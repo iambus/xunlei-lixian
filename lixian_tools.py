@@ -10,11 +10,9 @@ def wget_download(url):
 
 	download_url = str(task['xunlei_url'])
 	filename = task['name'].encode(sys.getfilesystemencoding())
-	cookie = str(client.get_cookie_header())
 	referer = str(client.get_referer())
 	gdriveid = str(client.get_gdriveid())
 
-	#subprocess.call(['wget', '--referer='+referer, '--header=Cookie: '+cookie, '--keep-session-cookies', download_url, '-O', filename])
 	subprocess.call(['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename])
 
 
