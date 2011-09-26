@@ -1,10 +1,10 @@
 
-import xunlei_lixian
+import lixian
 import subprocess
 import sys
 
 def wget_download(url):
-	client = xunlei_lixian.XunleiClient(cookie_path='xunlei.cookies')
+	client = lixian.XunleiClient(cookie_path='xunlei.cookies')
 	tasks = [x for x in client.read_completed() if x['original_url'] == url]
 	task = tasks[0]
 
