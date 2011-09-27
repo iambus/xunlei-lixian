@@ -7,6 +7,8 @@ import cookielib
 import re
 import time
 import os.path
+import json
+from ast import literal_eval
 
 
 class XunleiClient:
@@ -29,7 +31,8 @@ class XunleiClient:
 			self.id = self.get_userid()
 
 	def urlopen(self, url, **args):
-		print url
+		if 'data' in args and type(args['data']) == dict:
+			args['data'] = urllib.urlencode(args['data'])
 		return self.opener.open(urllib2.Request(url, **args))
 
 	def load_cookies(self):
@@ -74,10 +77,10 @@ class XunleiClient:
 		return  domain_header('.xunlei.com') + '; ' + domain_header('.vip.xunlei.com')
 
 	def has_logged_in(self):
-		return len(self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d'%create_timestamp()).read()) > 512
+		return len(self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d'%current_timestamp()).read()) > 512
 
 	def login(self, username, password):
-		cachetime = create_timestamp()
+		cachetime = current_timestamp()
 		check_url = 'http://login.xunlei.com/check?u=%s&cachetime=%d' % (username, cachetime)
 		login_page = self.urlopen(check_url).read()
 		verifycode = self.get_cookie('.xunlei.com', 'check_result')[2:].upper()
@@ -87,13 +90,13 @@ class XunleiClient:
 		if not re.match(r'^[0-9a-f]{32}$', username):
 			password = md5(md5(password))
 		password = md5(password+verifycode)
-		login_page = self.urlopen('http://login.xunlei.com/sec2login/', data=urllib.urlencode({'u': username, 'p': password, 'verifycode': verifycode}))
+		login_page = self.urlopen('http://login.xunlei.com/sec2login/', {'u': username, 'p': password, 'verifycode': verifycode})
 		self.id = self.get_userid()
-		login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%create_timestamp())
+		login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp())
 		self.save_cookies()
 
 	def list_bt(self, task):
-		url = 'http://dynamic.cloud.vip.xunlei.com/interface/fill_bt_list?callback=fill_bt_list&tid=%s&infoid=%s&g_net=1&p=1&uid=%s&noCacheIE=%s' % (task['id'], task['bt_hash'], self.id, create_timestamp())
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/fill_bt_list?callback=fill_bt_list&tid=%s&infoid=%s&g_net=1&p=1&uid=%s&noCacheIE=%s' % (task['id'], task['bt_hash'], self.id, current_timestamp())
 		html = self.urlopen(url).read().decode('utf-8')
 		return parse_bt_list(html)
 
@@ -130,8 +133,89 @@ class XunleiClient:
 	def read_completed(self):
 		return self.read_tasks(2)
 
+	def add_task(self, url):
+		assert url.startswith('ed2k://') # only ed2k is tested, will support others later
 
-def create_timestamp():
+		from random import randint
+		random = '%s%06d.%s' % (current_timestamp(), randint(0, 999999), randint(100000000, 9999999999))
+		check_url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_check?callback=queryCid&url=%s&random=%s&tcache=%s' % (urllib.quote(url), random, current_timestamp())
+		js = self.urlopen(check_url).read().decode('utf-8')
+		qcid = re.match(r'^queryCid(\(.+\))\s*$', js).group(1)
+		cid, gcid, size_required, filename, goldbean_need, silverbean_need, is_full, random = literal_eval(qcid)
+		assert goldbean_need == 0
+		assert silverbean_need == 0
+
+
+		if url.startswith('htt:'):
+			task_type = 0
+		elif url.startswith('ed2k://'):
+			task_type = 2
+		else:
+			raise NotImplementedError()
+		task_url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_commit?'+urllib.urlencode(
+		   {'callback': 'ret_task',
+		    'uid': self.id,
+		    'cid': cid,
+		    'gcid': gcid,
+		    'size': size_required,
+		    'goldbean': goldbean_need,
+		    'silverbean': silverbean_need,
+		    't': filename,
+		    'url': url,
+			'type': task_type,
+		    'o_page': 'task',
+		    'o_taskid': '0',
+		    })
+
+		response = self.urlopen(task_url).read()
+		assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid="+self.id+"&st=0'</script>"
+
+	def delete_tasks_by_id(self, ids):
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_delete?type=%s&taskids=%s&noCacheIE=%s' % (2, ','.join(ids)+',', current_timestamp()) # XXX: what is 'type'?
+		response = json.loads(re.match(r'^delete_task_resp\((.+)\)$', self.urlopen(url).read()).group(1))
+		assert response['result'] == 1
+		assert response['type'] == 2
+
+	def delete_task_by_id(self, id):
+		self.delete_tasks_by_id([id])
+
+	def delete_task(self, task):
+		self.delete_task_by_id(task['id'])
+
+	def pause_tasks_by_id(self, ids):
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_pause?tid=%s&uid=%s&noCacheIE=%s' % (','.join(ids)+',', self.id, current_timestamp())
+		assert self.urlopen(url).read() == 'pause_task_resp()'
+
+	def pause_task_by_id(self, id):
+		self.pause_tasks_by_id([id])
+
+	def pause_task(self, task):
+		self.pause_task_by_id(task['id'])
+
+	def restart_task(self, task):
+		assert task['type'] in ('ed2k', 'http', 'https'), "'%s' is not tested" % task['type']
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/redownload'
+		data = {
+			'id[]': task['id'],
+			'cid[]': '',
+			'url[]': task['original_url'],
+			'download_status[]': task['status'],
+			'type': '1'}
+		if task['type'] == 'ed2k':
+			data['taskname[]'] = task['name'].encode('utf-8')
+		response = self.urlopen(url, data=data).read()
+		assert response == "<script>document.domain='xunlei.com';window.parent.redownload_resp(1)</script>"
+
+	def get_task_by_id(self, id):
+		tasks = self.read_all_tasks(0)
+		print len(tasks)
+		for x in tasks:
+			print x['name'], x['id']
+			if x['id'] == id:
+				return x
+		raise Exception, 'Not task found for id '+id
+
+def current_timestamp():
 	return int(time.time()*1000)
 
 def parse_link(html):
@@ -153,7 +237,7 @@ def parse_link(html):
 			'type': task_type,
 			'name': mini_info['durl'],
 			'status': int(mini_info['d_status']),
-			'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed'}[mini_info['d_status']],
+			'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed', '5':'pending'}[mini_info['d_status']],
 			'size': int(mini_info['ysfilesize']),
 			'original_url': mini_info['f_url'],
 			'xunlei_url': mini_info['dl_url'],
@@ -168,7 +252,6 @@ def parse_links(html):
 	return map(parse_link, rw_lists)
 
 def parse_bt_list(js):
-	import json
 	result = json.loads(re.match(r'^fill_bt_list\((.+)\)\s*$', js).group(1))['Result']
 	files = []
 	for record in result['Record']:
@@ -183,5 +266,4 @@ def parse_bt_list(js):
 			'xunlei_url': record['downurl'],
 			})
 	return files
-
 
