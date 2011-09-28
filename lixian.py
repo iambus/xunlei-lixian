@@ -138,7 +138,7 @@ class XunleiClient:
 		return self.read_all_tasks(2)
 
 	def add_task(self, url):
-		assert url.startswith('ed2k://') # only ed2k is tested, will support others later
+		assert url.startswith('ed2k://'), 'only ed2k is tested, will support others later'
 
 		from random import randint
 		random = '%s%06d.%s' % (current_timestamp(), randint(0, 999999), randint(100000000, 9999999999))
