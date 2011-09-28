@@ -1,5 +1,6 @@
 
 from lixian import XunleiClient
+import subprocess
 import sys
 import re
 
@@ -55,8 +56,48 @@ def login(args):
 	args = parse_command_line(args, ['cookies'])
 	client = XunleiClient(args[0], args[1], args.cookies)
 
+def urllib2_download(client, download_url, filename):
+	'''In the case you don't even have wget...'''
+	print 'Downloading', download_url, 'to', filename, '...'
+	import urllib2
+	request = urllib2.Request(download_url, headers={'Cookie': 'gdriveid='+client.get_gdriveid()})
+	response = urllib2.urlopen(request)
+	import shutil
+	with open(filename, 'wb') as output:
+		shutil.copyfileobj(response, output)
+
+def wget_download(client, download_url, filename):
+	gdriveid = str(client.get_gdriveid())
+	subprocess.call(['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename])
+
 def download(args):
-	raise NotImplementedError()
+	args = parse_command_line(args, ['username', 'password', 'cookies', 'tool', 'output'], ['id', 'name', 'url'], alias={'o', 'output'}, default={'tool':'wget'})
+	download = {'wget':wget_download, 'urllib2':urllib2_download}[args.tool]
+	if len(args) > 1:
+		raise NotImplementedError()
+	elif len(args) == 1:
+		assert not args.url
+		args._args['url'] = args[0]
+	client = XunleiClient(args.username, args.password, args.cookies)
+	tasks = search_tasks(client, args, status='all', check=False)
+	if not tasks:
+		assert args.url
+		print 'Adding new task %s ...' % args.url
+		client.add_task(args.url)
+		tasks = client.read_all_completed()
+		tasks = filter_tasks(tasks, 'original_url', args.url)
+	elif len(tasks) > 1:
+		raise NotImplementedError()
+	elif tasks[0]['status_text'] != 'completed':
+		raise NotImplementedError()
+	task = tasks[0]
+
+	download_url = str(task['xunlei_url'])
+	filename = args.output or task['name'].encode(sys.getfilesystemencoding())
+	referer = str(client.get_referer())
+	gdriveid = str(client.get_gdriveid())
+
+	download(client, download_url, filename)
 
 def filter_tasks(tasks, k, v):
 	if k == 'name':
@@ -76,7 +117,7 @@ def search_tasks(client, args, status='all', check=True):
 	for x in args:
 		if args.id:
 			matched = filter_tasks(tasks, 'id', x)
-		elif args.file:
+		elif args.file or args.name:
 			matched = filter_tasks(tasks, 'name', x)
 		elif args.url:
 			matched = filter_tasks(tasks, 'original_url', x)
@@ -190,5 +231,5 @@ def execute_command(args=sys.argv[1:]):
 	commands[command](args[1:])
 
 #x = execute_command(['delete', '-i', '--cookies', 'xunlei.cookies', 'ed2k://|file|%5BSC-OL%5D%5BKaiji2%5D%5B01%5D%5BMKV%5D%5BX264_AAC%5D%5B1280X720%5D%5B6C77C65F%5D.gb.ass|56114|e39a590424b6bb0574c40989d199c91c|h=er4uegovpq3p2jjz7pejtqx242j5ioym|/'])
-#x = execute_command(['restart', '-i', '--cookies', 'xunlei.cookies', '--file', '--all', 'zip'])
+#execute_command(['download', '--cookies', 'xunlei.cookies', 'ed2k://|file|%5BSC-OL%5D%5BKaiji2%5D%5B07%5D%5BMKV%5D%5BX264_AAC%5D%5B1280X720%5D%5B7221E7AA%5D.gb.ass|53758|aadb39c8621fdd300655c7e82af30335|h=fdvhxzqqzocqkxuwltz6xm6x3vdhasnb|/'])
 
