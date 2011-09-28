@@ -31,6 +31,7 @@ class XunleiClient:
 			self.id = self.get_userid()
 
 	def urlopen(self, url, **args):
+		#print url
 		if 'data' in args and type(args['data']) == dict:
 			args['data'] = urllib.urlencode(args['data'])
 		return self.opener.open(urllib2.Request(url, **args))
@@ -90,7 +91,7 @@ class XunleiClient:
 		if not re.match(r'^[0-9a-f]{32}$', username):
 			password = md5(md5(password))
 		password = md5(password+verifycode)
-		login_page = self.urlopen('http://login.xunlei.com/sec2login/', {'u': username, 'p': password, 'verifycode': verifycode})
+		login_page = self.urlopen('http://login.xunlei.com/sec2login/', data={'u': username, 'p': password, 'verifycode': verifycode})
 		self.id = self.get_userid()
 		login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp())
 		self.save_cookies()
@@ -118,10 +119,10 @@ class XunleiClient:
 			url = 'http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=%d&p=%d' % (self.id, st, pg)
 		return self.read_task_page_url(url)
 
-	def read_tasks(self, st):
+	def read_tasks(self, st=0):
 		return self.read_task_page(st)[0]
 
-	def read_all_tasks(self, st):
+	def read_all_tasks(self, st=0):
 		all_links = []
 		links, next_link = self.read_task_page(st)
 		all_links.extend(links)
@@ -208,9 +209,7 @@ class XunleiClient:
 
 	def get_task_by_id(self, id):
 		tasks = self.read_all_tasks(0)
-		print len(tasks)
 		for x in tasks:
-			print x['name'], x['id']
 			if x['id'] == id:
 				return x
 		raise Exception, 'Not task found for id '+id
@@ -266,4 +265,6 @@ def parse_bt_list(js):
 			'xunlei_url': record['downurl'],
 			})
 	return files
+
+
 
