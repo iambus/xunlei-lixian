@@ -84,5 +84,8 @@ def execute_command(args=sys.argv[1:]):
 def main():
 	execute_args(parse_command())
 
+if __name__ == '__main__':
+	main()
+
 #execute_command(['--cookies', 'xunlei.cookies', '--output', 'quick.txt', '--task-name', 'quick', '--tool', 'urllib2'])
 
