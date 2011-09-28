@@ -25,7 +25,7 @@ class XunleiClient:
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
 		if not self.has_logged_in():
 			if not username:
-				raise NotImplementedError()
+				raise NotImplementedError('user is not logged in')
 			self.login(username, password)
 		else:
 			self.id = self.get_userid()
@@ -133,6 +133,9 @@ class XunleiClient:
 
 	def read_completed(self):
 		return self.read_tasks(2)
+
+	def read_all_completed(self):
+		return self.read_all_tasks(2)
 
 	def add_task(self, url):
 		assert url.startswith('ed2k://') # only ed2k is tested, will support others later
@@ -265,6 +268,5 @@ def parse_bt_list(js):
 			'xunlei_url': record['downurl'],
 			})
 	return files
-
 
 
