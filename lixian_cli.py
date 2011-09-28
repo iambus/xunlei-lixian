@@ -21,8 +21,8 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
 			k = x.lstrip('-')
 			if k in bools:
 				options[k] = True
-			elif 'no-'+k in bools:
-				options[k] = False
+			elif k.startswith('no-') and k[3:] in bools:
+				options[k[3:]] = False
 			elif k in keys:
 				options[k] = args.pop(0)
 			elif k in alias:
@@ -50,7 +50,28 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
 	return Args(options, left)
 
 def usage():
-	raise NotImplementedError()
+	print '''python lixian_cli.py login "Your Xunlei account" "Your password" --cookies "path to save cookies"
+
+python lixian_cli.py list --cookies "cookie path"
+python lixian_cli.py list --completed --cookies "cookie path"
+python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-task-id --cookies "cookie path"
+python lixian_cli.py list --cookies "cookie path" --name zip
+
+python lixian_cli.py download ed2k-url --cookies cookies
+python lixian_cli.py download --tool wget ed2k-url --cookies cookies
+python lixian_cli.py download --tool urllib2 ed2k-url --cookies cookies
+python lixian_cli.py download --tool wget ed2k-url --output "file to save" --cookies cookies
+
+python lixian_cli.py add --cookies cookies url
+
+python lixian_cli.py delete --cookies cookies url
+python lixian_cli.py delete --cookies cookies --id task-id-to-delete
+python lixian_cli.py delete --cookies cookies --file file-name-on-cloud-to-delete
+
+python lixian_cli.py pause --cookies cookies ...
+
+python lixian_cli.py restart --cookies cookies ...
+'''
 
 def login(args):
 	args = parse_command_line(args, ['cookies'])
@@ -162,7 +183,7 @@ def list_task(args):
 			elif k == 'original-url':
 				print t['original_url'],
 			elif k == 'download-url':
-				print t['download_url'],
+				print t['xunlei_url'],
 			else:
 				raise NotImplementedError()
 		print

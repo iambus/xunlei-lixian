@@ -1,18 +1,24 @@
 Python script to download from xunlei cloud
 
-python lixian_tools.py --username "Your Xunlei account" --password "Your password" --cookies "path to save cookies" link-to-download
+python lixian_cli.py login "Your Xunlei account" "Your password" --cookies "path to save cookies"
 
-Options:
-  --username  <arg>    (Optional) Your Xunlei account. You could skip this if you already have live cookies.
-  --password  <arg>    (Optional) Your password. You could skip this if you already have live cookies.
-  --cookies   <arg>    (Optional) Path to save cookies. If you specify the cookies, next time you don't have to provide the username and password.
-  --tool      <arg>    (Optional) Specify the download tool. Only "wget" and "urllib2" are supported in this version.
-    [default wget]
-  --output    <arg>    (Optional) Path to save the downloaded file
-  --task-name <arg>   (Optional) Search cloud task by file name
-  --help              Print this help
+python lixian_cli.py list --cookies "cookie path"
+python lixian_cli.py list --completed --cookies "cookie path"
+python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-task-id --cookies "cookie path"
+python lixian_cli.py list --cookies "cookie path" --name zip
 
-Examples:
-python lixian_tools.py --username "Your Xunlei account" --password "Your password" --cookies "path to save cookies" "ed2k://|file|%5BSC-OL%5D%5BKaiji2%5D%5B25%5D%5BMKV%5D%5BX264_AAC%5D%5B1280X720%5D%5B8E2F2597%5D.gb.ass|48720|12bb92eb635854ee75dba02ddbcdad13|h=kxeezdk2dvzqejb2taj3lthdwvmrfxbt|/"
-python lixian_tools.py --cookies "path to save cookies" "ed2k://|file|%5BSC-OL%5D%5BKaiji2%5D%5B25%5D%5BMKV%5D%5BX264_AAC%5D%5B1280X720%5D%5B8E2F2597%5D.gb.ass|48720|12bb92eb635854ee75dba02ddbcdad13|h=kxeezdk2dvzqejb2taj3lthdwvmrfxbt|/"
+python lixian_cli.py download ed2k-url --cookies cookies
+python lixian_cli.py download --tool wget ed2k-url --cookies cookies
+python lixian_cli.py download --tool urllib2 ed2k-url --cookies cookies
+python lixian_cli.py download --tool wget ed2k-url --output "file to save" --cookies cookies
+
+python lixian_cli.py add --cookies cookies url
+
+python lixian_cli.py delete --cookies cookies url
+python lixian_cli.py delete --cookies cookies --id task-id-to-delete
+python lixian_cli.py delete --cookies cookies --file file-name-on-cloud-to-delete
+
+python lixian_cli.py pause --cookies cookies ...
+
+python lixian_cli.py restart --cookies cookies ...
 
