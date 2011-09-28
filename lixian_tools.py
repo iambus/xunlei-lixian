@@ -20,7 +20,28 @@ def wget_download(client, download_url, filename):
 def check_ed2k(url, path):
 	raise NotImplementedError()
 
+def usage():
+	print '''python lixian_tools.py --username "Your Xunlei account" --password "Your password" --cookies "path to save cookies" link-to-download
+
+Options:
+  --username  <arg>    (Optional) Your Xunlei account. You could skip this if you already have live cookies.
+  --password  <arg>    (Optional) Your password. You could skip this if you already have live cookies.
+  --cookies   <arg>    (Optional) Path to save cookies. If you specify the cookies, next time you don't have to provide the username and password.
+  --tool      <arg>    (Optional) Specify the download tool. Only "wget" and "urllib2" are supported in this version.
+    [default wget]
+  --output    <arg>    (Optional) Path to save the downloaded file
+  --task-name <arg>   (Optional) Search cloud task by file name
+  --help              Print this help
+
+Examples:
+python lixian_tools.py --username "Your Xunlei account" --password "Your password" --cookies "path to save cookies" "ed2k://|file|%5BSC-OL%5D%5BKaiji2%5D%5B25%5D%5BMKV%5D%5BX264_AAC%5D%5B1280X720%5D%5B8E2F2597%5D.gb.ass|48720|12bb92eb635854ee75dba02ddbcdad13|h=kxeezdk2dvzqejb2taj3lthdwvmrfxbt|/"
+python lixian_tools.py --cookies "path to save cookies" "ed2k://|file|%5BSC-OL%5D%5BKaiji2%5D%5B25%5D%5BMKV%5D%5BX264_AAC%5D%5B1280X720%5D%5B8E2F2597%5D.gb.ass|48720|12bb92eb635854ee75dba02ddbcdad13|h=kxeezdk2dvzqejb2taj3lthdwvmrfxbt|/"
+'''
+
 def parse_command(args=sys.argv[1:]):
+	if not args:
+		usage()
+		sys.exit(1)
 	import getopt
 	try:
 		opts, links = getopt.getopt(args, 'ho:', ['help', 'username=', 'password=', 'cookies=', 'output=', 'tool=', 'link=', 'task-id=', 'task-name='])
@@ -53,7 +74,7 @@ def execute_args(args):
 	download = {'wget':wget_download, 'urllib2':urllib2_download}[args.tool]
 
 	if args.links:
-		assert len(links) == 1
+		assert len(args.links) == 1
 		url = args.links[0]
 	else:
 		url = args.link
@@ -63,7 +84,15 @@ def execute_args(args):
 	client.set_page_size(100)
 	tasks = client.read_all_completed()
 	if url:
-		task = filter(lambda t: t['original_url'] == url, tasks)[0]
+		matched = filter(lambda t: t['original_url'] == url, tasks)
+		if matched:
+			task = matched[0]
+		else:
+			# if the task doesn't exist yet, add it
+			# TODO: check space, check queue, delete after download done, add loggings
+			client.add_task(url)
+			tasks = client.read_all_completed()
+			task = filter(lambda t: t['original_url'] == url, tasks)[0]
 	elif args.task_name:
 		task = filter(lambda t: t['name'].find(args.task_name) != -1, tasks)[0]
 	elif args.task_id:
