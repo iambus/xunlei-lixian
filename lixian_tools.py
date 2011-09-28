@@ -1,4 +1,6 @@
 
+raise Exception('lixian_tools.py is deprecated. Please us lixian_cli.py')
+
 from lixian import XunleiClient
 import subprocess
 import sys
