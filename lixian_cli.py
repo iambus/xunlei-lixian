@@ -58,19 +58,51 @@ def login(args):
 def download(args):
 	raise NotImplementedError()
 
-def query_task(args):
-	raise NotImplementedError()
+def filter_tasks(tasks, k, v):
+	if k == 'name':
+		matched = filter(lambda t: t[k].find(v) != -1, tasks)
+	else:
+		matched = filter(lambda t: t[k] == v, tasks)
+	return matched
+
+def search_tasks(client, args, status='all', check=True):
+	if status == 'all':
+		tasks = client.read_all_tasks()
+	elif status == 'completed':
+		tasks = client.read_all_tasks()
+	else:
+		raise NotImplementedError()
+	found = []
+	for x in args:
+		if args.id:
+			matched = filter_tasks(tasks, 'id', x)
+		elif args.file:
+			matched = filter_tasks(tasks, 'name', x)
+		elif args.url:
+			matched = filter_tasks(tasks, 'original_url', x)
+		else:
+			if re.match(r'^\d+$', x):
+				matched = filter_tasks(tasks, 'id', x)
+			else:
+				matched = filter_tasks(tasks, 'original_url', x) or filter_tasks(tasks, 'name', x)
+		if check:
+			if not matched:
+				raise RuntimeError('Not task found for '+x)
+			if (not args.all) and len(matched) > 1:
+				raise RuntimeError('Too tasks found for '+x)
+		found.extend(matched)
+	return found
+
 
 def list_task(args):
 	args = parse_command_line(args, ['username', 'password', 'cookies'],
-	                                ['all', 'completed', 'task-id', 'name', 'status', 'original-url', 'download-url'],
+	                                ['all', 'completed',
+	                                 'task-id', 'name', 'status', 'original-url', 'download-url',
+	                                 'id', 'file', 'url',],
 									default={'task-id': True, 'name': True, 'status': True})
 	client = XunleiClient(args.username, args.password, args.cookies)
 	client.set_page_size(100)
-	if args.completed:
-		tasks = client.read_all_completed()
-	else:
-		tasks = client.read_all_tasks()
+	tasks = search_tasks(client, args, status=(args.completed and 'completed' or 'all'), check=False)
 	columns = ['task-id', 'name', 'status', 'original-url', 'download-url']
 	columns = filter(lambda k: getattr(args, k), columns)
 	for t in tasks:
@@ -101,39 +133,6 @@ def add_task(args):
 	for link in args:
 		task = filter(lambda t: t['original_url'] == link, tasks)[0]
 		print task['status_text'] + ' ' + link
-
-def filter_tasks(tasks, k, v, all=False):
-	if k == 'name':
-		matched = filter(lambda t: t[k].find(v) != -1, tasks)
-	else:
-		matched = filter(lambda t: t[k] == v, tasks)
-#	if not matched:
-#		raise RuntimeError('Not task found for '+v)
-#	if all and len(matched) > 1:
-#		raise RuntimeError('Too many tasks matched for '+v)
-	return matched
-
-def search_tasks(client, args):
-	tasks = client.read_all_tasks()
-	found = []
-	for x in args:
-		if args.id:
-			matched = filter_tasks(tasks, 'id', x, all=args.all)
-		elif args.file:
-			matched = filter_tasks(tasks, 'name', x, all=args.all)
-		elif args.url:
-			matched = filter_tasks(tasks, 'original_url', x, all=args.all)
-		else:
-			if re.match(r'^\d+$', x):
-				matched = filter_tasks(tasks, 'id', x, all=args.all)
-			else:
-				matched = filter_tasks(tasks, 'original_url', x, all=args.all) or filter_tasks(tasks, 'name', x, all=args.all)
-		if not matched:
-			raise RuntimeError('Not task found for '+x)
-		if (not args.all) and len(matched) > 1:
-			raise RuntimeError('Too tasks found for '+x)
-		found.extend(matched)
-	return found
 
 def delete_task(args):
 	args = parse_command_line(args, ['username', 'password', 'cookies'], ['id', 'file', 'url', 'i', 'all'])
@@ -168,7 +167,7 @@ def restart_task(args):
 	print "Below files are going to be restarted:"
 	for x in to_restart:
 		print x['name']
-	client.pause_tasks(to_restart)
+	client.restart_tasks(to_restart)
 
 def execute_command(args=sys.argv[1:]):
 	if not args:
@@ -184,7 +183,7 @@ def execute_command(args=sys.argv[1:]):
 			usage()
 			sys.exit(1)
 		sys.exit(0)
-	commands = {'login': login, 'download': download, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'get': query_task}
+	commands = {'login': login, 'download': download, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task}
 	if command not in commands:
 		usage()
 		sys.exit(1)
