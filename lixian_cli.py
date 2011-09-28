@@ -113,12 +113,9 @@ def filter_tasks(tasks, k, v, all=False):
 #		raise RuntimeError('Too many tasks matched for '+v)
 	return matched
 
-
-def delete_task(args):
-	args = parse_command_line(args, ['username', 'password', 'cookies'], ['id', 'file', 'url', 'i', 'all'])
-	client = XunleiClient(args.username, args.password, args.cookies)
+def search_tasks(client, args):
 	tasks = client.read_all_tasks()
-	to_delete = []
+	found = []
 	for x in args:
 		if args.id:
 			matched = filter_tasks(tasks, 'id', x, all=args.all)
@@ -135,7 +132,13 @@ def delete_task(args):
 			raise RuntimeError('Not task found for '+x)
 		if (not args.all) and len(matched) > 1:
 			raise RuntimeError('Too tasks found for '+x)
-		to_delete.extend(matched)
+		found.extend(matched)
+	return found
+
+def delete_task(args):
+	args = parse_command_line(args, ['username', 'password', 'cookies'], ['id', 'file', 'url', 'i', 'all'])
+	client = XunleiClient(args.username, args.password, args.cookies)
+	to_delete = search_tasks(client, args)
 	print "Below files are going to be deleted:"
 	for x in to_delete:
 		print x['name']
@@ -147,14 +150,25 @@ def delete_task(args):
 			pass
 		elif yes_or_no.lower() in ('n', 'no'):
 			raise RuntimeError('Deletion abort per user request.')
-	for x in to_delete:
-		client.delete_task(x)
+	client.delete_tasks(to_delete)
 
 def pause_task(args):
-	raise NotImplementedError()
+	args = parse_command_line(args, ['username', 'password', 'cookies'], ['id', 'file', 'url', 'i', 'all'])
+	client = XunleiClient(args.username, args.password, args.cookies)
+	to_pause = search_tasks(client, args)
+	print "Below files are going to be paused:"
+	for x in to_pause:
+		print x['name']
+	client.pause_tasks(to_pause)
 
 def restart_task(args):
-	raise NotImplementedError()
+	args = parse_command_line(args, ['username', 'password', 'cookies'], ['id', 'file', 'url', 'i', 'all'])
+	client = XunleiClient(args.username, args.password, args.cookies)
+	to_restart = search_tasks(client, args)
+	print "Below files are going to be restarted:"
+	for x in to_restart:
+		print x['name']
+	client.pause_tasks(to_restart)
 
 def execute_command(args=sys.argv[1:]):
 	if not args:
@@ -176,5 +190,6 @@ def execute_command(args=sys.argv[1:]):
 		sys.exit(1)
 	commands[command](args[1:])
 
-x = execute_command(['delete', '-i', '--cookies', 'xunlei.cookies', 'ed2k://|file|%5BSC-OL%5D%5BKaiji2%5D%5B01%5D%5BMKV%5D%5BX264_AAC%5D%5B1280X720%5D%5B6C77C65F%5D.gb.ass|56114|e39a590424b6bb0574c40989d199c91c|h=er4uegovpq3p2jjz7pejtqx242j5ioym|/'])
+#x = execute_command(['delete', '-i', '--cookies', 'xunlei.cookies', 'ed2k://|file|%5BSC-OL%5D%5BKaiji2%5D%5B01%5D%5BMKV%5D%5BX264_AAC%5D%5B1280X720%5D%5B6C77C65F%5D.gb.ass|56114|e39a590424b6bb0574c40989d199c91c|h=er4uegovpq3p2jjz7pejtqx242j5ioym|/'])
+#x = execute_command(['restart', '-i', '--cookies', 'xunlei.cookies', '--file', '--all', 'zip'])
 

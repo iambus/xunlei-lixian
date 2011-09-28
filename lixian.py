@@ -186,6 +186,9 @@ class XunleiClient:
 	def delete_task(self, task):
 		self.delete_task_by_id(task['id'])
 
+	def delete_tasks(self, tasks):
+		self.delete_tasks_by_id(t['id'] for t in tasks)
+
 	def pause_tasks_by_id(self, ids):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_pause?tid=%s&uid=%s&noCacheIE=%s' % (','.join(ids)+',', self.id, current_timestamp())
 		assert self.urlopen(url).read() == 'pause_task_resp()'
@@ -196,19 +199,28 @@ class XunleiClient:
 	def pause_task(self, task):
 		self.pause_task_by_id(task['id'])
 
-	def restart_task(self, task):
-		assert task['type'] in ('ed2k', 'http', 'https'), "'%s' is not tested" % task['type']
+	def pause_tasks(self, tasks):
+		self.pause_tasks_by_id(t['id'] for t in tasks)
+
+	def restart_tasks(self, tasks):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/redownload'
-		data = {
-			'id[]': task['id'],
-			'cid[]': '',
-			'url[]': task['original_url'],
-			'download_status[]': task['status'],
-			'type': '1'}
-		if task['type'] == 'ed2k':
-			data['taskname[]'] = task['name'].encode('utf-8')
+		form = []
+		for task in tasks:
+			assert task['type'] in ('ed2k', 'http', 'https'), "'%s' is not tested" % task['type']
+			data = {'id[]': task['id'],
+					'cid[]': '',
+					'url[]': task['original_url'],
+					'download_status[]': task['status']}
+			if task['type'] == 'ed2k':
+				data['taskname[]'] = task['name'].encode('utf-8')
+			form.append(urllib.urlencode(data))
+		form.append(urllib.urlencode({'type':1}))
+		data = '&'.join(form)
 		response = self.urlopen(url, data=data).read()
 		assert response == "<script>document.domain='xunlei.com';window.parent.redownload_resp(1)</script>"
+
+	def restart_task(self, task):
+		self.restart_tasks([task])
 
 	def get_task_by_id(self, id):
 		tasks = self.read_all_tasks(0)
