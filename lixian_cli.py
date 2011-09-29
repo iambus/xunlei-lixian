@@ -85,10 +85,14 @@ python lixian_cli.py delete --file file-name-on-cloud-to-delete
 python lixian_cli.py pause ...
 
 python lixian_cli.py restart ...
+
+python lixian_cli.py logout
 '''
 
 def login(args):
 	args = parse_command_line(args, ['cookies'], default={'cookies': LIXIAN_DEFAULT_COOKIES})
+	if args.cookies == '-':
+		args._args['cookies'] = None
 	if len(args) < 2:
 		raise RuntimeError('Not enough arguments')
 	elif len(args) > 3:
@@ -97,10 +101,18 @@ def login(args):
 		args._arg['cookies'] = args[2]
 	if args.cookies:
 		print 'Saving login session to', args.cookies
+	else:
+		print 'Testing login without saving session'
 	client = XunleiClient(args[0], args[1], args.cookies)
 
 def logout(args):
-	raise NotImplementedError()
+	args = parse_command_line(args, ['cookies'], default={'cookies': LIXIAN_DEFAULT_COOKIES})
+	if len(args):
+		raise RuntimeError('Too many arguments')
+	print 'logging out from', args.cookies
+	assert args.cookies
+	client = XunleiClient(cookie_path=args.cookies, login=False)
+	client.logout()
 
 def urllib2_download(client, download_url, filename):
 	'''In the case you don't even have wget...'''

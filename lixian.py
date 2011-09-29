@@ -12,23 +12,22 @@ from ast import literal_eval
 
 
 class XunleiClient:
-	def __init__(self, username=None, password=None, cookie_path=None):
+	def __init__(self, username=None, password=None, cookie_path=None, login=True):
 		self.cookie_path = cookie_path
 		if cookie_path:
 			self.cookiejar = cookielib.LWPCookieJar()
 			if os.path.exists(cookie_path):
 				self.load_cookies()
-			else:
-				self.save_cookies()
 		else:
 			self.cookiejar = cookielib.CookieJar()
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
-		if not self.has_logged_in():
-			if not username:
-				raise NotImplementedError('user is not logged in')
-			self.login(username, password)
-		else:
-			self.id = self.get_userid()
+		if login:
+			if not self.has_logged_in():
+				if not username:
+					raise NotImplementedError('user is not logged in')
+				self.login(username, password)
+			else:
+				self.id = self.get_userid()
 
 	def urlopen(self, url, **args):
 		#print url
@@ -97,6 +96,20 @@ class XunleiClient:
 		login_page = self.urlopen('http://login.xunlei.com/sec2login/', data={'u': username, 'p': password, 'verifycode': verifycode})
 		self.id = self.get_userid()
 		login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp())
+		self.save_cookies()
+
+	def logout(self):
+		#session_id = self.get_cookie('.xunlei.com', 'sessionid')
+		#timestamp = current_timestamp()
+		#url = 'http://login.xunlei.com/unregister?sessionid=%s&cachetime=%s&noCacheIE=%s' % (session_id, timestamp, timestamp)
+		#self.urlopen(url).read()
+		#self.urlopen('http://dynamic.vip.xunlei.com/login/indexlogin_contr/logout/').read()
+		ckeys = ["vip_isvip","lx_sessionid","vip_level","lx_login","dl_enable","in_xl","ucid","lixian_section"];
+		ckeys1 = ["sessionid","usrname","nickname","usernewno","userid"];
+		for k in ckeys:
+			self.set_cookie('.vip.xunlei.com', k, '')
+		for k in ckeys1:
+			self.set_cookie('.xunlei.com', k, '')
 		self.save_cookies()
 
 	def list_bt(self, task):
