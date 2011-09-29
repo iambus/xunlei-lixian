@@ -123,6 +123,7 @@ class XunleiClient:
 		if not self.has_gdriveid():
 			gdriveid = re.search(r'id="cok" value="([^"]+)"', page).group(1)
 			self.set_gdriveid(gdriveid)
+			self.save_cookies()
 		links = parse_links(page)
 		pginfo = re.search(r'<div class="pginfo">.*?</div>', page)
 		match_next_page = re.search(r'<li class="next"><a href="([^"]+)">[^<>]*</a></li>', page)
