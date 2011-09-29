@@ -50,7 +50,10 @@ class XunleiClient:
 		return k in self.cookiejar._cookies[domain]['/']
 
 	def get_userid(self):
-		return self.get_cookie('.xunlei.com', 'userid')
+		if self.has_cookie('.xunlei.com', 'userid'):
+			return self.get_cookie('.xunlei.com', 'userid')
+		else:
+			raise Exception('Probably login failed')
 
 	def get_gdriveid(self):
 		return self.get_cookie('.vip.xunlei.com', 'gdriveid')
