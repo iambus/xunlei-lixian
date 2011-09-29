@@ -273,6 +273,13 @@ def restart_task(args):
 		print x['name']
 	client.restart_tasks(to_restart)
 
+def lixian_info(args):
+	args = parse_login_command_line(args)
+	client = XunleiClient(args.username, args.password, args.cookies)
+	print 'id:', client.get_cookie('.xunlei.com', 'usernewno')
+	print 'internalid:', client.get_cookie('.xunlei.com', 'userid')
+	print 'gdriveid:', client.get_gdriveid()
+
 def execute_command(args=sys.argv[1:]):
 	if not args:
 		usage()
@@ -287,7 +294,7 @@ def execute_command(args=sys.argv[1:]):
 			usage()
 			sys.exit(1)
 		sys.exit(0)
-	commands = {'login': login, 'logout': logout, 'download': download, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task}
+	commands = {'login': login, 'logout': logout, 'download': download, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'info': lixian_info}
 	if command not in commands:
 		usage()
 		sys.exit(1)
