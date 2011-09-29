@@ -2,7 +2,11 @@
 from lixian import XunleiClient
 import subprocess
 import sys
+import os
+import os.path
 import re
+
+LIXIAN_DEFAULT_COOKIES = os.path.join(os.getenv('USERPROFILE') or os.getenv('HOME'), '.xunlei.lixian.cookies')
 
 def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
 	options = {}
@@ -49,33 +53,54 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
 			return len(self._left)
 	return Args(options, left)
 
+def parse_login_command_line(args, keys=[], bools=[], alias={}, default={}):
+	common_keys = ['username', 'password', 'cookies']
+	common_default = {'cookies': LIXIAN_DEFAULT_COOKIES}
+	common_keys.extend(keys)
+	common_default.update(default)
+	args = parse_command_line(args, common_keys, bools, alias, common_default)
+	if args.cookies == '-':
+		args._args['cookies'] = None
+	return args
+
 def usage():
-	print '''python lixian_cli.py login "Your Xunlei account" "Your password" --cookies "path to save cookies"
+	print '''python lixian_cli.py login "Your Xunlei account" "Your password"
 
-python lixian_cli.py list --cookies "cookie path"
-python lixian_cli.py list --completed --cookies "cookie path"
-python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-task-id --cookies "cookie path"
-python lixian_cli.py list --cookies "cookie path" --name zip
+python lixian_cli.py list
+python lixian_cli.py list --completed
+python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-task-id
+python lixian_cli.py list path" --name zip
 
-python lixian_cli.py download ed2k-url --cookies cookies
-python lixian_cli.py download --tool wget ed2k-url --cookies cookies
-python lixian_cli.py download --tool urllib2 ed2k-url --cookies cookies
-python lixian_cli.py download --tool wget ed2k-url --output "file to save" --cookies cookies
+python lixian_cli.py download ed2k-url
+python lixian_cli.py download --tool wget ed2k-url
+python lixian_cli.py download --tool urllib2 ed2k-url
+python lixian_cli.py download --tool wget ed2k-url --output "file to save"
 
-python lixian_cli.py add --cookies cookies url
+python lixian_cli.py add url
 
-python lixian_cli.py delete --cookies cookies url
-python lixian_cli.py delete --cookies cookies --id task-id-to-delete
-python lixian_cli.py delete --cookies cookies --file file-name-on-cloud-to-delete
+python lixian_cli.py delete url
+python lixian_cli.py delete --id task-id-to-delete
+python lixian_cli.py delete --file file-name-on-cloud-to-delete
 
-python lixian_cli.py pause --cookies cookies ...
+python lixian_cli.py pause ...
 
-python lixian_cli.py restart --cookies cookies ...
+python lixian_cli.py restart ...
 '''
 
 def login(args):
-	args = parse_command_line(args, ['cookies'])
+	args = parse_command_line(args, ['cookies'], default={'cookies': LIXIAN_DEFAULT_COOKIES})
+	if len(args) < 2:
+		raise RuntimeError('Not enough arguments')
+	elif len(args) > 3:
+		raise RuntimeError('Too many arguments')
+	elif len(args) == 3:
+		args._arg['cookies'] = args[2]
+	if args.cookies:
+		print 'Saving login session to', args.cookies
 	client = XunleiClient(args[0], args[1], args.cookies)
+
+def logout(args):
+	raise NotImplementedError()
 
 def urllib2_download(client, download_url, filename):
 	'''In the case you don't even have wget...'''
@@ -92,7 +117,7 @@ def wget_download(client, download_url, filename):
 	subprocess.call(['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename])
 
 def download(args):
-	args = parse_command_line(args, ['username', 'password', 'cookies', 'tool', 'output'], ['id', 'name', 'url'], alias={'o', 'output'}, default={'tool':'wget'})
+	args = parse_login_command_line(args, ['tool', 'output'], ['id', 'name', 'url'], alias={'o', 'output'}, default={'tool':'wget'})
 	download = {'wget':wget_download, 'urllib2':urllib2_download}[args.tool]
 	if len(args) > 1:
 		raise NotImplementedError()
@@ -157,7 +182,7 @@ def search_tasks(client, args, status='all', check=True):
 
 
 def list_task(args):
-	args = parse_command_line(args, ['username', 'password', 'cookies'],
+	args = parse_login_command_line(args, [],
 	                                ['all', 'completed',
 	                                 'task-id', 'name', 'status', 'original-url', 'download-url',
 	                                 'id', 'file', 'url',],
@@ -189,7 +214,7 @@ def list_task(args):
 		print
 
 def add_task(args):
-	args = parse_command_line(args, ['username', 'password', 'cookies'])
+	args = parse_login_command_line(args)
 	assert len(args)
 	client = XunleiClient(args.username, args.password, args.cookies)
 	for link in args:
@@ -202,7 +227,7 @@ def add_task(args):
 		print task['status_text'] + ' ' + link
 
 def delete_task(args):
-	args = parse_command_line(args, ['username', 'password', 'cookies'], ['id', 'file', 'url', 'i', 'all'])
+	args = parse_login_command_line(args, [], ['id', 'file', 'url', 'i', 'all'])
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_delete = search_tasks(client, args)
 	print "Below files are going to be deleted:"
@@ -219,7 +244,7 @@ def delete_task(args):
 	client.delete_tasks(to_delete)
 
 def pause_task(args):
-	args = parse_command_line(args, ['username', 'password', 'cookies'], ['id', 'file', 'url', 'i', 'all'])
+	args = parse_login_command_line(args, [], ['id', 'file', 'url', 'i', 'all'])
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_pause = search_tasks(client, args)
 	print "Below files are going to be paused:"
@@ -228,7 +253,7 @@ def pause_task(args):
 	client.pause_tasks(to_pause)
 
 def restart_task(args):
-	args = parse_command_line(args, ['username', 'password', 'cookies'], ['id', 'file', 'url', 'i', 'all'])
+	args = parse_login_command_line(args, [], ['id', 'file', 'url', 'i', 'all'])
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_restart = search_tasks(client, args)
 	print "Below files are going to be restarted:"
@@ -250,7 +275,7 @@ def execute_command(args=sys.argv[1:]):
 			usage()
 			sys.exit(1)
 		sys.exit(0)
-	commands = {'login': login, 'download': download, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task}
+	commands = {'login': login, 'logout': logout, 'download': download, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task}
 	if command not in commands:
 		usage()
 		sys.exit(1)

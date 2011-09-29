@@ -1,24 +1,24 @@
 Python script to download from xunlei cloud
 
-python lixian_cli.py login "Your Xunlei account" "Your password" --cookies "path to save cookies"
+python lixian_cli.py login "Your Xunlei account" "Your password"
 
-python lixian_cli.py list --cookies "cookie path"
-python lixian_cli.py list --completed --cookies "cookie path"
-python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-task-id --cookies "cookie path"
-python lixian_cli.py list --cookies "cookie path" --name zip
+python lixian_cli.py list
+python lixian_cli.py list --completed
+python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-task-id
+python lixian_cli.py list path" --name zip
 
-python lixian_cli.py download ed2k-url --cookies cookies
-python lixian_cli.py download --tool wget ed2k-url --cookies cookies
-python lixian_cli.py download --tool urllib2 ed2k-url --cookies cookies
-python lixian_cli.py download --tool wget ed2k-url --output "file to save" --cookies cookies
+python lixian_cli.py download ed2k-url
+python lixian_cli.py download --tool wget ed2k-url
+python lixian_cli.py download --tool urllib2 ed2k-url
+python lixian_cli.py download --tool wget ed2k-url --output "file to save"
 
-python lixian_cli.py add --cookies cookies url
+python lixian_cli.py add url
 
-python lixian_cli.py delete --cookies cookies url
-python lixian_cli.py delete --cookies cookies --id task-id-to-delete
-python lixian_cli.py delete --cookies cookies --file file-name-on-cloud-to-delete
+python lixian_cli.py delete url
+python lixian_cli.py delete --id task-id-to-delete
+python lixian_cli.py delete --file file-name-on-cloud-to-delete
 
-python lixian_cli.py pause --cookies cookies ...
+python lixian_cli.py pause ...
 
-python lixian_cli.py restart --cookies cookies ...
+python lixian_cli.py restart ...
 
