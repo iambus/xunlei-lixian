@@ -111,8 +111,8 @@ class http_client(asynchat.async_chat):
 
 	def handle_http_relocate(self, location):
 		self.close()
-		relocate_times = getattr(self, 'relocate_times', 1)
-		max_relocate_times = getattr(self, 'max_relocate_times', 0)
+		relocate_times = getattr(self, 'relocate_times', 0)
+		max_relocate_times = getattr(self, 'max_relocate_times', 1)
 		if relocate_times >= max_relocate_times:
 			raise Exception('too many relocate times')
 		new_client = self.__class__(location, headers=self.user_headers)
@@ -127,33 +127,48 @@ class http_client(asynchat.async_chat):
 
 
 def download(url, path, headers=None):
-	with open(path, 'wb') as output:
-		class download_client(http_client):
-			def __init__(self, url, headers=headers):
-				http_client.__init__(self, url, headers=headers)
+	class download_client(http_client):
+		def __init__(self, url, headers=headers):
+			http_client.__init__(self, url, headers=headers)
+			self.last_status_time = time()
+			self.last_speed_time = time()
+			self.last_size = 0
+			self.path = path
+			self.output = None
+		def handle_connect(self):
+			http_client.handle_connect(self)
+		def handle_close(self):
+			http_client.handle_close(self)
+			if self.output:
+				self.output.close()
+				self.output = None
+		def handle_http_status_error(self):
+			http_client.handle_http_status_error(self)
+			print 'http status error:', self.status_code, self.status_text
+		def handle_data(self, data):
+			if not self.output:
+				self.output = open(path, 'wb')
+			self.output.write(data)
+		def handle_status_update(self, total, completed, force_update=False):
+			if total is None:
+				return
+			if time() - self.last_status_time > 1 or force_update:
+				print '%.02f' % (completed*100.0/total)
 				self.last_status_time = time()
+		def handle_speed_update(self, completed, start_time, force_update=False):
+			now = time()
+			period = now - self.last_speed_time
+			if period > 1 or force_update:
+				print '%.02f, %.02f' % ((completed-self.last_size)/period, completed/(now-start_time))
 				self.last_speed_time = time()
-				self.last_size = 0
-			def handle_http_status_error(self):
-				http_client.handle_http_status_error(self)
-				print 'http status error:', self.status_code, self.status_text
-			def handle_data(self, data):
-				output.write(data)
-			def handle_status_update(self, total, completed, force_update=False):
-				if total is None:
-					return
-				if time() - self.last_status_time > 1 or force_update:
-					print '%.02f' % (completed*100.0/total)
-					self.last_status_time = time()
-			def handle_speed_update(self, completed, start_time, force_update=False):
-				now = time()
-				period = now - self.last_speed_time
-				if period > 1 or force_update:
-					print '%.02f, %.02f' % ((completed-self.last_size)/period, completed/(now-start_time))
-					self.last_speed_time = time()
-					self.last_size = completed
-		client = download_client(url)
-		asyncore.loop()
+				self.last_size = completed
+		def __del__(self): # XXX: sometimes handle_close() is not called, don't know why...
+			#http_client.__del__(self)
+			if self.output:
+				self.output.close()
+				self.output = None
+	client = download_client(url)
+	asyncore.loop()
 
 
 
