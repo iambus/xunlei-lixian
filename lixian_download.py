@@ -4,7 +4,8 @@ import asynchat
 import socket
 import re
 from cStringIO import StringIO
-from time import time
+from time import time, sleep
+import sys
 
 #asynchat.async_chat.ac_out_buffer_size = 1024*1024
 
@@ -16,8 +17,6 @@ class http_client(asynchat.async_chat):
 		host, port, path = re.match(r'http://([^/]+)(?:(\d+))?(/.*)?$', url).groups()
 		port = int(port or 80)
 		path = path or '/'
-		self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.connect((host, port))
 
 		self.user_headers = headers
 		request_headers = {'host': host, 'connection': 'close'}
@@ -36,6 +35,13 @@ class http_client(asynchat.async_chat):
 		self.set_terminator("\r\n\r\n")
 		self.reading_headers = True
 
+		self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+		try:
+			self.connect((host, port))
+		except:
+			self.close()
+			self.log_error('connect_failed')
+
 	def handle_connect(self):
 		self.start_time = time()
 		self.push(self.request)
@@ -44,11 +50,17 @@ class http_client(asynchat.async_chat):
 		asynchat.async_chat.handle_close(self)
 		self.handle_status_update(self.size, self.completed, force_update=True)
 		self.handle_speed_update(self.completed, self.start_time, force_update=True)
+	def close(self):
+		asyncore.dispatcher.close(self)
+
+	def handle_connection_error(self):
+		self.handle_error()
 
 	def handle_error(self):
+		print 'handle_error', self
 		self.close()
-		raise
-		#asynchat.async_chat.handle_error(self)
+		self.log_error('there is some error')
+		#raise
 
 	def collect_incoming_data(self, data):
 		if self.reading_headers:
@@ -65,6 +77,8 @@ class http_client(asynchat.async_chat):
 		self.completed += len(data)
 		self.handle_status_update(self.size, self.completed)
 		self.handle_speed_update(self.completed, self.start_time)
+		if self.size == self.completed:
+			self.close()
 
 	def handle_data(self, data):
 		print len(data)
@@ -118,12 +132,17 @@ class http_client(asynchat.async_chat):
 		new_client = self.__class__(location, headers=self.user_headers)
 		new_client.relocate_times = relocate_times + 1
 		new_client.max_relocate_times = max_relocate_times
+		self.next_client = new_client
 
 	def handle_status_update(self, total, completed, force_update=False):
 		pass
 
 	def handle_speed_update(self, completed, start_time, force_update=False):
 		pass
+
+	def log_error(self, message):
+		print 'log_error', message
+		self.error_message = message
 
 
 def download(url, path, headers=None):
@@ -167,8 +186,21 @@ def download(url, path, headers=None):
 			if self.output:
 				self.output.close()
 				self.output = None
-	client = download_client(url)
-	asyncore.loop()
+	
+	max_retry_times = 10
+	retry_times = 0
+	while True:
+		client = download_client(url)
+		asyncore.loop()
+		while hasattr(client, 'next_client'):
+			client = client.next_client
+		if getattr(client, 'error_message', None):
+			retry_times += 1
+			if retry_times >= max_retry_times:
+				raise Exception(client.error_message)
+			print 'retry', retry_times
+		else:
+			break
 
 
 
