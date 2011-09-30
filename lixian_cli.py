@@ -178,6 +178,7 @@ def search_tasks(client, args, status='all', check=True):
 		elif args.file or args.name:
 			matched = filter_tasks(tasks, 'name', x)
 		elif args.url:
+			print '2'
 			matched = filter_tasks(tasks, 'original_url', x)
 		else:
 			if re.match(r'^\d+$', x):
@@ -275,7 +276,7 @@ def restart_task(args):
 
 def lixian_info(args):
 	args = parse_login_command_line(args)
-	client = XunleiClient(args.username, args.password, args.cookies)
+	client = XunleiClient(args.username, args.password, args.cookies, login=False)
 	print 'id:', client.get_cookie('.xunlei.com', 'usernewno')
 	print 'internalid:', client.get_cookie('.xunlei.com', 'userid')
 	print 'gdriveid:', client.get_gdriveid()
