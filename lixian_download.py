@@ -50,8 +50,6 @@ class http_client(asynchat.async_chat):
 		asynchat.async_chat.handle_close(self)
 		self.handle_status_update(self.size, self.completed, force_update=True)
 		self.handle_speed_update(self.completed, self.start_time, force_update=True)
-	def close(self):
-		asyncore.dispatcher.close(self)
 
 	def handle_connection_error(self):
 		self.handle_error()
@@ -79,6 +77,8 @@ class http_client(asynchat.async_chat):
 		self.handle_speed_update(self.completed, self.start_time)
 		if self.size == self.completed:
 			self.close()
+			self.handle_status_update(self.size, self.completed, force_update=True)
+			self.handle_speed_update(self.completed, self.start_time, force_update=True)
 
 	def handle_data(self, data):
 		print len(data)
