@@ -110,9 +110,14 @@ class http_client(asynchat.async_chat):
 		self.close()
 
 	def handle_http_relocate(self, location):
-		# TODO: detect dead loop
 		self.close()
-		self.__class__(location, headers=self.user_headers)
+		relocate_times = getattr(self, 'relocate_times', 1)
+		max_relocate_times = getattr(self, 'max_relocate_times', 0)
+		if relocate_times >= max_relocate_times:
+			raise Exception('too many relocate times')
+		new_client = self.__class__(location, headers=self.user_headers)
+		new_client.relocate_times = relocate_times + 1
+		new_client.max_relocate_times = max_relocate_times
 
 	def handle_status_update(self, total, completed, force_update=False):
 		pass
