@@ -194,7 +194,6 @@ def search_tasks(client, args, status='all', check=True):
 		elif args.file or args.name:
 			matched = filter_tasks(tasks, 'name', x)
 		elif args.url:
-			print '2'
 			matched = filter_tasks(tasks, 'original_url', x)
 		else:
 			if re.match(r'^\d+$', x):
