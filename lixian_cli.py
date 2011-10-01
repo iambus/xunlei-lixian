@@ -277,8 +277,8 @@ def restart_task(args):
 def lixian_info(args):
 	args = parse_login_command_line(args)
 	client = XunleiClient(args.username, args.password, args.cookies, login=False)
-	print 'id:', client.get_cookie('.xunlei.com', 'usernewno')
-	print 'internalid:', client.get_cookie('.xunlei.com', 'userid')
+	print 'id:', client.get_username()
+	print 'internalid:', client.get_userid()
 	print 'gdriveid:', client.get_gdriveid()
 
 def execute_command(args=sys.argv[1:]):

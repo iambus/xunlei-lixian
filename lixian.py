@@ -54,6 +54,9 @@ class XunleiClient:
 		else:
 			raise Exception('Probably login failed')
 
+	def get_username(self):
+		return self.get_cookie('.xunlei.com', 'usernewno')
+
 	def get_gdriveid(self):
 		return self.get_cookie('.vip.xunlei.com', 'gdriveid')
 
