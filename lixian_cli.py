@@ -218,7 +218,7 @@ def list_task(args):
 									default={'task-id': True, 'name': True, 'status': True})
 	client = XunleiClient(args.username, args.password, args.cookies)
 	client.set_page_size(100)
-	if args.id or args.file or args.url:
+	if args.id or args.file or args.url or len(args):
 		tasks = search_tasks(client, args, status=(args.completed and 'completed' or 'all'), check=False)
 	elif args.completed:
 		tasks = client.read_all_completed()
