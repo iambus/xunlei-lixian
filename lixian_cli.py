@@ -42,11 +42,16 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
 
 	class Args(object):
 		def __init__(self, args, left):
-			self._args = args
-			self._left = left
-			#self.__dict__.update(args)
+			self.__dict__['_args'] = args
+			self.__dict__['_left'] = left
 		def __getattr__(self, k):
-			return self._args.get(k, None) or self._args.get(k.replace('_', '-'), None)
+			v = self._args.get(k, None)
+			if v:
+				return v
+			if '_' in k:
+				return self._args.get(k.replace('_', '-'), None)
+		def __setattr__(self, k, v):
+			self._args[k] = v
 		def __getitem__(self, i):
 			return self._left[i]
 		def __len__(self):
@@ -90,20 +95,27 @@ python lixian_cli.py logout
 '''
 
 def login(args):
-	args = parse_command_line(args, ['cookies'], default={'cookies': LIXIAN_DEFAULT_COOKIES})
+	args = parse_login_command_line(args)
 	if args.cookies == '-':
 		args._args['cookies'] = None
-	if len(args) < 2:
+	if len(args) < 1:
 		raise RuntimeError('Not enough arguments')
+	elif len(args) == 1:
+		args.username = XunleiClient(cookie_path=args.cookies, login=False).get_username()
+		args.password = args[0]
+	elif len(args) == 2:
+		args.username, args.password = list(args)
+	elif len(args) == 3:
+		args.username, args.password, args.cookies = list(args)
 	elif len(args) > 3:
 		raise RuntimeError('Too many arguments')
-	elif len(args) == 3:
-		args._arg['cookies'] = args[2]
+	if not args.username:
+		raise RuntimeError("What's your name?")
 	if args.cookies:
 		print 'Saving login session to', args.cookies
 	else:
 		print 'Testing login without saving session'
-	client = XunleiClient(args[0], args[1], args.cookies)
+	client = XunleiClient(args.username, args.password, args.cookies)
 
 def logout(args):
 	args = parse_command_line(args, ['cookies'], default={'cookies': LIXIAN_DEFAULT_COOKIES})

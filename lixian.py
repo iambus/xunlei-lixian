@@ -24,6 +24,11 @@ class XunleiClient:
 		if login:
 			if not self.has_logged_in():
 				if not username:
+					if self.has_cookie('.xunlei.com', 'usernewno'):
+						username = self.get_username()
+					else:
+						raise NotImplementedError('user is not logged in')
+				if not password:
 					raise NotImplementedError('user is not logged in')
 				self.login(username, password)
 			else:
