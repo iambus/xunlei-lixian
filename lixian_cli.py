@@ -136,13 +136,17 @@ def urllib2_download(client, download_url, filename):
 	with open(filename, 'wb') as output:
 		shutil.copyfileobj(response, output)
 
+def asyn_download(client, download_url, filename):
+	import lixian_download
+	lixian_download.download(download_url, filename, headers={'Cookie': 'gdriveid='+str(client.get_gdriveid())})
+
 def wget_download(client, download_url, filename):
 	gdriveid = str(client.get_gdriveid())
 	subprocess.call(['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename])
 
 def download(args):
 	args = parse_login_command_line(args, ['tool', 'output'], ['id', 'name', 'url'], alias={'o', 'output'}, default={'tool':'wget'})
-	download = {'wget':wget_download, 'urllib2':urllib2_download}[args.tool]
+	download = {'wget':wget_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
 	if len(args) > 1:
 		raise NotImplementedError()
 	elif len(args) == 1:
