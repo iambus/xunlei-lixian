@@ -144,6 +144,70 @@ class http_client(asynchat.async_chat):
 		print 'log_error', message
 		self.error_message = message
 
+class ProgressBar:
+	def __init__(self, total=0):
+		self.total = total
+		self.completed = 0
+		self.start = time()
+		self.speed = 0
+	def update(self):
+		bar_size = 40
+		if self.total:
+			percent = int(self.completed*100/self.total)
+			if percent > 100:
+				percent = 100
+			dots = bar_size * percent / 100
+			plus = percent - dots * bar_size / 100
+			if plus > 0.8:
+				plus = '='
+			elif plus > 0.4:
+				plu = '>'
+			else:
+				plus = ''
+			bar = '=' * dots + plus
+		else:
+			percent = 0
+			bar = '-'
+		speed = self.speed
+		if speed < 1000:
+			speed = '%sB/s' % int(speed)
+		elif speed < 1000*100:
+			speed = '%.1fK/s' % (speed/1000.0)
+		elif speed < 1000*1000:
+			speed = '%dK/s' % int(speed/1000)
+		elif speed < 1000*1000*100:
+			speed = '%.1fM/s' % (speed/1000.0/1000.0)
+		else:
+			speed = '%dM/s' % int(speed/1000/1000)
+		seconds = time() - self.start
+		if seconds < 10:
+			seconds = '%.1fs' % seconds
+		elif seconds < 60:
+			seconds = '%ds' % int(seconds)
+		elif seconds < 60*60:
+			seconds = '%dm%ds' % (int(seconds/60), int(seconds)%60)
+		elif seconds < 60*60*24:
+			seconds = '%dh%dm%ds' % (int(seconds)/60/60, (int(seconds)/60)%60, int(seconds)%60)
+		else:
+			seconds = int(seconds)
+			days = seconds/60/60/24
+			seconds -= days*60*60*24
+			hours = seconds/60/60
+			seconds -= hours*60*60
+			minutes = seconds/60
+			seconds -= minutes*60
+			seconds = '%dd%dh%dm%ds' % (days, hours, minutes, seconds)
+		bar = '{:>3}%[{:<40}] {:<12,} {:>4} in {}'.format(percent, bar, self.completed, speed, seconds)
+		sys.stdout.write('\r'+bar+'')
+		sys.stdout.flush()
+	def update_status(self, total, completed):
+		self.total = total
+		self.completed = completed
+		self.update()
+	def update_speed(self, start, speed):
+		self.start = start
+		self.speed = speed
+		self.update()
 
 def download(url, path, headers=None):
 	class download_client(http_client):
@@ -154,6 +218,7 @@ def download(url, path, headers=None):
 			self.last_size = 0
 			self.path = path
 			self.output = None
+			self.bar = ProgressBar()
 		def handle_connect(self):
 			http_client.handle_connect(self)
 		def handle_close(self):
@@ -172,13 +237,15 @@ def download(url, path, headers=None):
 			if total is None:
 				return
 			if time() - self.last_status_time > 1 or force_update:
-				print '%.02f' % (completed*100.0/total)
+				#print '%.02f' % (completed*100.0/total)
+				self.bar.update_status(total, completed)
 				self.last_status_time = time()
 		def handle_speed_update(self, completed, start_time, force_update=False):
 			now = time()
 			period = now - self.last_speed_time
 			if period > 1 or force_update:
-				print '%.02f, %.02f' % ((completed-self.last_size)/period, completed/(now-start_time))
+				#print '%.02f, %.02f' % ((completed-self.last_size)/period, completed/(now-start_time))
+				self.bar.update_speed(start_time, (completed-self.last_size)/period)
 				self.last_speed_time = time()
 				self.last_size = completed
 		def __del__(self): # XXX: sometimes handle_close() is not called, don't know why...
