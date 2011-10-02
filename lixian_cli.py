@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 from lixian import XunleiClient
 import subprocess
