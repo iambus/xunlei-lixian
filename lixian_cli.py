@@ -75,7 +75,7 @@ def usage():
 python lixian_cli.py list
 python lixian_cli.py list --completed
 python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-task-id
-python lixian_cli.py list path" --name zip
+python lixian_cli.py list --file zip
 
 python lixian_cli.py download ed2k-url
 python lixian_cli.py download --tool wget ed2k-url
