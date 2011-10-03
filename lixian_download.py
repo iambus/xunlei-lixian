@@ -55,9 +55,9 @@ class http_client(asynchat.async_chat):
 		self.handle_error()
 
 	def handle_error(self):
-		print 'handle_error', self
 		self.close()
-		self.log_error('there is some error')
+		error_message = sys.exc_info()[1]
+		self.log_error('there is some error: %s' % error_message)
 		#raise
 
 	def collect_incoming_data(self, data):
