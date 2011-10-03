@@ -7,6 +7,10 @@ import os
 import os.path
 import re
 
+default_encoding = sys.getfilesystemencoding()
+if default_encoding is None or default_encoding.lower() == 'ascii':
+	default_encoding = 'utf-8'
+
 LIXIAN_DEFAULT_COOKIES = os.path.join(os.getenv('USERPROFILE') or os.getenv('HOME'), '.xunlei.lixian.cookies')
 
 def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
@@ -231,7 +235,7 @@ def list_task(args):
 			if k == 'task-id':
 				print t['id'],
 			elif k == 'name':
-				print t['name'],
+				print t['name'].encode(default_encoding),
 			elif k == 'status':
 				print t['status_text'],
 			elif k == 'original-url':
