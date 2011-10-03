@@ -149,6 +149,11 @@ def wget_download(client, download_url, filename):
 	gdriveid = str(client.get_gdriveid())
 	subprocess.call(['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename])
 
+def escape_filename(name):
+	name = re.sub(r'&amp;', '&', name, flags=re.I)
+	name = re.sub(r'[\\/:*?"<>|]', '-', name)
+	return name
+
 def download(args):
 	args = parse_login_command_line(args, ['tool', 'output'], ['id', 'name', 'url'], alias={'o', 'output'}, default={'tool':'wget'})
 	download = {'wget':wget_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
@@ -172,7 +177,7 @@ def download(args):
 	task = tasks[0]
 
 	download_url = str(task['xunlei_url'])
-	filename = args.output or task['name'].encode(default_encoding)
+	filename = args.output or escape_filename(task['name']).encode(default_encoding)
 	referer = str(client.get_referer())
 	gdriveid = str(client.get_gdriveid())
 
