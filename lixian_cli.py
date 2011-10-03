@@ -172,7 +172,7 @@ def download(args):
 	task = tasks[0]
 
 	download_url = str(task['xunlei_url'])
-	filename = args.output or task['name'].encode(sys.getfilesystemencoding())
+	filename = args.output or task['name'].encode(default_encoding)
 	referer = str(client.get_referer())
 	gdriveid = str(client.get_gdriveid())
 
