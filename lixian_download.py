@@ -266,6 +266,7 @@ def download(url, path, headers=None):
 			if retry_times >= max_retry_times:
 				raise Exception(client.error_message)
 			print 'retry', retry_times
+			sleep(retry_times)
 		else:
 			break
 
