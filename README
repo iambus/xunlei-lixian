@@ -8,6 +8,7 @@ python lixian_cli.py list --completed --name --original-url --download-url --no-
 python lixian_cli.py list --file zip
 
 python lixian_cli.py download ed2k-url
+python lixian_cli.py download --id task-id
 python lixian_cli.py download --tool wget ed2k-url
 python lixian_cli.py download --tool urllib2 ed2k-url
 python lixian_cli.py download --tool wget ed2k-url --output "file to save"
