@@ -47,9 +47,12 @@ class http_client(asynchat.async_chat):
 		self.push(self.request)
 
 	def handle_close(self):
+		self.flush_data()
 		asynchat.async_chat.handle_close(self)
 		self.handle_status_update(self.size, self.completed, force_update=True)
 		self.handle_speed_update(self.completed, self.start_time, force_update=True)
+		if self.size is not None and self.completed < self.size:
+			self.log_error('incompleted download')
 
 	def handle_connection_error(self):
 		self.handle_error()
@@ -83,6 +86,10 @@ class http_client(asynchat.async_chat):
 	def handle_data(self, data):
 		print len(data)
 		pass
+
+	def flush_data(self):
+		self.handle_data(self.buffer.getvalue())
+		self.buffer.truncate(0)
 
 	def parse_headers(self, header):
 		lines = header.split('\r\n')
@@ -199,9 +206,9 @@ class ProgressBar:
 			seconds -= minutes*60
 			seconds = '%dd%dh%dm%ds' % (days, hours, minutes, seconds)
 		bar = '{:>3}%[{:<40}] {:<12,} {:>4} in {:>6s}'.format(percent, bar, self.completed, speed, seconds)
-		bar.ljust(self.bar_width)
+		bar = bar.ljust(self.bar_width)
 		self.bar_width = len(bar)
-		sys.stdout.write('\r'+bar+'')
+		sys.stdout.write('\r'+bar)
 		sys.stdout.flush()
 	def update_status(self, total, completed):
 		self.total = total
