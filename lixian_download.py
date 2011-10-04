@@ -271,6 +271,7 @@ def download(url, path, headers=None):
 			print 'retry', retry_times
 			sleep(retry_times)
 		else:
+			print
 			break
 
 
