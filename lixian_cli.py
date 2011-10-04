@@ -222,7 +222,7 @@ def search_tasks(client, args, status='all', check=True):
 def list_task(args):
 	args = parse_login_command_line(args, [],
 	                                ['all', 'completed',
-	                                 'task-id', 'name', 'status', 'original-url', 'download-url',
+	                                 'task-id', 'name', 'status', 'size', 'original-url', 'download-url',
 	                                 'id', 'file', 'url',],
 									default={'task-id': True, 'name': True, 'status': True})
 	client = XunleiClient(args.username, args.password, args.cookies)
@@ -233,7 +233,7 @@ def list_task(args):
 		tasks = client.read_all_completed()
 	else:
 		tasks = client.read_all_tasks()
-	columns = ['task-id', 'name', 'status', 'original-url', 'download-url']
+	columns = ['task-id', 'name', 'status', 'size', 'original-url', 'download-url']
 	columns = filter(lambda k: getattr(args, k), columns)
 	for t in tasks:
 		for k in columns:
@@ -243,6 +243,8 @@ def list_task(args):
 				print t['name'].encode(default_encoding),
 			elif k == 'status':
 				print t['status_text'],
+			elif k == 'size':
+				print t['size'],
 			elif k == 'original-url':
 				print t['original_url'],
 			elif k == 'download-url':
