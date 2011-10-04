@@ -51,7 +51,7 @@ class XunleiClient:
 		return self.cookiejar._cookies[domain]['/'][k].value
 
 	def has_cookie(self, domain, k):
-		return k in self.cookiejar._cookies[domain]['/']
+		return domain in self.cookiejar._cookies and k in self.cookiejar._cookies[domain]['/']
 
 	def get_userid(self):
 		if self.has_cookie('.xunlei.com', 'userid'):
