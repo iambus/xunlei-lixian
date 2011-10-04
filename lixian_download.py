@@ -11,15 +11,18 @@ import sys
 
 class http_client(asynchat.async_chat):
 
-	def __init__(self, url, headers=None):
+	def __init__(self, url, headers=None, start_from=0):
 		asynchat.async_chat.__init__(self)
+
+		self.args = {'headers': headers, 'start_from': start_from}
 
 		host, port, path = re.match(r'http://([^/]+)(?:(\d+))?(/.*)?$', url).groups()
 		port = int(port or 80)
 		path = path or '/'
 
-		self.user_headers = headers
 		request_headers = {'host': host, 'connection': 'close'}
+		if start_from:
+			request_headers['RANGE'] = 'bytes=%d-' % start_time
 		if headers:
 			request_headers.update(headers)
 		headers = request_headers
@@ -136,7 +139,7 @@ class http_client(asynchat.async_chat):
 		max_relocate_times = getattr(self, 'max_relocate_times', 1)
 		if relocate_times >= max_relocate_times:
 			raise Exception('too many relocate times')
-		new_client = self.__class__(location, headers=self.user_headers)
+		new_client = self.__class__(location, **self.args)
 		new_client.relocate_times = relocate_times + 1
 		new_client.max_relocate_times = max_relocate_times
 		self.next_client = new_client
@@ -219,10 +222,11 @@ class ProgressBar:
 		self.speed = speed
 		self.update()
 
-def download(url, path, headers=None):
+def download(url, path, headers=None, resuming=False):
 	class download_client(http_client):
-		def __init__(self, url, headers=headers):
-			http_client.__init__(self, url, headers=headers)
+		def __init__(self, url, headers=headers, start_from=0):
+			http_client.__init__(self, url, headers=headers, start_from=start_from)
+			self.start_from = start_from
 			self.last_status_time = time()
 			self.last_speed_time = time()
 			self.last_size = 0
@@ -241,7 +245,10 @@ def download(url, path, headers=None):
 			print 'http status error:', self.status_code, self.status_text
 		def handle_data(self, data):
 			if not self.output:
-				self.output = open(path, 'wb')
+				if self.start_from:
+					self.output = open(path, 'ab')
+				else:
+					self.output = open(path, 'wb')
 			self.output.write(data)
 		def handle_status_update(self, total, completed, force_update=False):
 			if total is None:
@@ -266,8 +273,11 @@ def download(url, path, headers=None):
 	
 	max_retry_times = 10
 	retry_times = 0
+	start_from = 0
+	if resuming and os.path.exists(path):
+		start_from = os.path.getsize(path)
 	while True:
-		client = download_client(url)
+		client = download_client(url, start_from=start_from)
 		asyncore.loop()
 		while hasattr(client, 'next_client'):
 			client = client.next_client
@@ -275,6 +285,8 @@ def download(url, path, headers=None):
 			retry_times += 1
 			if retry_times >= max_retry_times:
 				raise Exception(client.error_message)
+			if client.size and client.completed:
+				start_from = os.path.getsize(path)
 			print 'retry', retry_times
 			sleep(retry_times)
 		else:
