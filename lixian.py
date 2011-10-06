@@ -212,6 +212,34 @@ class XunleiClient:
 		response = self.urlopen(url, data=data).read()
 		assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0'</script>" % self.id
 
+	def add_torrent_task(self, path):
+		upload_url = 'http://dynamic.cloud.vip.xunlei.com/interface/torrent_upload'
+		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit'
+
+		with open(path, 'rb') as x:
+			content_type, body = encode_multipart_formdata([], [('filepath', path, x.read())])
+			response = self.urlopen(upload_url, data=body, headers={'Content-Type': content_type}).read().decode('utf-8')
+
+		upload_success = re.search(r'<script>document\.domain="xunlei\.com";var btResult =(\{.*\});</script>', response, flags=re.S)
+		if upload_success:
+			bt = json.loads(upload_success.group(1))
+			bt_hash = bt['infoid']
+			bt_name = bt['ftitle']
+			bt_size = bt['btsize']
+			data = {'uid':self.id, 'btname':bt_name, 'cid':bt_hash, 'tsize':bt_size,
+					'findex':''.join(f['id']+'_' for f in bt['filelist']),
+					'size':''.join(f['subsize']+'_' for f in bt['filelist']),
+					'from':'0'}
+			response = self.urlopen(commit_url, data=data).read()
+			assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0'</script>" % self.id
+			return
+		already_exists = re.search(r"parent\.edit_bt_list\((\{.*\}),''\)", response, flags=re.S)
+		if already_exists:
+			raise NotImplementedError()
+			print json.loads(already_exists.group(1))
+			return
+		raise NotImplementedError()
+
 	def delete_tasks_by_id(self, ids):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_delete?type=%s&taskids=%s&noCacheIE=%s' % (2, ','.join(ids)+',', current_timestamp()) # XXX: what is 'type'?
 		response = json.loads(re.match(r'^delete_task_resp\((.+)\)$', self.urlopen(url).read()).group(1))
@@ -322,5 +350,36 @@ def parse_bt_list(js):
 			'xunlei_url': record['downurl'],
 			})
 	return files
+
+def encode_multipart_formdata(fields, files):
+	#http://code.activestate.com/recipes/146306/
+	"""
+	fields is a sequence of (name, value) elements for regular form fields.
+	files is a sequence of (name, filename, value) elements for data to be uploaded as files
+	Return (content_type, body) ready for httplib.HTTP instance
+	"""
+	BOUNDARY = '----------ThIs_Is_tHe_bouNdaRY_$'
+	CRLF = '\r\n'
+	L = []
+	for (key, value) in fields:
+		L.append('--' + BOUNDARY)
+		L.append('Content-Disposition: form-data; name="%s"' % key)
+		L.append('')
+		L.append(value)
+	for (key, filename, value) in files:
+		L.append('--' + BOUNDARY)
+		L.append('Content-Disposition: form-data; name="%s"; filename="%s"' % (key, filename))
+		L.append('Content-Type: %s' % get_content_type(filename))
+		L.append('')
+		L.append(value)
+	L.append('--' + BOUNDARY + '--')
+	L.append('')
+	body = CRLF.join(L)
+	content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
+	return content_type, body
+
+def get_content_type(filename):
+	import mimetypes
+	return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
 
 
