@@ -149,7 +149,9 @@ def asyn_download(client, download_url, filename):
 
 def wget_download(client, download_url, filename):
 	gdriveid = str(client.get_gdriveid())
-	subprocess.call(['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename])
+	exit_code = subprocess.call(['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename])
+	if exit_code != 0:
+		raise Exception('wget exited abnormaly')
 
 def escape_filename(name):
 	name = re.sub(r'&amp;', '&', name, flags=re.I)
@@ -184,6 +186,11 @@ def download(args):
 	gdriveid = str(client.get_gdriveid())
 
 	download(client, download_url, filename)
+	if task['type'] == 'ed2k':
+		ed2k_link = task['original_url']
+		from lixian_hash_ed2k import verify_ed2k_link
+		if not verify_ed2k_link(filename, ed2k_link):
+			raise Exception('ed2k hash check failed')
 
 def filter_tasks(tasks, k, v):
 	if k == 'name':
