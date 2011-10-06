@@ -86,8 +86,10 @@ python lixian_cli.py download ed2k-url
 python lixian_cli.py download --id task-id
 python lixian_cli.py download --tool wget ed2k-url
 python lixian_cli.py download --tool asyn ed2k-url
-python lixian_cli.py download --tool urllib2 ed2k-url
 python lixian_cli.py download ed2k-url --output "file to save"
+python lixian_cli.py download --input download-urls-file
+python lixian_cli.py download --input download-urls-file --delete
+python lixian_cli.py download --input download-urls-file --ouput-dir root-dir-to-save-files
 
 python lixian_cli.py add url
 
