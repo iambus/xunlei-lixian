@@ -20,6 +20,12 @@ class http_client(asynchat.async_chat):
 		host, port, path = re.match(r'http://([^/]+)(?:(\d+))?(/.*)?$', url).groups()
 		port = int(port or 80)
 		path = path or '/'
+		if socket.gethostbyname(host) == '180.168.41.175':
+			# fuck shanghai dian DNS
+			self.log_error('gethostbyname failed')
+			self.size = None
+			return
+
 
 		request_headers = {'host': host, 'connection': 'close'}
 		if start_from:
