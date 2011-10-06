@@ -168,7 +168,7 @@ class ProgressBar:
 			if percent > 100:
 				percent = 100
 			dots = bar_size * percent / 100
-			plus = percent - dots * bar_size / 100
+			plus = percent - dots / bar_size * 100
 			if plus > 0.8:
 				plus = '='
 			elif plus > 0.4:
@@ -292,6 +292,5 @@ def download(url, path, headers=None, resuming=False):
 		else:
 			print
 			break
-
 
 
