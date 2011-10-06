@@ -265,6 +265,10 @@ def link_equals(x1, x2):
 		import urllib
 		x1 = urllib.unquote(x1)
 		x2 = urllib.unquote(x2)
+		if type(x1) == str and type(x2) == unicode:
+			x1 = x1.decode('utf-8')
+		elif type(x1) == unicode and type(x1) == str:
+			x2 = x2.decode('utf-8')
 		return x1 == x2
 	else:
 		return x1 == x2
