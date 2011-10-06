@@ -2,6 +2,7 @@
 import hashlib
 
 chunk_size = 9728000
+buffer_size = 1024*1024
 
 def md4():
 	return hashlib.new('md4')
@@ -12,7 +13,7 @@ def hash_stream(stream):
 		chunk_md4 = md4()
 		chunk_left = chunk_size
 		while chunk_left:
-			n = min(chunk_left, 1024*1024)
+			n = min(chunk_left, buffer_size)
 			part = stream.read(n)
 			chunk_md4.update(part)
 			if len(part) < n:
@@ -44,5 +45,20 @@ def test_md4():
 	assert hash_string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789") == '043f8582f241db351ce627e153e7f0e4'
 	assert hash_string("12345678901234567890123456789012345678901234567890123456789012345678901234567890") == 'e33b4ddc9c38f2199c3e7b164fcc0536'
 
+
+def parse_ed2k_link(link):
+	import re
+	m = re.match(r'ed2k://\|file\|[^|]*\|(\d+)\|([a-fA-F0-9]{32})\|.*/', link)
+	if not m:
+		raise Exception('not an acceptable ed2k link: '+link)
+	file_size, hash_hex = m.groups()
+	return hash_hex, int(file_size)
+
+def verify_ed2k_link(path, link):
+	hash_hex, file_size = parse_ed2k_link(link)
+	import os.path
+	if os.path.getsize(path) != file_size:
+		return False
+	return hash_file(path) == hash_hex
 
 
