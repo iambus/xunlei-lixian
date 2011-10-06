@@ -158,30 +158,9 @@ def escape_filename(name):
 	name = re.sub(r'[\\/:*?"<>|]', '-', name)
 	return name
 
-def download(args):
-	args = parse_login_command_line(args, ['tool', 'output'], ['id', 'name', 'url'], alias={'o', 'output'}, default={'tool':'wget'})
-	download = {'wget':wget_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
-	if len(args) > 1:
-		raise NotImplementedError()
-	elif len(args) == 1:
-		assert not args.url
-		args._args['url'] = args[0]
-	client = XunleiClient(args.username, args.password, args.cookies)
-	tasks = search_tasks(client, args, status='all', check=False)
-	if not tasks:
-		assert args.url
-		print 'Adding new task %s ...' % args.url
-		client.add_task(args.url)
-		tasks = client.read_all_completed()
-		tasks = filter_tasks(tasks, 'original_url', args.url)
-	elif len(tasks) > 1:
-		raise NotImplementedError()
-	elif tasks[0]['status_text'] != 'completed':
-		raise NotImplementedError()
-	task = tasks[0]
-
+def download_single_task(client, download, task, output=None):
 	download_url = str(task['xunlei_url'])
-	filename = args.output or escape_filename(task['name']).encode(default_encoding)
+	filename = output or escape_filename(task['name']).encode(default_encoding)
 	referer = str(client.get_referer())
 	gdriveid = str(client.get_gdriveid())
 
@@ -191,6 +170,52 @@ def download(args):
 		from lixian_hash_ed2k import verify_ed2k_link
 		if not verify_ed2k_link(filename, ed2k_link):
 			raise Exception('ed2k hash check failed')
+
+def download_multiple_tasks(client, download, tasks):
+	for task in tasks:
+		download_single_task(client, download, task)
+
+def download_task(args):
+	args = parse_login_command_line(args, ['tool', 'output', 'input'], ['id', 'name', 'url'], alias={'o': 'output', 'i': 'input'}, default={'tool':'wget'})
+	download = {'wget':wget_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
+	client = XunleiClient(args.username, args.password, args.cookies)
+	links = None
+	if len(args) > 1 or args.input:
+		assert not(args.id or args.name or args.url or args.output)
+		links = []
+		links.extend(args)
+		if args.input:
+			with open(args.input) as x:
+				links.extend(line.strip() for line in x.readlines() if line.strip())
+		all_tasks = client.read_all_tasks()
+		to_add = set(links)
+		for t in all_tasks:
+			if t['original_url'] in to_add:
+				to_add.remove(t['original_url'])
+		if to_add:
+			print 'Adding below tasks:'
+			for link in to_add:
+				print link
+			for link in to_add:
+				client.add_task(link) # TODO: use batch add
+			all_tasks = client.read_all_tasks()
+		download_multiple_tasks(client, download, filter(lambda t: t['original_url'] in links, all_tasks))
+	else:
+		if len(args) == 1:
+			assert not args.url
+			args.url = args[0]
+		tasks = search_tasks(client, args, status='all', check=False)
+		if not tasks:
+			assert args.url
+			print 'Adding new task %s ...' % args.url
+			client.add_task(args.url)
+			tasks = client.read_all_completed()
+			tasks = filter_tasks(tasks, 'original_url', args.url)
+		if args.output:
+			assert len(tasks) == 1
+			download_single_task(client, download, task, args.output)
+		else:
+			download_multiple_tasks(client, download, tasks)
 
 def filter_tasks(tasks, k, v):
 	if k == 'name':
@@ -331,7 +356,7 @@ def execute_command(args=sys.argv[1:]):
 			usage()
 			sys.exit(1)
 		sys.exit(0)
-	commands = {'login': login, 'logout': logout, 'download': download, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'info': lixian_info}
+	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'info': lixian_info}
 	if command not in commands:
 		usage()
 		sys.exit(1)
