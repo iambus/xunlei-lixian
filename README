@@ -1,6 +1,7 @@
 Python script to download from xunlei cloud
 
 python lixian_cli.py login "Your Xunlei account" "Your password"
+python lixian_cli.py login "Your password"
 
 python lixian_cli.py list
 python lixian_cli.py list --completed

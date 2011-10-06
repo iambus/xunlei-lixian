@@ -75,6 +75,7 @@ def parse_login_command_line(args, keys=[], bools=[], alias={}, default={}):
 
 def usage():
 	print '''python lixian_cli.py login "Your Xunlei account" "Your password"
+python lixian_cli.py login "Your password"
 
 python lixian_cli.py list
 python lixian_cli.py list --completed
@@ -159,6 +160,7 @@ def escape_filename(name):
 	return name
 
 def download_single_task(client, download, task, output=None, output_dir=None, delete=False):
+	assert task['status_text'] == 'completed'
 	download_url = str(task['xunlei_url'])
 	#filename = output or escape_filename(task['name']).encode(default_encoding)
 	if output:
@@ -170,7 +172,21 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 	referer = str(client.get_referer())
 	gdriveid = str(client.get_gdriveid())
 
-	download(client, download_url, filename)
+	if task['type'] == 'bt':
+		dirname = filename
+		if not os.path.exists(dirname):
+			os.makedirs(dirname)
+		files = client.list_bt(task)
+		for f in files:
+			name = f['name'].encode(default_encoding)
+			print 'Downloading', name, '...'
+			path = os.path.join(dirname, name)
+			download_url = str(f['xunlei_url'])
+			download(client, download_url, path)
+	else:
+		print 'Downloading', os.path.basename(filename), '...'
+		download(client, download_url, filename)
+
 	if task['type'] == 'ed2k':
 		ed2k_link = task['original_url']
 		from lixian_hash_ed2k import verify_ed2k_link
