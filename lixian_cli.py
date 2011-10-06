@@ -134,8 +134,9 @@ def logout(args):
 	client = XunleiClient(cookie_path=args.cookies, login=False)
 	client.logout()
 
-def urllib2_download(client, download_url, filename):
+def urllib2_download(client, download_url, filename, resuming=False):
 	'''In the case you don't even have wget...'''
+	assert not resuming
 	print 'Downloading', download_url, 'to', filename, '...'
 	import urllib2
 	request = urllib2.Request(download_url, headers={'Cookie': 'gdriveid='+client.get_gdriveid()})
@@ -144,13 +145,16 @@ def urllib2_download(client, download_url, filename):
 	with open(filename, 'wb') as output:
 		shutil.copyfileobj(response, output)
 
-def asyn_download(client, download_url, filename):
+def asyn_download(client, download_url, filename, resuming=False):
 	import lixian_download
-	lixian_download.download(download_url, filename, headers={'Cookie': 'gdriveid='+str(client.get_gdriveid())})
+	lixian_download.download(download_url, filename, headers={'Cookie': 'gdriveid='+str(client.get_gdriveid())}, resuming=resuming)
 
-def wget_download(client, download_url, filename):
+def wget_download(client, download_url, filename, resuming=False):
 	gdriveid = str(client.get_gdriveid())
-	exit_code = subprocess.call(['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename])
+	wget_opts = ['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename]
+	if resuming:
+		wget_opts.append('-c')
+	exit_code = subprocess.call(wget_opts)
 	if exit_code != 0:
 		raise Exception('wget exited abnormaly')
 
@@ -159,8 +163,19 @@ def escape_filename(name):
 	name = re.sub(r'[\\/:*?"<>|]', '-', name)
 	return name
 
-def download_single_task(client, download, task, output=None, output_dir=None, delete=False):
+def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False):
 	assert task['status_text'] == 'completed'
+	def download1(client, url, path, size):
+		if not resuming:
+			download(client, url, path)
+		else:
+			assert os.path.getsize(path) <= size
+			if os.path.getsize(path) < size:
+				download(client, url, path, resuming)
+			elif os.path.getsize(path) == size:
+				pass
+			else:
+				raise NotImplementedError()
 	download_url = str(task['xunlei_url'])
 	#filename = output or escape_filename(task['name']).encode(default_encoding)
 	if output:
@@ -182,10 +197,10 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			print 'Downloading', name, '...'
 			path = os.path.join(dirname, name)
 			download_url = str(f['xunlei_url'])
-			download(client, download_url, path)
+			download1(client, download_url, path, f['size'])
 	else:
 		print 'Downloading', os.path.basename(filename), '...'
-		download(client, download_url, filename)
+		download1(client, download_url, filename, f['size'])
 
 	if task['type'] == 'ed2k':
 		ed2k_link = task['original_url']
@@ -196,12 +211,12 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 	if delete:
 		client.delete_task(task)
 
-def download_multiple_tasks(client, download, tasks, output_dir=None, delete=False):
+def download_multiple_tasks(client, download, tasks, output_dir=None, delete=False, resuming=False):
 	for task in tasks:
-		download_single_task(client, download, task, output_dir=output_dir, delete=delete)
+		download_single_task(client, download, task, output_dir=output_dir, delete=delete, resuming=resuming)
 
 def download_task(args):
-	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'id', 'name', 'url'], alias={'o': 'output', 'i': 'input'}, default={'tool':'wget'})
+	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'id', 'name', 'url'], alias={'o': 'output', 'i': 'input'}, default={'tool':'wget'})
 	download = {'wget':wget_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
@@ -227,7 +242,7 @@ def download_task(args):
 			all_tasks = client.read_all_tasks()
 		tasks = filter(lambda t: link_in(t['original_url'], links), all_tasks)
 		# TODO: check if some task is missing
-		download_multiple_tasks(client, download, tasks, output_dir=args.output_dir, delete=args.delete)
+		download_multiple_tasks(client, download, tasks, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'])
 	else:
 		if len(args) == 1:
 			assert not args.url
@@ -241,9 +256,9 @@ def download_task(args):
 			tasks = filter_tasks(tasks, 'original_url', args.url)
 		if args.output:
 			assert len(tasks) == 1
-			download_single_task(client, download, task, args.output, output_dir=args.output_dir, delete=args.delete)
+			download_single_task(client, download, task, args.output, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'])
 		else:
-			download_multiple_tasks(client, download, tasks, output_dir=args.output_dir, delete=args.delete)
+			download_multiple_tasks(client, download, tasks, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'])
 
 def link_equals(x1, x2):
 	if x1.startswith('ed2k://') and x2.startswith('ed2k://'):
