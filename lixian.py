@@ -201,6 +201,7 @@ class XunleiClient:
 
 	def add_batch_tasks(self, urls):
 		assert urls
+		urls = list(urls)
 		#self.urlopen('http://dynamic.cloud.vip.xunlei.com/interface/batch_task_check', data={'url':'\r\n'.join(urls), 'random':current_random()})
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/batch_task_commit'
 		batch_old_taskid = '0' + ',' * (len(urls) - 1) # XXX: what is it?
