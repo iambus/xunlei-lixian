@@ -190,16 +190,17 @@ def download_task(args):
 		all_tasks = client.read_all_tasks()
 		to_add = set(links)
 		for t in all_tasks:
-			if t['original_url'] in to_add:
+			if link_in(t['original_url'], to_add):
 				to_add.remove(t['original_url'])
 		if to_add:
 			print 'Adding below tasks:'
 			for link in to_add:
 				print link
-			for link in to_add:
-				client.add_task(link) # TODO: use batch add
+			self.add_batch_task(to_add)
 			all_tasks = client.read_all_tasks()
-		download_multiple_tasks(client, download, filter(lambda t: t['original_url'] in links, all_tasks))
+		tasks = filter(lambda t: link_in(t['original_url'], links), all_tasks)
+		# TODO: check if some task is missing
+		download_multiple_tasks(client, download, tasks)
 	else:
 		if len(args) == 1:
 			assert not args.url
@@ -217,9 +218,25 @@ def download_task(args):
 		else:
 			download_multiple_tasks(client, download, tasks)
 
+def link_equals(x1, x2):
+	if x1.startswith('ed2k://') and x2.startswith('ed2k://'):
+		import urllib
+		x1 = urllib.unquote(x1)
+		x2 = urllib.unquote(x2)
+		return x1 == x2
+	else:
+		return x1 == x2
+
+def link_in(url, links):
+	for link in links:
+		if link_equals(url, link):
+			return True
+
 def filter_tasks(tasks, k, v):
 	if k == 'name':
 		matched = filter(lambda t: t[k].find(v) != -1, tasks)
+	elif k == 'original_url':
+		matched = filter(lambda t: link_equals(t[k], v), tasks)
 	else:
 		matched = filter(lambda t: t[k] == v, tasks)
 	return matched
@@ -288,17 +305,26 @@ def list_task(args):
 		print
 
 def add_task(args):
-	args = parse_login_command_line(args)
-	assert len(args)
+	args = parse_login_command_line(args, ['input'], alias={'i':'input'})
+	assert len(args) or args.input
 	client = XunleiClient(args.username, args.password, args.cookies)
-	for link in args:
-		print 'Adding ' + link
-		client.add_task(link)
-	tasks = client.read_all_tasks()
+	links = []
+	links.extend(args)
+	if args.input:
+		with open(args.input) as x:
+			links.extend(line.strip() for line in x.readlines() if line.strip())
+	print 'Adding below tasks:'
+	for link in links:
+		print link
+	client.add_batch_tasks(links)
 	print 'All tasks added. Checking status...'
-	for link in args:
-		task = filter(lambda t: t['original_url'] == link, tasks)[0]
-		print task['status_text'] + ' ' + link
+	tasks = client.read_all_tasks()
+	for link in links:
+		found = filter_tasks(tasks, 'original_url', link)
+		if found:
+			print found[0]['status_text'], link
+		else:
+			print 'unknown', link
 
 def delete_task(args):
 	args = parse_login_command_line(args, [], ['id', 'file', 'url', 'i', 'all'])

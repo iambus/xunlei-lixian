@@ -199,6 +199,19 @@ class XunleiClient:
 		response = self.urlopen(task_url).read()
 		assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid="+self.id+"&st=0'</script>"
 
+	def add_batch_tasks(self, urls):
+		assert urls
+		#self.urlopen('http://dynamic.cloud.vip.xunlei.com/interface/batch_task_check', data={'url':'\r\n'.join(urls), 'random':current_random()})
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/batch_task_commit'
+		batch_old_taskid = '0' + ',' * (len(urls) - 1) # XXX: what is it?
+		data = {}
+		for i in range(len(urls)):
+			data['cid[%d]' % i] = ''
+			data['url[%d]' % i] = urls[i]
+		data['batch_old_taskid' ] = batch_old_taskid
+		response = self.urlopen(url, data=data).read()
+		assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0'</script>" % self.id
+
 	def delete_tasks_by_id(self, ids):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_delete?type=%s&taskids=%s&noCacheIE=%s' % (2, ','.join(ids)+',', current_timestamp()) # XXX: what is 'type'?
 		response = json.loads(re.match(r'^delete_task_resp\((.+)\)$', self.urlopen(url).read()).group(1))
@@ -256,6 +269,10 @@ class XunleiClient:
 
 def current_timestamp():
 	return int(time.time()*1000)
+
+def current_random():
+	from random import randint
+	return '%s%06d.%s' % (current_timestamp(), randint(0, 999999), randint(100000000, 9999999999))
 
 def parse_link(html):
 	inputs = re.findall(r'<input[^<>]+/>', html)

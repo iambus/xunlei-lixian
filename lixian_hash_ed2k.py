@@ -47,8 +47,9 @@ def test_md4():
 
 
 def parse_ed2k_link(link):
-	import re
-	m = re.match(r'ed2k://\|file\|[^|]*\|(\d+)\|([a-fA-F0-9]{32})\|.*/', link)
+	import re, urllib
+	ed2k_re = r'ed2k://\|file\|[^|]*\|(\d+)\|([a-fA-F0-9]{32})\|.*/'
+	m = re.match(ed2k_re, link) or re.match(ed2k_re, urllib.unquote(link))
 	if not m:
 		raise Exception('not an acceptable ed2k link: '+link)
 	file_size, hash_hex = m.groups()
