@@ -172,7 +172,9 @@ class ProgressBar:
 		self.start = time()
 		self.speed = 0
 		self.bar_width = 0
+		self.displayed = False
 	def update(self):
+		self.displayed = True
 		bar_size = 40
 		if self.total:
 			percent = int(self.completed*100/self.total)
@@ -232,6 +234,9 @@ class ProgressBar:
 		self.start = start
 		self.speed = speed
 		self.update()
+	def done(self):
+		if self.displayed:
+			print
 
 def download(url, path, headers=None, resuming=False):
 	class download_client(http_client):
@@ -291,6 +296,7 @@ def download(url, path, headers=None, resuming=False):
 		asyncore.loop()
 		while hasattr(client, 'next_client'):
 			client = client.next_client
+		client.bar.done()
 		if getattr(client, 'error_message', None):
 			retry_times += 1
 			if retry_times >= max_retry_times:
@@ -300,7 +306,6 @@ def download(url, path, headers=None, resuming=False):
 			print 'retry', retry_times
 			sleep(retry_times)
 		else:
-			print
 			break
 
 
