@@ -190,8 +190,10 @@ def download_task(args):
 		all_tasks = client.read_all_tasks()
 		to_add = set(links)
 		for t in all_tasks:
-			if link_in(t['original_url'], to_add):
-				to_add.remove(t['original_url'])
+			for x in to_add:
+				if link_equals(t['original_url'], x):
+					to_add.remove(x)
+					break
 		if to_add:
 			print 'Adding below tasks:'
 			for link in to_add:

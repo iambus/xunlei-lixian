@@ -50,8 +50,11 @@ class http_client(asynchat.async_chat):
 		self.push(self.request)
 
 	def handle_close(self):
-		self.flush_data()
 		asynchat.async_chat.handle_close(self)
+		self.flush_data()
+		if self.reading_headers:
+			self.log_error('incompleted http response')
+			return
 		self.handle_status_update(self.size, self.completed, force_update=True)
 		self.handle_speed_update(self.completed, self.start_time, force_update=True)
 		if self.size is not None and self.completed < self.size:
@@ -91,8 +94,9 @@ class http_client(asynchat.async_chat):
 		pass
 
 	def flush_data(self):
-		self.handle_data(self.buffer.getvalue())
-		self.buffer.truncate(0)
+		if self.buffer.tell():
+			self.handle_data(self.buffer.getvalue())
+			self.buffer.truncate(0)
 
 	def parse_headers(self, header):
 		lines = header.split('\r\n')
@@ -233,8 +237,6 @@ def download(url, path, headers=None, resuming=False):
 			self.path = path
 			self.output = None
 			self.bar = ProgressBar()
-		def handle_connect(self):
-			http_client.handle_connect(self)
 		def handle_close(self):
 			http_client.handle_close(self)
 			if self.output:
