@@ -6,6 +6,7 @@ import re
 from cStringIO import StringIO
 from time import time, sleep
 import sys
+import os
 
 #asynchat.async_chat.ac_out_buffer_size = 1024*1024
 
@@ -22,7 +23,7 @@ class http_client(asynchat.async_chat):
 
 		request_headers = {'host': host, 'connection': 'close'}
 		if start_from:
-			request_headers['RANGE'] = 'bytes=%d-' % start_time
+			request_headers['RANGE'] = 'bytes=%d-' % start_from
 		if headers:
 			request_headers.update(headers)
 		headers = request_headers
@@ -110,7 +111,7 @@ class http_client(asynchat.async_chat):
 		for k, v in (h.split(': ', 1) for h in lines):
 			self.headers[k.lower()] = v
 
-		if status_code == 200:
+		if status_code in (200, 206):
 			pass
 		elif status_code == 302:
 			return self.handle_http_relocate(self.headers['location'])
@@ -278,6 +279,7 @@ def download(url, path, headers=None, resuming=False):
 	start_from = 0
 	if resuming and os.path.exists(path):
 		start_from = os.path.getsize(path)
+		# TODO: fix status bar for resuming
 	while True:
 		client = download_client(url, start_from=start_from)
 		asyncore.loop()

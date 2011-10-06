@@ -166,7 +166,7 @@ def escape_filename(name):
 def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False):
 	assert task['status_text'] == 'completed'
 	def download1(client, url, path, size):
-		if not resuming:
+		if (not resuming) or (not os.path.exists(path)):
 			download(client, url, path)
 		else:
 			assert os.path.getsize(path) <= size
@@ -200,7 +200,7 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			download1(client, download_url, path, f['size'])
 	else:
 		print 'Downloading', os.path.basename(filename), '...'
-		download1(client, download_url, filename, f['size'])
+		download1(client, download_url, filename, task['size'])
 
 	if task['type'] == 'ed2k':
 		ed2k_link = task['original_url']
