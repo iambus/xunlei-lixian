@@ -240,7 +240,7 @@ def download_task(args):
 			print 'Adding below tasks:'
 			for link in to_add:
 				print link
-			self.add_batch_task(to_add)
+			client.add_batch_task(to_add)
 			all_tasks = client.read_all_tasks()
 		tasks = filter(lambda t: link_in(t['original_url'], links), all_tasks)
 		# TODO: check if some task is missing
