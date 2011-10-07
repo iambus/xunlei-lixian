@@ -327,6 +327,7 @@ def parse_link(html):
 			'original_url': mini_info['f_url'],
 			'xunlei_url': mini_info['dl_url'],
 			'bt_hash': mini_info['dcid'],
+			'sha1': mini_info['dcid'],
 			}
 	# XXX: should I return bt files?
 	return task
@@ -349,6 +350,7 @@ def parse_bt_list(js):
 			'size': record['filesize'],
 			'original_url': record['url'],
 			'xunlei_url': record['downurl'],
+			'sha1': record['btcid'],
 			})
 	return files
 

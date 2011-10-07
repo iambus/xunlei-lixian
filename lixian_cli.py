@@ -165,6 +165,20 @@ def escape_filename(name):
 	name = re.sub(r'[\\/:*?"<>|]', '-', name)
 	return name
 
+def sha1_hash_file(path):
+	import hashlib
+	h = hashlib.sha1()
+	with open(path, 'rb') as stream:
+		while True:
+			bytes = stream.read(1024*1024)
+			if bytes:
+				break
+			h.update(bytes)
+	return h.hexdigest()
+
+def verify_sha1(path, sha1):
+	return sha1_hash_file(path).lower() == sha1.lower()
+
 def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False):
 	if task['status_text'] != 'completed':
 		print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
@@ -180,6 +194,14 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 				pass
 			else:
 				raise NotImplementedError()
+	def download2(client, url, path, size, sha1):
+		download1(client, url, path, size)
+		if not verify_sha1(path, sha1):
+			print 'sha1 hash error, redownloading...'
+			os.remove(path)
+			download1(client, url, path, size)
+			if not verify_ed2k_link(filename, ed2k_link):
+				raise Exception('sha1 hash check failed')
 	download_url = str(task['xunlei_url'])
 	#filename = output or escape_filename(task['name']).encode(default_encoding)
 	if output:
@@ -201,23 +223,13 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			print 'Downloading', name, '...'
 			path = os.path.join(dirname, name)
 			download_url = str(f['xunlei_url'])
-			download1(client, download_url, path, f['size'])
+			download2(client, download_url, path, f['size'], task['sha1'])
 	else:
 		dirname = os.path.dirname(filename)
 		if dirname and not os.path.exists(dirname):
 			os.makedirs(dirname)
 		print 'Downloading', os.path.basename(filename), '...'
-		download1(client, download_url, filename, task['size'])
-
-	if task['type'] == 'ed2k':
-		ed2k_link = task['original_url']
-		from lixian_hash_ed2k import verify_ed2k_link
-		if not verify_ed2k_link(filename, ed2k_link):
-			print 'ed2k hash error, redownloading...'
-			os.remove(filename)
-			download1(client, download_url, filename, task['size'])
-			if not verify_ed2k_link(filename, ed2k_link):
-				raise Exception('ed2k hash check failed')
+		download2(client, download_url, filename, task['size'], task['sha1'])
 
 	if delete:
 		client.delete_task(task)
