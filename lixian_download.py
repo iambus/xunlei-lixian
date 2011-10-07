@@ -60,12 +60,12 @@ class http_client(asynchat.async_chat):
 		asynchat.async_chat.handle_close(self)
 		self.flush_data()
 		if self.reading_headers:
-			self.log_error('incompleted http response')
+			self.log_error('incomplete http response')
 			return
 		self.handle_status_update(self.size, self.completed, force_update=True)
 		self.handle_speed_update(self.completed, self.start_time, force_update=True)
 		if self.size is not None and self.completed < self.size:
-			self.log_error('incompleted download')
+			self.log_error('incomplete download')
 
 	def handle_connection_error(self):
 		self.handle_error()
@@ -237,6 +237,7 @@ class ProgressBar:
 	def done(self):
 		if self.displayed:
 			print
+			self.displayed = False
 
 def download(url, path, headers=None, resuming=False):
 	class download_client(http_client):
@@ -256,7 +257,7 @@ def download(url, path, headers=None, resuming=False):
 				self.output = None
 		def handle_http_status_error(self):
 			http_client.handle_http_status_error(self)
-			print 'http status error:', self.status_code, self.status_text
+			self.log_error('http status error: %s, %s' % (self.status_code, self.status_text))
 		def handle_data(self, data):
 			if not self.output:
 				if self.start_from:
@@ -279,6 +280,9 @@ def download(url, path, headers=None, resuming=False):
 				self.bar.update_speed(start_time, (completed-self.last_size)/period)
 				self.last_speed_time = time()
 				self.last_size = completed
+		def log_error(self, message):
+			self.bar.done()
+			http_client.log_error(self, message)
 		def __del__(self): # XXX: sometimes handle_close() is not called, don't know why...
 			#http_client.__del__(self)
 			if self.output:
