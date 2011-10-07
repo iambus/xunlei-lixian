@@ -243,13 +243,13 @@ def download(url, path, headers=None, resuming=False):
 	class download_client(http_client):
 		def __init__(self, url, headers=headers, start_from=0):
 			self.output = None
+			self.bar = ProgressBar()
 			http_client.__init__(self, url, headers=headers, start_from=start_from)
 			self.start_from = start_from
 			self.last_status_time = time()
 			self.last_speed_time = time()
 			self.last_size = 0
 			self.path = path
-			self.bar = ProgressBar()
 		def handle_close(self):
 			http_client.handle_close(self)
 			if self.output:
