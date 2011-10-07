@@ -213,7 +213,11 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 		ed2k_link = task['original_url']
 		from lixian_hash_ed2k import verify_ed2k_link
 		if not verify_ed2k_link(filename, ed2k_link):
-			raise Exception('ed2k hash check failed')
+			print 'ed2k hash error, redownloading...'
+			os.remove(filename)
+			download1(client, download_url, filename, task['size'])
+			if not verify_ed2k_link(filename, ed2k_link):
+				raise Exception('ed2k hash check failed')
 
 	if delete:
 		client.delete_task(task)
