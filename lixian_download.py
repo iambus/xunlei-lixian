@@ -270,7 +270,7 @@ def download(url, path, headers=None, resuming=False):
 				return
 			if time() - self.last_status_time > 1 or force_update:
 				#print '%.02f' % (completed*100.0/total)
-				self.bar.update_status(total, completed)
+				self.bar.update_status(total+start_from, completed+start_from)
 				self.last_status_time = time()
 		def handle_speed_update(self, completed, start_time, force_update=False):
 			now = time()
