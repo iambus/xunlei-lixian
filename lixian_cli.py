@@ -202,7 +202,7 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			download1(client, download_url, path, f['size'])
 	else:
 		dirname = os.path.dirname(filename)
-		if not os.path.exists(dirname):
+		if dirname and not os.path.exists(dirname):
 			os.makedirs(dirname)
 		print 'Downloading', os.path.basename(filename), '...'
 		download1(client, download_url, filename, task['size'])
