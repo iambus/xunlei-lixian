@@ -171,7 +171,7 @@ def sha1_hash_file(path):
 	with open(path, 'rb') as stream:
 		while True:
 			bytes = stream.read(1024*1024)
-			if bytes:
+			if not bytes:
 				break
 			h.update(bytes)
 	return h.hexdigest()
@@ -200,7 +200,7 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			print 'sha1 hash error, redownloading...'
 			os.remove(path)
 			download1(client, url, path, size)
-			if not verify_ed2k_link(filename, ed2k_link):
+			if not verify_sha1(filename, sha1):
 				raise Exception('sha1 hash check failed')
 	download_url = str(task['xunlei_url'])
 	#filename = output or escape_filename(task['name']).encode(default_encoding)
@@ -471,6 +471,4 @@ def execute_command(args=sys.argv[1:]):
 if __name__ == '__main__':
 	execute_command()
 
-#x = execute_command(['delete', '-i', '--cookies', 'xunlei.cookies', 'ed2k://|file|%5BSC-OL%5D%5BKaiji2%5D%5B01%5D%5BMKV%5D%5BX264_AAC%5D%5B1280X720%5D%5B6C77C65F%5D.gb.ass|56114|e39a590424b6bb0574c40989d199c91c|h=er4uegovpq3p2jjz7pejtqx242j5ioym|/'])
-#execute_command(['download', '--cookies', 'xunlei.cookies', 'ed2k://|file|%5BSC-OL%5D%5BKaiji2%5D%5B07%5D%5BMKV%5D%5BX264_AAC%5D%5B1280X720%5D%5B7221E7AA%5D.gb.ass|53758|aadb39c8621fdd300655c7e82af30335|h=fdvhxzqqzocqkxuwltz6xm6x3vdhasnb|/'])
 
