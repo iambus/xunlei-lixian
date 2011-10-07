@@ -166,7 +166,9 @@ def escape_filename(name):
 	return name
 
 def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False):
-	assert task['status_text'] == 'completed'
+	if task['status_text'] != 'completed':
+		print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
+		return
 	def download1(client, url, path, size):
 		if (not resuming) or (not os.path.exists(path)):
 			download(client, url, path)
@@ -219,6 +221,11 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 def download_multiple_tasks(client, download, tasks, output_dir=None, delete=False, resuming=False):
 	for task in tasks:
 		download_single_task(client, download, task, output_dir=output_dir, delete=delete, resuming=resuming)
+	skipped = filter(lambda t: t['status_text'] != 'completed', tasks)
+	if skipped:
+		print "Below tasks were skipped as they were not ready:"
+		for task in skipped:
+			print task['status_text'], task['name'].encode(default_encoding)
 
 def download_task(args):
 	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'id', 'name', 'url'], alias={'o': 'output', 'i': 'input'}, default={'tool':'wget'})
