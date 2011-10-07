@@ -252,8 +252,14 @@ def download_task(args):
 				print link
 			client.add_batch_tasks(to_add)
 			all_tasks = client.read_all_tasks()
-		tasks = filter(lambda t: link_in(t['original_url'], links), all_tasks)
-		# TODO: check if some task is missing
+		tasks = []
+		for link in links:
+			for task in all_tasks:
+				if link_equals(link, task['original_url']):
+					tasks.append(task)
+					break
+			else:
+				raise NotImplementedError('task not found, wired')
 		download_multiple_tasks(client, download, tasks, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'])
 	else:
 		if len(args) == 1:
