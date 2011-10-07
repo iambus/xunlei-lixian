@@ -289,7 +289,7 @@ def download(url, path, headers=None, resuming=False):
 				self.output.close()
 				self.output = None
 	
-	max_retry_times = 10
+	max_retry_times = 25
 	retry_times = 0
 	start_from = 0
 	if resuming and os.path.exists(path):
