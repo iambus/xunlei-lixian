@@ -39,7 +39,7 @@ class http_client(asynchat.async_chat):
 		self.headers = {} # for response headers
 
 		self.buffer = StringIO()
-		self.cache_size = 0
+		self.cache_size = 1024*1024
 		self.size = None
 		self.completed = 0
 		self.set_terminator("\r\n\r\n")
