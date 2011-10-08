@@ -17,7 +17,7 @@ class http_client(asynchat.async_chat):
 
 		self.args = {'headers': headers, 'start_from': start_from}
 
-		host, port, path = re.match(r'http://([^/]+)(?:(\d+))?(/.*)?$', url).groups()
+		host, port, path = re.match(r'http://([^/:]+)(?:(\d+))?(/.*)?$', url).groups()
 		port = int(port or 80)
 		path = path or '/'
 		if socket.gethostbyname(host) == '180.168.41.175':
