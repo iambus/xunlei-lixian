@@ -207,13 +207,18 @@ def verify_hash(path, task):
 	else:
 		return False
 
-def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False):
+def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False, overwrite=False):
 	if task['status_text'] != 'completed':
 		print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
 		return
 	def download1(client, url, path, size):
-		if (not resuming) or (not os.path.exists(path)):
+		if not os.path.exists(path):
 			download(client, url, path)
+		elif not resuming:
+			if overwrite:
+				download(client, url, path)
+			else:
+				raise Exception('%s already exists. Please specify --continue or --overwrite' % path)
 		else:
 			assert os.path.getsize(path) <= size
 			if os.path.getsize(path) < size:
@@ -263,9 +268,9 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 	if delete:
 		client.delete_task(task)
 
-def download_multiple_tasks(client, download, tasks, output_dir=None, delete=False, resuming=False):
+def download_multiple_tasks(client, download, tasks, output_dir=None, delete=False, resuming=False, overwrite=False):
 	for task in tasks:
-		download_single_task(client, download, task, output_dir=output_dir, delete=delete, resuming=resuming)
+		download_single_task(client, download, task, output_dir=output_dir, delete=delete, resuming=resuming, overwrite=overwrite)
 	skipped = filter(lambda t: t['status_text'] != 'completed', tasks)
 	if skipped:
 		print "Below tasks were skipped as they were not ready:"
@@ -273,7 +278,7 @@ def download_multiple_tasks(client, download, tasks, output_dir=None, delete=Fal
 			print task['id'], task['status_text'], task['name'].encode(default_encoding)
 
 def download_task(args):
-	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'id', 'name', 'url'], alias={'o': 'output', 'i': 'input'}, default={'tool':'wget'})
+	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'id', 'name', 'url'], alias={'o': 'output', 'i': 'input'}, default={'tool':'wget'})
 	download = {'wget':wget_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
@@ -305,7 +310,7 @@ def download_task(args):
 					break
 			else:
 				raise NotImplementedError('task not found, wired')
-		download_multiple_tasks(client, download, tasks, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'])
+		download_multiple_tasks(client, download, tasks, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'], overwrite=args.overwrite)
 	else:
 		if len(args) == 1:
 			assert not args.url
@@ -319,9 +324,9 @@ def download_task(args):
 			tasks = filter_tasks(tasks, 'original_url', args.url)
 		if args.output:
 			assert len(tasks) == 1
-			download_single_task(client, download, tasks[0], args.output, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'])
+			download_single_task(client, download, tasks[0], args.output, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'], overwrite=args.overwrite)
 		else:
-			download_multiple_tasks(client, download, tasks, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'])
+			download_multiple_tasks(client, download, tasks, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'], overwrite=args.overwrite)
 
 def link_equals(x1, x2):
 	if x1.startswith('ed2k://') and x2.startswith('ed2k://'):
