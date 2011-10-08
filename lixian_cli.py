@@ -270,7 +270,7 @@ def download_multiple_tasks(client, download, tasks, output_dir=None, delete=Fal
 	if skipped:
 		print "Below tasks were skipped as they were not ready:"
 		for task in skipped:
-			print task['status_text'], task['name'].encode(default_encoding)
+			print task['id'], task['status_text'], task['name'].encode(default_encoding)
 
 def download_task(args):
 	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'id', 'name', 'url'], alias={'o': 'output', 'i': 'input'}, default={'tool':'wget'})
