@@ -197,6 +197,16 @@ def dcid_hash_file(path):
 def verify_dcid(path, dcid):
 	return dcid_hash_file(path).lower() == dcid.lower()
 
+def verify_hash(path, task):
+	if verify_dcid(path, task['dcid']):
+		if task['type'] == 'ed2k':
+			from lixian_hash_ed2k import verify_ed2k_link
+			return verify_ed2k_link(path, task['original_url'])
+		else:
+			return True
+	else:
+		return False
+
 def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False):
 	if task['status_text'] != 'completed':
 		print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
@@ -212,14 +222,15 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 				pass
 			else:
 				raise NotImplementedError()
-	def download2(client, url, path, size, dcid):
+	def download2(client, url, path, task):
+		size = task['size']
 		download1(client, url, path, size)
-		if not verify_dcid(path, dcid):
-			print 'dcid hash error, redownloading...'
+		if not verify_hash(path, task):
+			print 'hash error, redownloading...'
 			os.remove(path)
 			download1(client, url, path, size)
-			if not verify_dcid(filename, dcid):
-				raise Exception('dcid hash check failed')
+			if not verify_hash(filename, task):
+				raise Exception('hash check failed')
 	download_url = str(task['xunlei_url'])
 	#filename = output or escape_filename(task['name']).encode(default_encoding)
 	if output:
@@ -241,13 +252,13 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			print 'Downloading', name, '...'
 			path = os.path.join(dirname, name)
 			download_url = str(f['xunlei_url'])
-			download2(client, download_url, path, f['size'], task['dcid'])
+			download2(client, download_url, path, f)
 	else:
 		dirname = os.path.dirname(filename)
 		if dirname and not os.path.exists(dirname):
 			os.makedirs(dirname)
 		print 'Downloading', os.path.basename(filename), '...'
-		download2(client, download_url, filename, task['size'], task['dcid'])
+		download2(client, download_url, filename, task)
 
 	if delete:
 		client.delete_task(task)
