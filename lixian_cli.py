@@ -234,7 +234,7 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			print 'hash error, redownloading...'
 			os.remove(path)
 			download1(client, url, path, size)
-			if not verify_hash(filename, task):
+			if not verify_hash(path, task):
 				raise Exception('hash check failed')
 	download_url = str(task['xunlei_url'])
 	#filename = output or escape_filename(task['name']).encode(default_encoding)
