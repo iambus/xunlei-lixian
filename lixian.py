@@ -120,11 +120,6 @@ class XunleiClient:
 			self.set_cookie('.xunlei.com', k, '')
 		self.save_cookies()
 
-	def list_bt(self, task):
-		url = 'http://dynamic.cloud.vip.xunlei.com/interface/fill_bt_list?callback=fill_bt_list&tid=%s&infoid=%s&g_net=1&p=1&uid=%s&noCacheIE=%s' % (task['id'], task['bt_hash'], self.id, current_timestamp())
-		html = self.urlopen(url).read().decode('utf-8')
-		return parse_bt_list(html)
-
 	def read_task_page_url(self, url):
 		req = self.urlopen(url)
 		page = req.read().decode('utf-8')
@@ -161,6 +156,15 @@ class XunleiClient:
 
 	def read_all_completed(self):
 		return self.read_all_tasks(2)
+
+	def list_bt(self, task):
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/fill_bt_list?callback=fill_bt_list&tid=%s&infoid=%s&g_net=1&p=1&uid=%s&noCacheIE=%s' % (task['id'], task['bt_hash'], self.id, current_timestamp())
+		html = self.urlopen(url).read().decode('utf-8')
+		return parse_bt_list(html)
+
+	def get_torrent_file(self, task):
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/get_torrent?userid=%s&infoid=%s' % (self.id, task['bt_hash'])
+		return self.urlopen(url).read()
 
 	def add_task(self, url):
 		assert url.startswith('ed2k://'), 'task "%s" is not suppoted (only ed2k is tested, will support others later)' % url
