@@ -198,14 +198,12 @@ def verify_dcid(path, dcid):
 	return dcid_hash_file(path).lower() == dcid.lower()
 
 def verify_hash(path, task):
-	if verify_dcid(path, task['dcid']):
+	if os.path.getsize(path) == task['size'] and verify_dcid(path, task['dcid']):
 		if task['type'] == 'ed2k':
 			from lixian_hash_ed2k import verify_ed2k_link
 			return verify_ed2k_link(path, task['original_url'])
 		else:
 			return True
-	else:
-		return False
 
 def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False, overwrite=False):
 	if task['status_text'] != 'completed':
