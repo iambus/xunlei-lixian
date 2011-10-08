@@ -169,8 +169,7 @@ class XunleiClient:
 	def add_task(self, url):
 		assert url.startswith('ed2k://'), 'task "%s" is not suppoted (only ed2k is tested, will support others later)' % url
 
-		from random import randint
-		random = '%s%06d.%s' % (current_timestamp(), randint(0, 999999), randint(100000000, 9999999999))
+		random = current_random()
 		check_url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_check?callback=queryCid&url=%s&random=%s&tcache=%s' % (urllib.quote(url), random, current_timestamp())
 		js = self.urlopen(check_url).read().decode('utf-8')
 		qcid = re.match(r'^queryCid(\(.+\))\s*$', js).group(1)
