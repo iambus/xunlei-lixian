@@ -350,7 +350,7 @@ def parse_bt_list(js):
 			'name': record['title'], # TODO: support folder
 			'status': int(record['download_status']),
 			'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed'}[record['download_status']],
-			'size': record['filesize'],
+			'size': int(record['filesize']),
 			'original_url': record['url'],
 			'xunlei_url': record['downurl'],
 			'dcid': record['cid'],
