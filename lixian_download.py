@@ -72,6 +72,7 @@ class http_client(asynchat.async_chat):
 
 	def handle_error(self):
 		self.close()
+		self.flush_data()
 		error_message = sys.exc_info()[1]
 		self.log_error('there is some error: %s' % error_message)
 		#raise
@@ -93,6 +94,7 @@ class http_client(asynchat.async_chat):
 		self.handle_speed_update(self.completed, self.start_time)
 		if self.size == self.completed:
 			self.close()
+			self.flush_data()
 			self.handle_status_update(self.size, self.completed, force_update=True)
 			self.handle_speed_update(self.completed, self.start_time, force_update=True)
 
