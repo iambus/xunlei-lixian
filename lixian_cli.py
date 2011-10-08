@@ -319,7 +319,7 @@ def download_task(args):
 			tasks = filter_tasks(tasks, 'original_url', args.url)
 		if args.output:
 			assert len(tasks) == 1
-			download_single_task(client, download, task, args.output, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'])
+			download_single_task(client, download, tasks[0], args.output, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'])
 		else:
 			download_multiple_tasks(client, download, tasks, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'])
 
