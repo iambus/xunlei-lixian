@@ -350,7 +350,7 @@ def parse_bt_list(js):
 			'size': record['filesize'],
 			'original_url': record['url'],
 			'xunlei_url': record['downurl'],
-			'dcid': record['btcid'],
+			'dcid': record['cid'],
 			})
 	return files
 
