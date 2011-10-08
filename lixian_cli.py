@@ -179,6 +179,24 @@ def sha1_hash_file(path):
 def verify_sha1(path, sha1):
 	return sha1_hash_file(path).lower() == sha1.lower()
 
+def dcid_hash_file(path):
+	import hashlib
+	h = hashlib.sha1()
+	size = os.path.getsize(path)
+	with open(path, 'rb') as stream:
+		if size < 0xF000:
+			h.update(stream.read())
+		else:
+			h.update(stream.read(0x5000))
+			stream.seek(size/3)
+			h.update(stream.read(0x5000))
+			stream.seek(size-0x5000)
+			h.update(stream.read(0x5000))
+	return h.hexdigest()
+
+def verify_dcid(path, dcid):
+	return dcid_hash_file(path).lower() == dcid.lower()
+
 def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False):
 	if task['status_text'] != 'completed':
 		print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
@@ -194,14 +212,14 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 				pass
 			else:
 				raise NotImplementedError()
-	def download2(client, url, path, size, sha1):
+	def download2(client, url, path, size, dcid):
 		download1(client, url, path, size)
-		if not verify_sha1(path, sha1):
-			print 'sha1 hash error, redownloading...'
+		if not verify_dcid(path, dcid):
+			print 'dcid hash error, redownloading...'
 			os.remove(path)
 			download1(client, url, path, size)
-			if not verify_sha1(filename, sha1):
-				raise Exception('sha1 hash check failed')
+			if not verify_dcid(filename, dcid):
+				raise Exception('dcid hash check failed')
 	download_url = str(task['xunlei_url'])
 	#filename = output or escape_filename(task['name']).encode(default_encoding)
 	if output:
@@ -223,13 +241,13 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			print 'Downloading', name, '...'
 			path = os.path.join(dirname, name)
 			download_url = str(f['xunlei_url'])
-			download2(client, download_url, path, f['size'], task['sha1'])
+			download2(client, download_url, path, f['size'], task['dcid'])
 	else:
 		dirname = os.path.dirname(filename)
 		if dirname and not os.path.exists(dirname):
 			os.makedirs(dirname)
 		print 'Downloading', os.path.basename(filename), '...'
-		download2(client, download_url, filename, task['size'], task['sha1'])
+		download2(client, download_url, filename, task['size'], task['dcid'])
 
 	if delete:
 		client.delete_task(task)
@@ -353,7 +371,7 @@ def search_tasks(client, args, status='all', check=True):
 def list_task(args):
 	args = parse_login_command_line(args, [],
 	                                ['all', 'completed',
-	                                 'task-id', 'name', 'status', 'size', 'original-url', 'download-url',
+	                                 'task-id', 'name', 'status', 'size', 'dcid', 'original-url', 'download-url',
 	                                 'id', 'file', 'url',],
 									default={'task-id': True, 'name': True, 'status': True})
 	client = XunleiClient(args.username, args.password, args.cookies)
@@ -364,7 +382,7 @@ def list_task(args):
 		tasks = client.read_all_completed()
 	else:
 		tasks = client.read_all_tasks()
-	columns = ['task-id', 'name', 'status', 'size', 'original-url', 'download-url']
+	columns = ['task-id', 'name', 'status', 'size', 'dcid', 'original-url', 'download-url']
 	columns = filter(lambda k: getattr(args, k), columns)
 	for t in tasks:
 		for k in columns:
@@ -376,6 +394,8 @@ def list_task(args):
 				print t['status_text'],
 			elif k == 'size':
 				print t['size'],
+			elif k == 'dcid':
+				print t['dcid'],
 			elif k == 'original-url':
 				print t['original_url'],
 			elif k == 'download-url':
