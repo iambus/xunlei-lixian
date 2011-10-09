@@ -354,6 +354,7 @@ def download_task(args):
 			client.add_task(args.url)
 			tasks = client.read_all_completed()
 			tasks = filter_tasks(tasks, 'original_url', args.url)
+			assert tasks, 'task not found, wired'
 		if args.output:
 			assert len(tasks) == 1
 			download_single_task(client, download, tasks[0], args.output, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'], overwrite=args.overwrite)
@@ -363,15 +364,13 @@ def download_task(args):
 def link_equals(x1, x2):
 	if x1.startswith('ed2k://') and x2.startswith('ed2k://'):
 		import urllib
+		if type(x1) == unicode:
+			x1 = x1.encode('utf-8')
+		if type(x2) == unicode:
+			x2 = x2.encode('utf-8')
 		x1 = urllib.unquote(x1)
 		x2 = urllib.unquote(x2)
-		if type(x1) == str and type(x2) == unicode:
-			x1 = x1.decode('utf-8')
-		elif type(x1) == unicode and type(x2) == str:
-			x2 = x2.decode('utf-8')
-		return x1 == x2
-	else:
-		return x1 == x2
+	return x1 == x2
 
 def link_in(url, links):
 	for link in links:
