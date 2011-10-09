@@ -194,6 +194,8 @@ def verify_bt_multiple(folder, info, progress_callback=None):
 	return True
 
 def verify_bt(path, info, progress_callback=None):
+	if not os.path.exists(path):
+		raise Exception("File doesn't exist: %s" % path)
 	if 'files' not in info:
 		if os.path.isfile(path):
 			return verify_bt_single_file(path, info, progress_callback=progress_callback)
