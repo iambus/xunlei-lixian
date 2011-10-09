@@ -100,7 +100,7 @@ def verify_bt_single_file(path, info):
 	with open(path, 'rb') as stream:
 		while True:
 			bytes = stream.read(piece_length)
-			sha1 = sha1_streamlread(20)
+			sha1 = sha1_stream.read(20)
 			if bytes:
 				assert len(sha1) == 20
 				if hashlib.sha1(bytes).digest() != sha1:
