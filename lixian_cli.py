@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
 from lixian import XunleiClient
+import lixian_hash_bt
 import subprocess
 import sys
 import os
 import os.path
 import re
+import urllib2
 
 default_encoding = sys.getfilesystemencoding()
 if default_encoding is None or default_encoding.lower() == 'ascii':
@@ -140,7 +142,6 @@ def urllib2_download(client, download_url, filename, resuming=False):
 	'''In the case you don't even have wget...'''
 	assert not resuming
 	print 'Downloading', download_url, 'to', filename, '...'
-	import urllib2
 	request = urllib2.Request(download_url, headers={'Cookie': 'gdriveid='+client.get_gdriveid()})
 	response = urllib2.urlopen(request)
 	import shutil
@@ -309,40 +310,93 @@ def download_multiple_tasks(client, download, tasks, output_dir=None, delete=Fal
 		for task in skipped:
 			print task['id'], task['status_text'], task['name'].encode(default_encoding)
 
+def find_torrents_task_to_download(client, links):
+	tasks = client.read_all_tasks()
+	hashes = set(t['bt_hash'].lower() for t in tasks if t['type'] == 'bt')
+	link_hashes = []
+	for link in links:
+		if re.match(r'^(?:bt://)?([a-fA-F0-9]{40})$', link):
+			info_hash = link[-40:]
+			if info_hash not in hashes:
+				print 'Adding bt task', link
+				client.add_torrent_task_by_info_hash(info_hash)
+			link_hashes.append(info_hash)
+		elif re.match(r'http://', link):
+			print 'Downloading torrent file from', link
+			torrent = urllib2.urlopen(link, timeout=60).read()
+			info_hash = lixian_hash_bt.info_hash_from_content(torrent)
+			if info_hash not in hashes:
+				print 'Adding bt task', link
+				client.add_torrent_task_by_content(torrent, os.path.basename(link))
+			link_hashes.append(info_hash)
+		elif os.path.exists(link):
+			with open(link, 'rb') as stream:
+				torrent = stream.read()
+			info_hash = lixian_hash_bt.info_hash_from_content(torrent)
+			if info_hash not in hashes:
+				print 'Adding bt task', link
+				client.add_torrent_task_by_content(torrent, os.path.basename(link))
+			link_hashes.append(info_hash)
+		else:
+			raise NotImplementedError('Unknown torrent '+link)
+	all_tasks = client.read_all_tasks()
+	tasks = []
+	for h in link_hashes:
+		for t in all_tasks:
+			if t['bt_hash'].lower() == h.lower():
+				tasks.append(t)
+				break
+		else:
+			raise NotImplementedError('not task found')
+	return tasks
+
+def find_tasks_to_download(client, args):
+	links = []
+	links.extend(args)
+	if args.input:
+		with open(args.input) as x:
+			links.extend(line.strip() for line in x.readlines() if line.strip())
+	if args.torrent:
+		return find_torrents_task_to_download(client, links)
+	all_tasks = client.read_all_tasks()
+	to_add = set(links)
+	for t in all_tasks:
+		for x in to_add:
+			if link_equals(t['original_url'], x):
+				to_add.remove(x)
+				break
+	if to_add:
+		print 'Adding below tasks:'
+		for link in to_add:
+			print link
+		client.add_batch_tasks(to_add)
+		all_tasks = client.read_all_tasks()
+	tasks = []
+	for link in links:
+		for task in all_tasks:
+			if link_equals(link, task['original_url']):
+				tasks.append(task)
+				break
+		else:
+			raise NotImplementedError('task not found, wired')
+	return tasks
+
 def download_task(args):
-	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'id', 'name', 'url'], alias={'o': 'output', 'i': 'input'}, default={'tool':'wget'})
+	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'torrent', 'id', 'name', 'url'], alias={'o': 'output', 'i': 'input'}, default={'tool':'wget'})
 	download = {'wget':wget_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
+	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
 	if len(args) > 1 or args.input:
 		assert not(args.id or args.name or args.url or args.output)
-		links = []
-		links.extend(args)
-		if args.input:
-			with open(args.input) as x:
-				links.extend(line.strip() for line in x.readlines() if line.strip())
-		all_tasks = client.read_all_tasks()
-		to_add = set(links)
-		for t in all_tasks:
-			for x in to_add:
-				if link_equals(t['original_url'], x):
-					to_add.remove(x)
-					break
-		if to_add:
-			print 'Adding below tasks:'
-			for link in to_add:
-				print link
-			client.add_batch_tasks(to_add)
-			all_tasks = client.read_all_tasks()
-		tasks = []
-		for link in links:
-			for task in all_tasks:
-				if link_equals(link, task['original_url']):
-					tasks.append(task)
-					break
-			else:
-				raise NotImplementedError('task not found, wired')
-		download_multiple_tasks(client, download, tasks, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'], overwrite=args.overwrite)
+		tasks = find_tasks_to_download(client, args)
+		download_multiple_tasks(client, download, tasks, **download_args)
+	elif args.torrent:
+		assert not(args.id or args.name or args.url)
+		assert len(args) == 1
+		tasks = find_torrents_task_to_download(client, [args[0]])
+		assert len(tasks) == 1
+		download_single_task(client, download, tasks[0], args.output, **download_args)
 	else:
 		if len(args) == 1:
 			assert not args.url
@@ -357,9 +411,9 @@ def download_task(args):
 			assert tasks, 'task not found, wired'
 		if args.output:
 			assert len(tasks) == 1
-			download_single_task(client, download, tasks[0], args.output, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'], overwrite=args.overwrite)
+			download_single_task(client, download, tasks[0], args.output, **download_args)
 		else:
-			download_multiple_tasks(client, download, tasks, output_dir=args.output_dir, delete=args.delete, resuming=args._args['continue'], overwrite=args.overwrite)
+			download_multiple_tasks(client, download, tasks, **download_args)
 
 def link_equals(x1, x2):
 	if x1.startswith('ed2k://') and x2.startswith('ed2k://'):
@@ -370,6 +424,9 @@ def link_equals(x1, x2):
 			x2 = x2.encode('utf-8')
 		x1 = urllib.unquote(x1)
 		x2 = urllib.unquote(x2)
+	elif x1.startswith('bt://') and x2.startswith('bt://'):
+		x1 = x1.lower()
+		x2 = x2.lower()
 	return x1 == x2
 
 def link_in(url, links):
@@ -452,7 +509,7 @@ def list_task(args):
 		print
 
 def add_task(args):
-	args = parse_login_command_line(args, ['input'], alias={'i':'input'})
+	args = parse_login_command_line(args, ['input'], ['torrent'], alias={'i':'input'})
 	assert len(args) or args.input
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = []
@@ -460,18 +517,25 @@ def add_task(args):
 	if args.input:
 		with open(args.input) as x:
 			links.extend(line.strip() for line in x.readlines() if line.strip())
-	print 'Adding below tasks:'
-	for link in links:
-		print link
-	client.add_batch_tasks(links)
-	print 'All tasks added. Checking status...'
-	tasks = client.read_all_tasks()
-	for link in links:
-		found = filter_tasks(tasks, 'original_url', link)
-		if found:
-			print found[0]['status_text'], link
-		else:
-			print 'unknown', link
+	if not args.torrent:
+		print 'Adding below tasks:'
+		for link in links:
+			print link
+		client.add_batch_tasks(links)
+		print 'All tasks added. Checking status...'
+		tasks = client.read_all_tasks()
+		for link in links:
+			found = filter_tasks(tasks, 'original_url', link)
+			if found:
+				print found[0]['status_text'], link
+			else:
+				print 'unknown', link
+	else:
+		tasks = find_torrents_task_to_download(client, links)
+		assert len(tasks) == len(links)
+		print 'All tasks added:'
+		for link, task in zip(links, tasks):
+			print task['status_text'], link
 
 def delete_task(args):
 	args = parse_login_command_line(args, [], ['id', 'file', 'url', 'i', 'all'])

@@ -83,9 +83,12 @@ def bencode(v):
 	encoder(stream).encode(v)
 	return stream.getvalue()
 
+def info_hash_from_content(content):
+	return hashlib.sha1(bencode(bdecode(content)['info'])).hexdigest()
+
 def info_hash(path):
 	with open(path, 'rb') as stream:
-		return hashlib.sha1(bencode(bdecode(stream.read())['info'])).hexdigest()
+		return info_hash_from_content(stream.read())
 
 def encode_path(path):
 	return path.decode('utf-8').encode(default_encoding)
