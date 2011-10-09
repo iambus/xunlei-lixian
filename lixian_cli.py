@@ -256,6 +256,10 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			path = os.path.join(dirname, name)
 			download_url = str(f['xunlei_url'])
 			download2(client, download_url, path, f)
+		import lixian_hash_bt
+		torrent_file = client.get_torrent_file(task)
+		if not verify_bt(dirname, bdecode(torrent_file)['info']):
+			raise Exception('bt hash check failed')
 	else:
 		dirname = os.path.dirname(filename)
 		if dirname and not os.path.exists(dirname):

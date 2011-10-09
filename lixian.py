@@ -162,9 +162,12 @@ class XunleiClient:
 		html = self.urlopen(url).read().decode('utf-8')
 		return parse_bt_list(html)
 
-	def get_torrent_file(self, task):
-		url = 'http://dynamic.cloud.vip.xunlei.com/interface/get_torrent?userid=%s&infoid=%s' % (self.id, task['bt_hash'])
+	def get_torrent_file_by_info_hash(self, info_hash):
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/get_torrent?userid=%s&infoid=%s' % (self.id, info_hash)
 		return self.urlopen(url).read()
+
+	def get_torrent_file(self, task):
+		return self.get_torrent_file_by_info_hash(task['bt_hash'])
 
 	def add_task(self, url):
 		assert url.startswith('ed2k://'), 'task "%s" is not suppoted (only ed2k is tested, will support others later)' % url
