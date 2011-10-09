@@ -182,10 +182,10 @@ def verify_bt_multiple(folder, info):
 def verify_bt(path, info):
 	if 'files' not in info:
 		if os.path.isfile(path):
-			verify_bt_single(path, info)
+			verify_bt_single_file(path, info)
 		else:
 			path = os.path.join(path, encode_path(info['name']))
-			verify_bt_single(path, info)
+			verify_bt_single_file(path, info)
 	else:
 		verify_bt_multiple(path, info)
 
