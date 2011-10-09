@@ -219,13 +219,13 @@ class XunleiClient:
 		response = self.urlopen(url, data=data).read()
 		assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0'</script>" % self.id
 
-	def add_torrent_task(self, path):
+	def add_torrent_task_by_content(self, content, path=''):
 		upload_url = 'http://dynamic.cloud.vip.xunlei.com/interface/torrent_upload'
 		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit'
 
-		with open(path, 'rb') as x:
-			content_type, body = encode_multipart_formdata([], [('filepath', path, x.read())])
-			response = self.urlopen(upload_url, data=body, headers={'Content-Type': content_type}).read().decode('utf-8')
+		content_type, body = encode_multipart_formdata([], [('filepath', path, content)])
+
+		response = self.urlopen(upload_url, data=body, headers={'Content-Type': content_type}).read().decode('utf-8')
 
 		upload_success = re.search(r'<script>document\.domain="xunlei\.com";var btResult =(\{.*\});</script>', response, flags=re.S)
 		if upload_success:
@@ -246,6 +246,13 @@ class XunleiClient:
 			print json.loads(already_exists.group(1))
 			return
 		raise NotImplementedError()
+
+	def add_torrent_task_by_info_hash(self, sha1):
+		self.add_torrent_task_by_content(self.get_torrent_file(sha1), sha1.upper()+'.torrent')
+
+	def add_torrent_task(self, path):
+		with open(path, 'rb') as x:
+			self.add_torrent_task_by_content(x.read(), os.path.basename(path))
 
 	def delete_tasks_by_id(self, ids):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_delete?type=%s&taskids=%s&noCacheIE=%s' % (2, ','.join(ids)+',', current_timestamp()) # XXX: what is 'type'?
