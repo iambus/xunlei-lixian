@@ -121,6 +121,7 @@ def verify_bt_single_file(path, info, progress_callback=None):
 					return False
 			else:
 				assert len(sha1) == 0
+				break
 	assert sha1_stream.next_sha1() == ''
 	return True
 
