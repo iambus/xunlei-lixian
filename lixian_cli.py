@@ -205,6 +205,32 @@ def verify_hash(path, task):
 		else:
 			return True
 
+class SimpleProgressBar:
+	def __init__(self):
+		self.displayed = False
+	def update(self, percent):
+		self.displayed = True
+		bar_size = 40
+		percent = int(percent*100)
+		if percent > 100:
+			percent = 100
+		dots = bar_size * percent / 100
+		plus = percent - dots / bar_size * 100
+		if plus > 0.8:
+			plus = '='
+		elif plus > 0.4:
+			plu = '>'
+		else:
+			plus = ''
+		bar = '=' * dots + plus
+		bar = '{:>3}%[{:<40}]'.format(percent, bar)
+		sys.stdout.write('\r'+bar)
+		sys.stdout.flush()
+	def done(self):
+		if self.displayed:
+			print
+			self.displayed = False
+
 def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False, overwrite=False):
 	if task['status_text'] != 'completed':
 		print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
@@ -258,7 +284,11 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			download2(client, download_url, path, f)
 		import lixian_hash_bt
 		torrent_file = client.get_torrent_file(task)
-		if not lixian_hash_bt.verify_bt(dirname, lixian_hash_bt.bdecode(torrent_file)['info']):
+		print 'Hashing bt ...'
+		bar = SimpleProgressBar()
+		verified = lixian_hash_bt.verify_bt(dirname, lixian_hash_bt.bdecode(torrent_file)['info'], progress_callback=bar.update)
+		bar.done()
+		if not verified:
 			raise Exception('bt hash check failed')
 	else:
 		dirname = os.path.dirname(filename)

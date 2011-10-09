@@ -90,33 +90,47 @@ def info_hash(path):
 def encode_path(path):
 	return path.decode('utf-8').encode(default_encoding)
 
-def verify_bt_single_file(path, info):
+class sha1_reader:
+	def __init__(self, pieces, progress_callback=None):
+		assert pieces
+		assert len(pieces) % 20 == 0
+		self.total = len(pieces)/20
+		self.processed = 0
+		self.stream = StringIO(pieces)
+		self.progress_callback = progress_callback
+	def next_sha1(self):
+		self.processed += 1
+		if self.progress_callback:
+			self.progress_callback(float(self.processed)/self.total)
+		return self.stream.read(20)
+
+def verify_bt_single_file(path, info, progress_callback=None):
 	# TODO: check md5sum if available
 	if os.path.getsize(path) != info['length']:
 		return False
 	piece_length = info['piece length']
 	assert piece_length <= 1024*1024
-	sha1_stream = StringIO(info['pieces'])
+	sha1_stream = sha1_reader(info['pieces'], progress_callback=progress_callback)
 	with open(path, 'rb') as stream:
 		while True:
 			bytes = stream.read(piece_length)
-			sha1 = sha1_stream.read(20)
+			sha1 = sha1_stream.next_sha1()
 			if bytes:
 				assert len(sha1) == 20
 				if hashlib.sha1(bytes).digest() != sha1:
 					return False
 			else:
 				assert len(sha1) == 0
-	assert len(sha1_stream.read()) == 0
+	assert sha1_stream.next_sha1() == ''
 	return True
 
-def verify_bt_multiple(folder, info):
+def verify_bt_multiple(folder, info, progress_callback=None):
 	# TODO: check md5sum if available
 	piece_length = info['piece length']
 	assert piece_length <= 1024*1024
 	files = [{'path':os.path.join(folder, apply(os.path.join, x['path'])), 'length':x['length']} for x in info['files']]
 
-	sha1_stream = StringIO(info['pieces'])
+	sha1_stream = sha1_reader(info['pieces'], progress_callback=progress_callback)
 	sha1sum = hashlib.sha1()
 
 	piece_left = piece_length
@@ -126,7 +140,6 @@ def verify_bt_multiple(folder, info):
 		f = files.pop(0)
 		path = f['path']
 		size = f['length']
-		print path
 		if os.path.exists(path):
 			if os.path.getsize(path) != size:
 				return False
@@ -137,7 +150,7 @@ def verify_bt_multiple(folder, info):
 				sha1sum.update(bytes)
 				piece_left -= size
 				if not piece_left:
-					if complete_piece and sha1sum.digest() != sha1_stream.read(20):
+					if complete_piece and sha1sum.digest() != sha1_stream.next_sha1():
 						return False
 					complete_piece = True
 					sha1sum = hashlib.sha1()
@@ -149,7 +162,7 @@ def verify_bt_multiple(folder, info):
 						assert len(bytes) == piece_left
 						size -= piece_left
 						sha1sum.update(bytes)
-						if sha1sum.digest() != sha1_stream.read(20):
+						if sha1sum.digest() != sha1_stream.next_sha1():
 							return False
 						sha1sum = hashlib.sha1()
 						piece_left = piece_length
@@ -160,7 +173,7 @@ def verify_bt_multiple(folder, info):
 		else:
 			while size >= piece_left:
 				size -= piece_left
-				sha1_stream.read(20)
+				sha1_stream.next_sha1()
 				sha1sum = hashlib.sha1()
 				piece_left = piece_length
 			if size:
@@ -171,22 +184,26 @@ def verify_bt_multiple(folder, info):
 
 	if piece_left < piece_length:
 		if complete_piece:
-			if sha1sum.digest() != sha1_stream.read(20):
+			if sha1sum.digest() != sha1_stream.next_sha1():
 				return False
 		else:
-			sha1_stream.read(20)
-	assert len(sha1_stream.read()) == 0
+			sha1_stream.next_sha1()
+	assert sha1_stream.next_sha1() == ''
 
 	return True
 
-def verify_bt(path, info):
+def verify_bt(path, info, progress_callback=None):
 	if 'files' not in info:
 		if os.path.isfile(path):
-			verify_bt_single_file(path, info)
+			return verify_bt_single_file(path, info, progress_callback=progress_callback)
 		else:
 			path = os.path.join(path, encode_path(info['name']))
-			verify_bt_single_file(path, info)
+			return verify_bt_single_file(path, info, progress_callback=progress_callback)
 	else:
-		verify_bt_multiple(path, info)
+		return verify_bt_multiple(path, info, progress_callback=progress_callback)
+
+def verify_bt_file(path, torrent_path, progress_callback=None):
+	with open(torrent_path, 'rb') as x:
+		return verify_bt(path, bdecode(x.read())['info'], progress_callback)
 
 
