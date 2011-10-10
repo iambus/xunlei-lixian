@@ -324,7 +324,7 @@ def find_torrents_task_to_download(client, links):
 		elif re.match(r'http://', link):
 			print 'Downloading torrent file from', link
 			torrent = urllib2.urlopen(link, timeout=60).read()
-			assert torrent.startswith('d8:announce')
+			assert torrent.startswith('d8:announce'), 'Probably not a valid torrent file [%s...]' % repr(torrent[:11])
 			info_hash = lixian_hash_bt.info_hash_from_content(torrent)
 			if info_hash not in hashes:
 				print 'Adding bt task', link
@@ -333,7 +333,7 @@ def find_torrents_task_to_download(client, links):
 		elif os.path.exists(link):
 			with open(link, 'rb') as stream:
 				torrent = stream.read()
-			assert torrent.startswith('d8:announce')
+			assert torrent.startswith('d8:announce'), 'Probably not a valid torrent file [%s...]' % repr(torrent[:11])
 			info_hash = lixian_hash_bt.info_hash_from_content(torrent)
 			if info_hash not in hashes:
 				print 'Adding bt task', link
