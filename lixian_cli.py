@@ -2,6 +2,7 @@
 
 from lixian import XunleiClient
 import lixian_hash_bt
+import lixian_hash_ed2k
 import subprocess
 import sys
 import os
@@ -201,8 +202,7 @@ def verify_dcid(path, dcid):
 def verify_hash(path, task):
 	if os.path.getsize(path) == task['size'] and verify_dcid(path, task['dcid']):
 		if task['type'] == 'ed2k':
-			from lixian_hash_ed2k import verify_ed2k_link
-			return verify_ed2k_link(path, task['original_url'])
+			return lixian_hash_ed2k.verify_ed2k_link(path, task['original_url'])
 		else:
 			return True
 
@@ -283,7 +283,6 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			path = os.path.join(dirname, name)
 			download_url = str(f['xunlei_url'])
 			download2(client, download_url, path, f)
-		import lixian_hash_bt
 		torrent_file = client.get_torrent_file(task)
 		print 'Hashing bt ...'
 		bar = SimpleProgressBar()
@@ -581,6 +580,11 @@ def lixian_info(args):
 	print 'internalid:', client.get_userid()
 	print 'gdriveid:', client.get_gdriveid()
 
+def lixian_hash(args):
+	assert len(args) == 1
+	print 'ed2k:', lixian_hash_ed2k.hash_file(args[0])
+	print 'dcid:', dcid_hash_file(args[0])
+
 def execute_command(args=sys.argv[1:]):
 	if not args:
 		usage()
@@ -595,7 +599,7 @@ def execute_command(args=sys.argv[1:]):
 			usage()
 			sys.exit(1)
 		sys.exit(0)
-	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'info': lixian_info}
+	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'info': lixian_info, 'hash': lixian_hash}
 	if command not in commands:
 		usage()
 		sys.exit(1)
