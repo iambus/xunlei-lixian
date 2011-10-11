@@ -53,13 +53,13 @@ def parse_ed2k_link(link):
 	if not m:
 		raise Exception('not an acceptable ed2k link: '+link)
 	file_size, hash_hex = m.groups()
-	return hash_hex, int(file_size)
+	return hash_hex.lower(), int(file_size)
 
 def verify_ed2k_link(path, link):
 	hash_hex, file_size = parse_ed2k_link(link)
 	import os.path
 	if os.path.getsize(path) != file_size:
 		return False
-	return hash_file(path) == hash_hex
+	return hash_file(path).lower() == hash_hex.lower()
 
 
