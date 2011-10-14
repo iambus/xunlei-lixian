@@ -379,7 +379,7 @@ def find_tasks_to_download(client, args):
 				tasks.append(task)
 				break
 		else:
-			raise NotImplementedError('task not found, wired')
+			raise NotImplementedError('task not found, wired: '+link)
 	return tasks
 
 def download_task(args):
