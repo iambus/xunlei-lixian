@@ -425,6 +425,8 @@ def link_equals(x1, x2):
 			x2 = x2.encode('utf-8')
 		x1 = urllib.unquote(x1)
 		x2 = urllib.unquote(x2)
+		x1 = x1.replace('&amp;', '&')
+		x2 = x2.replace('&amp;', '&')
 	elif x1.startswith('bt://') and x2.startswith('bt://'):
 		x1 = x1.lower()
 		x2 = x2.lower()
