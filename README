@@ -16,8 +16,14 @@ python lixian_cli.py download ed2k-url --output "file to save"
 python lixian_cli.py download --input download-urls-file
 python lixian_cli.py download --input download-urls-file --delete
 python lixian_cli.py download --input download-urls-file --ouput-dir root-dir-to-save-files
+python lixian_cli.py download --torrent 1.torrent
+python lixian_cli.py download --torrent torrent-info-hash
+python lixian_cli.py download --torrent http://xxx/xxx.torrent
 
 python lixian_cli.py add url
+python lixian_cli.py add --torrent 1.torrent
+python lixian_cli.py add --torrent torrent-info-hash
+python lixian_cli.py add --torrent http://xxx/xxx.torrent
 
 python lixian_cli.py delete url
 python lixian_cli.py delete --id task-id-to-delete
