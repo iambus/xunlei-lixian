@@ -173,6 +173,7 @@ def verify_bt_multiple(folder, info, progress_callback=None):
 					if size:
 						bytes = stream.read(size)
 						assert len(bytes) == size
+						size -= piece_left
 						sha1sum.update(bytes)
 		else:
 			while size >= piece_left:
