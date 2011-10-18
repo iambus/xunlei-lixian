@@ -164,7 +164,7 @@ def verify_bt_multiple(folder, info, progress_callback=None):
 					while size >= piece_left:
 						bytes = stream.read(piece_left)
 						assert len(bytes) == piece_left
-						size -= piece_left
+						piece_left -= size
 						sha1sum.update(bytes)
 						if sha1sum.digest() != sha1_stream.next_sha1():
 							return False
