@@ -424,15 +424,16 @@ def download_task(args):
 
 def link_equals(x1, x2):
 	if x1.startswith('ed2k://') and x2.startswith('ed2k://'):
-		import urllib
-		if type(x1) == unicode:
-			x1 = x1.encode('utf-8')
-		if type(x2) == unicode:
-			x2 = x2.encode('utf-8')
-		x1 = urllib.unquote(x1)
-		x2 = urllib.unquote(x2)
-		x1 = x1.replace('&amp;', '&')
-		x2 = x2.replace('&amp;', '&')
+		return lixian_hash_ed2k.parse_ed2k_link(x1) == lixian_hash_ed2k.parse_ed2k_link(x2)
+		#import urllib
+		#if type(x1) == unicode:
+		#	x1 = x1.encode('utf-8')
+		#if type(x2) == unicode:
+		#	x2 = x2.encode('utf-8')
+		#x1 = urllib.unquote(x1)
+		#x2 = urllib.unquote(x2)
+		#x1 = x1.replace('&amp;', '&')
+		#x2 = x2.replace('&amp;', '&')
 	elif x1.startswith('bt://') and x2.startswith('bt://'):
 		x1 = x1.lower()
 		x2 = x2.lower()
