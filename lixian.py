@@ -220,7 +220,7 @@ class XunleiClient:
 		assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0'</script>" % self.id
 
 	def add_torrent_task_by_content(self, content, path='attachment.torrent'):
-		assert content.startswith('d8:announce'), 'Probably not a valid torrent file [%s...]' % repr(content[:11])
+		assert content.startswith('d8:announce') or content.startswith('d13:announce-list'), 'Probably not a valid torrent file [%s...]' % repr(content[:17])
 		upload_url = 'http://dynamic.cloud.vip.xunlei.com/interface/torrent_upload'
 		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit'
 
