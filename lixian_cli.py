@@ -169,7 +169,7 @@ def wget_download(client, download_url, filename, resuming=False):
 		raise Exception('wget exited abnormaly')
 
 def escape_filename(name):
-	name = re.sub(r'&amp;', '&', name, flags=re.I)
+	name = re.sub(r'&(amp;)+', '&', name, flags=re.I)
 	name = re.sub(r'[\\/:*?"<>|]', '-', name)
 	return name
 
