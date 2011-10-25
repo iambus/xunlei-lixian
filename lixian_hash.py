@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 def sha1_hash_file(path):
 	import hashlib
