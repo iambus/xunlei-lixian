@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from lixian import XunleiClient
+import lixian_hash
 import lixian_hash_bt
 import lixian_hash_ed2k
 import subprocess
@@ -173,40 +174,8 @@ def escape_filename(name):
 	name = re.sub(r'[\\/:*?"<>|]', '-', name)
 	return name
 
-def sha1_hash_file(path):
-	import hashlib
-	h = hashlib.sha1()
-	with open(path, 'rb') as stream:
-		while True:
-			bytes = stream.read(1024*1024)
-			if not bytes:
-				break
-			h.update(bytes)
-	return h.hexdigest()
-
-def verify_sha1(path, sha1):
-	return sha1_hash_file(path).lower() == sha1.lower()
-
-def dcid_hash_file(path):
-	import hashlib
-	h = hashlib.sha1()
-	size = os.path.getsize(path)
-	with open(path, 'rb') as stream:
-		if size < 0xF000:
-			h.update(stream.read())
-		else:
-			h.update(stream.read(0x5000))
-			stream.seek(size/3)
-			h.update(stream.read(0x5000))
-			stream.seek(size-0x5000)
-			h.update(stream.read(0x5000))
-	return h.hexdigest()
-
-def verify_dcid(path, dcid):
-	return dcid_hash_file(path).lower() == dcid.lower()
-
 def verify_hash(path, task):
-	if os.path.getsize(path) == task['size'] and verify_dcid(path, task['dcid']):
+	if os.path.getsize(path) == task['size'] and lixian_hash.verify_dcid(path, task['dcid']):
 		if task['type'] == 'ed2k':
 			return lixian_hash_ed2k.verify_ed2k_link(path, task['original_url'])
 		else:
