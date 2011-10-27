@@ -558,7 +558,7 @@ def lixian_info(args):
 	print 'internalid:', client.get_userid()
 	print 'gdriveid:', client.get_gdriveid()
 
-def lixian_hash(args):
+def print_hash(args):
 	assert len(args) == 1
 	print 'ed2k:', lixian_hash_ed2k.hash_file(args[0])
 	print 'dcid:', dcid_hash_file(args[0])
@@ -577,7 +577,7 @@ def execute_command(args=sys.argv[1:]):
 			usage()
 			sys.exit(1)
 		sys.exit(0)
-	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'info': lixian_info, 'hash': lixian_hash}
+	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'info': lixian_info, 'hash': print_hash}
 	if command not in commands:
 		usage()
 		sys.exit(1)
