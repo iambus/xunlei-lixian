@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+import hashlib
+import os
+
 def sha1_hash_file(path):
-	import hashlib
 	h = hashlib.sha1()
 	with open(path, 'rb') as stream:
 		while True:
@@ -15,7 +17,6 @@ def verify_sha1(path, sha1):
 	return sha1_hash_file(path).lower() == sha1.lower()
 
 def dcid_hash_file(path):
-	import hashlib
 	h = hashlib.sha1()
 	size = os.path.getsize(path)
 	with open(path, 'rb') as stream:
