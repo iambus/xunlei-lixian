@@ -163,7 +163,7 @@ class XunleiClient:
 		return parse_bt_list(html)
 
 	def get_torrent_file_by_info_hash(self, info_hash):
-		url = 'http://dynamic.cloud.vip.xunlei.com/interface/get_torrent?userid=%s&infoid=%s' % (self.id, info_hash)
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/get_torrent?userid=%s&infoid=%s' % (self.id, info_hash.upper())
 		torrent = self.urlopen(url).read()
 		if torrent == "<meta http-equiv='Content-Type' content='text/html; charset=utf-8' /><script>alert('\xe5\xaf\xb9\xe4\xb8\x8d\xe8\xb5\xb7\xef\xbc\x8c\xe6\xb2\xa1\xe6\x9c\x89\xe6\x89\xbe\xe5\x88\xb0\xe5\xaf\xb9\xe5\xba\x94\xe7\x9a\x84\xe7\xa7\x8d\xe5\xad\x90\xe6\x96\x87\xe4\xbb\xb6!');</script>":
 			raise Exception('Torrent not found')
