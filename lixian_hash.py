@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 import hashlib
+import lixian_hash_ed2k
+import lixian_hash_bt
 import os
 
-def sha1_hash_file(path):
-	h = hashlib.sha1()
+def lib_hash_file(h, path):
 	with open(path, 'rb') as stream:
 		while True:
 			bytes = stream.read(1024*1024)
@@ -13,8 +14,23 @@ def sha1_hash_file(path):
 			h.update(bytes)
 	return h.hexdigest()
 
+def sha1_hash_file(path):
+	return lib_hash_file(hashlib.sha1(), path)
+
 def verify_sha1(path, sha1):
 	return sha1_hash_file(path).lower() == sha1.lower()
+
+def md5_hash_file(path):
+	return lib_hash_file(hashlib.md5(), path)
+
+def verify_md5(path, md5):
+	return md5_hash_file(path).lower() == md5.lower()
+
+def md4_hash_file(path):
+	return lib_hash_file(hashlib.new('md4'), path)
+
+def verify_md4(path, md4):
+	return md4_hash_file(path).lower() == md4.lower()
 
 def dcid_hash_file(path):
 	h = hashlib.sha1()
@@ -36,9 +52,29 @@ def verify_dcid(path, dcid):
 if __name__ == '__main__':
 	import sys
 	args = sys.argv[1:]
-	algorithm = args.pop(0)
-	hash_fun = {'--sha1':sha1_hash_file, '--dcid':dcid_hash_file}[algorithm]
-	for f in args:
-		h = hash_fun(f)
-		print '%s *%s' % (h, f)
+	option = args.pop(0)
+	if option.startswith('--verify'):
+		hash_fun = {'--verify-sha1':verify_sha1,
+					'--verify-md5':verify_md5,
+					'--verify-md4':verify_md4,
+					'--verify-dcid':verify_dcid,
+					'--verify-ed2k':lixian_hash_ed2k.verify_ed2k_link,
+					'--verify-bt':lixian_hash_bt.verify_bt_file,
+				   }[option]
+		assert len(args) == 2
+		hash, path = args
+		if hash_fun(path, hash):
+			print 'looks good...'
+		else:
+			print 'failed...'
+	else:
+		hash_fun = {'--sha1':sha1_hash_file,
+					'--md5':md5_hash_file,
+					'--md4':md4_hash_file,
+					'--dcid':dcid_hash_file,
+					'--ed2k':lixian_hash_ed2k.generate_ed2k_link,
+				   }[option]
+		for f in args:
+			h = hash_fun(f)
+			print '%s *%s' % (h, f)
 
