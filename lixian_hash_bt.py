@@ -107,31 +107,40 @@ class sha1_reader:
 			self.progress_callback(float(self.processed)/self.total)
 		return self.stream.read(20)
 
+def sha1_update_stream(sha1, stream, n):
+	while n > 0:
+		readn = min(n, 1024*1024)
+		bytes = stream.read(readn)
+		assert len(bytes) == readn
+		n -= readn
+		sha1.update(bytes)
+	assert n == 0
+
 def verify_bt_single_file(path, info, progress_callback=None):
 	# TODO: check md5sum if available
 	if os.path.getsize(path) != info['length']:
 		return False
 	piece_length = info['piece length']
-	assert piece_length <= 1024*1024
+	assert piece_length > 0
 	sha1_stream = sha1_reader(info['pieces'], progress_callback=progress_callback)
+	size = f['length']
 	with open(path, 'rb') as stream:
-		while True:
-			bytes = stream.read(piece_length)
-			sha1 = sha1_stream.next_sha1()
-			if bytes:
-				assert len(sha1) == 20
-				if hashlib.sha1(bytes).digest() != sha1:
-					return False
-			else:
-				assert len(sha1) == 0
-				break
-	assert sha1_stream.next_sha1() == ''
+		while size > 0:
+			n = min(size, piece_length)
+			size -= n
+			sha1sum = hashlib.sha1()
+			sha1_update_stream(sha1sum, stream, n)
+			if sha1sum.digest() != sha1_stream.next_sha1():
+				return False
+		assert size == 0
+		assert stream.read(1) == ''
+		assert sha1_stream.next_sha1() == ''
 	return True
 
 def verify_bt_multiple(folder, info, progress_callback=None):
 	# TODO: check md5sum if available
 	piece_length = info['piece length']
-	assert piece_length <= 1024*1024
+	assert piece_length > 0
 	files = [{'path':os.path.join(folder, apply(os.path.join, x['path'])), 'length':x['length']} for x in info['files']]
 
 	sha1_stream = sha1_reader(info['pieces'], progress_callback=progress_callback)
@@ -149,9 +158,8 @@ def verify_bt_multiple(folder, info, progress_callback=None):
 				return False
 			if size <= piece_left:
 				with open(path, 'rb') as stream:
-					bytes = stream.read()
-				assert len(bytes) == size
-				sha1sum.update(bytes)
+					sha1_update_stream(sha1sum, stream, size)
+					assert stream.read(1) == ''
 				piece_left -= size
 				if not piece_left:
 					if complete_piece and sha1sum.digest() != sha1_stream.next_sha1():
@@ -162,19 +170,15 @@ def verify_bt_multiple(folder, info, progress_callback=None):
 			else:
 				with open(path, 'rb') as stream:
 					while size >= piece_left:
-						bytes = stream.read(piece_left)
-						assert len(bytes) == piece_left
 						size -= piece_left
-						sha1sum.update(bytes)
+						sha1_update_stream(sha1sum, stream, piece_left)
 						if sha1sum.digest() != sha1_stream.next_sha1():
 							return False
 						sha1sum = hashlib.sha1()
 						piece_left = piece_length
 					if size:
-						bytes = stream.read(size)
-						assert len(bytes) == size
+						sha1_update_stream(sha1sum, stream, size)
 						piece_left -= size
-						sha1sum.update(bytes)
 		else:
 			while size >= piece_left:
 				size -= piece_left
