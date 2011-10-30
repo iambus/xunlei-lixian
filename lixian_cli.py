@@ -255,7 +255,10 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 		for f in files:
 			name = f['name'].encode(default_encoding)
 			print 'Downloading', name, '...'
-			path = os.path.join(dirname, name)
+			path = os.path.join(dirname, *name.split('\\'))
+			subdir = os.path.dirname(path)
+			if not os.path.exists(subdir):
+				os.makedirs(subdir)
 			download_url = str(f['xunlei_url'])
 			download2(client, download_url, path, f)
 		torrent_file = client.get_torrent_file(task)
