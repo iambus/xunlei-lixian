@@ -162,7 +162,7 @@ def verify_bt_multiple(folder, info, progress_callback=None):
 					assert stream.read(1) == ''
 				piece_left -= size
 				if not piece_left:
-					if complete_piece and sha1sum.digest() != sha1_stream.next_sha1():
+					if sha1sum.digest() != sha1_stream.next_sha1() and complete_piece:
 						return False
 					complete_piece = True
 					sha1sum = hashlib.sha1()
@@ -172,7 +172,7 @@ def verify_bt_multiple(folder, info, progress_callback=None):
 					while size >= piece_left:
 						size -= piece_left
 						sha1_update_stream(sha1sum, stream, piece_left)
-						if complete_piece and sha1sum.digest() != sha1_stream.next_sha1():
+						if sha1sum.digest() != sha1_stream.next_sha1() and complete_piece:
 							return False
 						complete_piece = True
 						sha1sum = hashlib.sha1()
