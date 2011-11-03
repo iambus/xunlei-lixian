@@ -181,7 +181,13 @@ class XunleiClient:
 		check_url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_check?callback=queryCid&url=%s&random=%s&tcache=%s' % (urllib.quote(url), random, current_timestamp())
 		js = self.urlopen(check_url).read().decode('utf-8')
 		qcid = re.match(r'^queryCid(\(.+\))\s*$', js).group(1)
-		cid, gcid, size_required, filename, goldbean_need, silverbean_need, is_full, random = literal_eval(qcid)
+		qcid = literal_eval(qcid)
+		if len(qcid) == 8:
+			cid, gcid, size_required, filename, goldbean_need, silverbean_need, is_full, random = qcid
+		elif len(qcid) == 9:
+			cid, gcid, size_required, filename, goldbean_need, silverbean_need, is_full, random, ext = qcid
+		else:
+			raise NotImplementedError()
 		assert goldbean_need == 0
 		assert silverbean_need == 0
 
