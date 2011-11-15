@@ -346,8 +346,9 @@ def find_tasks_to_download(client, args):
 				break
 	if to_add:
 		print 'Adding below tasks:'
-		for link in to_add:
-			print link
+		for link in links:
+			if link in to_add:
+				print link
 		client.add_batch_tasks(to_add)
 		all_tasks = client.read_all_tasks()
 	tasks = []
