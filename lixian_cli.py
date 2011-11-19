@@ -169,6 +169,28 @@ def wget_download(client, download_url, filename, resuming=False):
 	if exit_code != 0:
 		raise Exception('wget exited abnormaly')
 
+def curl_download(client, download_url, filename, resuming=False):
+	gdriveid = str(client.get_gdriveid())
+	curl_opts = ['curl', download_url, '--cookie', 'gdriveid='+gdriveid, '--output', filename]
+	if resuming:
+		curl_opts.append('--continue')
+	exit_code = subprocess.call(curl_opts)
+	if exit_code != 0:
+		raise Exception('curl exited abnormaly')
+
+def aria2_download(client, download_url, filename, resuming=False):
+	gdriveid = str(client.get_gdriveid())
+	aria2_opts = ['aria2c', '--header=Cookie: gdriveid='+gdriveid, download_url]
+	aria2_opts.extends(('--split', '5'))
+	aria2_opts.extends(('--output-file', filename)) # TODO: this option seems not supported by aria2c ...
+	if resuming:
+		aria2_opts.append('-c')
+	exit_code = subprocess.call(aria2_opts)
+	if exit_code != 0:
+		raise Exception('aria2c exited abnormaly')
+
+# TODO: support axel, ProZilla
+
 def escape_filename(name):
 	name = re.sub(r'&(amp;)+', '&', name, flags=re.I)
 	name = re.sub(r'[\\/:*?"<>|]', '-', name)
@@ -363,7 +385,7 @@ def find_tasks_to_download(client, args):
 
 def download_task(args):
 	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'torrent', 'id', 'name', 'url'], alias={'o': 'output', 'i': 'input'}, default={'tool':'wget'})
-	download = {'wget':wget_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
+	download = {'wget':wget_download, 'aria2':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
 	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
