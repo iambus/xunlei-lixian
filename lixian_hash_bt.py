@@ -123,7 +123,7 @@ def verify_bt_single_file(path, info, progress_callback=None):
 	piece_length = info['piece length']
 	assert piece_length > 0
 	sha1_stream = sha1_reader(info['pieces'], progress_callback=progress_callback)
-	size = f['length']
+	size = info['length']
 	with open(path, 'rb') as stream:
 		while size > 0:
 			n = min(size, piece_length)
