@@ -315,7 +315,7 @@ def find_torrents_task_to_download(client, links):
 	link_hashes = []
 	for link in links:
 		if re.match(r'^(?:bt://)?([a-fA-F0-9]{40})$', link):
-			info_hash = link[-40:]
+			info_hash = link[-40:].lower()
 			if info_hash not in hashes:
 				print 'Adding bt task', link
 				client.add_torrent_task_by_info_hash(info_hash)
