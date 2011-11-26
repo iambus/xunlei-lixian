@@ -171,7 +171,7 @@ def wget_download(client, download_url, filename, resuming=False):
 
 def curl_download(client, download_url, filename, resuming=False):
 	gdriveid = str(client.get_gdriveid())
-	curl_opts = ['curl', download_url, '--cookie', 'gdriveid='+gdriveid, '--output', filename]
+	curl_opts = ['curl', '-L', download_url, '--cookie', 'gdriveid='+gdriveid, '--output', filename]
 	if resuming:
 		curl_opts.append('--continue')
 	exit_code = subprocess.call(curl_opts)
