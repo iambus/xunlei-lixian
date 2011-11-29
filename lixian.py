@@ -412,7 +412,6 @@ def get_content_type(filename):
 
 def assert_default_page(response, id):
 	#assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0'</script>" % id
-	expected = re.escape("<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0%s'</script>") % (id, r'(&cache=\d+)')
-	assert re.match('^' + expected + '$', response)
+	assert re.match(r"^<script>top\.location='http://dynamic\.cloud\.vip\.xunlei\.com/user_task\?userid=%s&st=0(&cache=\d+)?'</script>$" % id, response), response
 
 
