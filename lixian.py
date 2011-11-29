@@ -214,7 +214,7 @@ class XunleiClient:
 		    })
 
 		response = self.urlopen(task_url).read()
-		assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid="+self.id+"&st=0'</script>"
+		assert_default_page(response, self.id)
 
 	def add_batch_tasks(self, urls):
 		assert urls
@@ -228,7 +228,7 @@ class XunleiClient:
 			data['url[%d]' % i] = urls[i]
 		data['batch_old_taskid' ] = batch_old_taskid
 		response = self.urlopen(url, data=data).read()
-		assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0'</script>" % self.id
+		assert_default_page(response, self.id)
 
 	def add_torrent_task_by_content(self, content, path='attachment.torrent'):
 		assert content.startswith('d8:announce') or content.startswith('d13:announce-list'), 'Probably not a valid torrent file [%s...]' % repr(content[:17])
@@ -250,7 +250,7 @@ class XunleiClient:
 					'size':''.join(f['subsize']+'_' for f in bt['filelist']),
 					'from':'0'}
 			response = self.urlopen(commit_url, data=data).read()
-			assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0'</script>" % self.id
+			assert_default_page(response, self.id)
 			return bt_hash
 		already_exists = re.search(r"parent\.edit_bt_list\((\{.*\}),''\)", response, flags=re.S)
 		if already_exists:
@@ -409,5 +409,10 @@ def encode_multipart_formdata(fields, files):
 def get_content_type(filename):
 	import mimetypes
 	return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+
+def assert_default_page(response, id):
+	#assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0'</script>" % id
+	expected = re.escape("<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0%s'</script>") % (id, r'(&cache=\d+)')
+	assert re.matches('^' + expected + '$', response)
 
 
