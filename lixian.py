@@ -175,7 +175,13 @@ class XunleiClient:
 		return self.get_torrent_file_by_info_hash(task['bt_hash'])
 
 	def add_task(self, url):
-		assert url.startswith('ed2k://'), 'task "%s" is not suppoted (only ed2k is tested, will support others later)' % url
+		protocol = parse_url_protocol(url)
+		assert protocol in ('ed2k', 'http', 'thunder', 'Flashget', 'qqdl'), 'protocol "%s" is not suppoted' % protocol
+
+		from lixian_url import url_unmask
+		url = url_unmask(url)
+		protocol = parse_url_protocol(url)
+		assert protocol in ('ed2k', 'http'), 'protocol "%s" is not suppoted' % protocol
 
 		random = current_random()
 		check_url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_check?callback=queryCid&url=%s&random=%s&tcache=%s' % (urllib.quote(url), random, current_timestamp())
@@ -192,7 +198,7 @@ class XunleiClient:
 		assert silverbean_need == 0
 
 
-		if url.startswith('htt:'):
+		if url.startswith('http:'):
 			task_type = 0
 		elif url.startswith('ed2k://'):
 			task_type = 2
@@ -414,4 +420,10 @@ def assert_default_page(response, id):
 	#assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0'</script>" % id
 	assert re.match(r"^<script>top\.location='http://dynamic\.cloud\.vip\.xunlei\.com/user_task\?userid=%s&st=0(&cache=\d+)?'</script>$" % id, response), response
 
+def parse_url_protocol(url):
+	m = re.match(r'([^:]+)://', url)
+	if m:
+		return m.group(1)
+	else:
+		return url
 

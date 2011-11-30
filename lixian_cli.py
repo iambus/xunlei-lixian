@@ -417,19 +417,11 @@ def download_task(args):
 		else:
 			download_multiple_tasks(client, download, tasks, **download_args)
 
-def normalize_unicode_link(url):
-	def escape_unicode(m):
-		import urllib
-		c = m.group()
-		if ord(c) < 0x80:
-			return c
-		else:
-			return urllib.quote(c.encode('utf-8'))
-	if type(url) == unicode:
-		return re.sub(r'.', escape_unicode, url)
-	return url
 
 def link_equals(x1, x2):
+	from lixian_url import url_unmask, normalize_unicode_link
+	x1 = url_unmask(x1)
+	x2 = url_unmask(x2)
 	if x1.startswith('ed2k://') and x2.startswith('ed2k://'):
 		return lixian_hash_ed2k.parse_ed2k_link(x1) == lixian_hash_ed2k.parse_ed2k_link(x2)
 		#import urllib
