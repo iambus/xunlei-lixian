@@ -176,12 +176,15 @@ class XunleiClient:
 
 	def add_task(self, url):
 		protocol = parse_url_protocol(url)
-		assert protocol in ('ed2k', 'http', 'thunder', 'Flashget', 'qqdl'), 'protocol "%s" is not suppoted' % protocol
+		assert protocol in ('ed2k', 'http', 'thunder', 'Flashget', 'qqdl', 'bt'), 'protocol "%s" is not suppoted' % protocol
 
 		from lixian_url import url_unmask
 		url = url_unmask(url)
 		protocol = parse_url_protocol(url)
-		assert protocol in ('ed2k', 'http'), 'protocol "%s" is not suppoted' % protocol
+		assert protocol in ('ed2k', 'http', 'bt'), 'protocol "%s" is not suppoted' % protocol
+
+		if protocol == 'bt':
+			return self.add_torrent_task_by_info_hash(url[5:])
 
 		random = current_random()
 		check_url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_check?callback=queryCid&url=%s&random=%s&tcache=%s' % (urllib.quote(url), random, current_timestamp())
