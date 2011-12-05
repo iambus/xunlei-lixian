@@ -35,3 +35,34 @@ python lixian_cli.py restart ...
 
 python lixian_cli.py logout
 
+* 安装指南：
+
+1. 安装git（非github用户应该只需要执行第一步Download and Install Git）
+http://help.github.com/set-up-git-redirect
+
+2. 安装Python 2.x
+http://www.python.org/getit/
+
+3. 执行（Windows用户请在git-bash里执行）
+git clone git://github.com/iambus/xunlei-lixian.git
+
+4. 在命令行里运行
+python lixian_cli.py
+
+5. Tip
+你可以为python lixian_cli.py创建一个别名（比如lx），以减少敲键次数。
+Linux上可以使用：
+   ln -s 你的lixian_cli.py路径 ~/bin/lx
+Windows上可以创建一个lx.bat脚本，放在你的PATH中：
+   @echo off
+   python 完整的lixian_cli.py路径 %*
+
+* 支持的下载工具：
+wget：默认下载工具。注意有些Linux发行版（比如某些运行在路由设备上的mini系统）自带的wget可能无法满足功能要求。可以尝试使用其他工具。
+asyn：内置的下载工具。在命令行中加上--tool asyn可以启用。注意此工具的下载表现一般，在高速下载或者设备性能不太好的情况（比如运行在低端路由上），CPU使用可能稍高。在我的RT-N16上，以250K/s的速度下载，CPU使用大概在10%~20%。
+urllib2：内置下载工具。不支持断点续传错误重连，不建议使用。
+curl：尚未测试。
+aria2：未测试通过。好像不支持指定下载保存的文件名。
+其他工具，比如axel，ProZilla，暂时都不支持。有需要请可以我，或者直接提交一个issue。
+
+
