@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from lixian import XunleiClient
+from lixian import XunleiClient, encypt_password
 import lixian_config
 import lixian_hash
 import lixian_hash_bt
@@ -79,7 +79,7 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
 
 def parse_login_command_line(args, keys=[], bools=[], alias={}, default={}):
 	common_keys = ['username', 'password', 'cookies']
-	common_default = {'cookies': lixian_config.LIXIAN_DEFAULT_COOKIES}
+	common_default = {'cookies': lixian_config.LIXIAN_DEFAULT_COOKIES, 'username': lixian_config.get_config('username'), 'password': lixian_config.get_config('password')}
 	common_keys.extend(keys)
 	common_default.update(default)
 	args = parse_command_line(args, common_keys, bools, alias, common_default)
@@ -615,8 +615,13 @@ def lx_config(args):
 			print lixian_config.source_config()
 			print lixian_config.global_config
 	else:
-		print 'Saving configuraion to', lixian_config.global_config.path
-		lixian_config.put_config(*args)
+		assert len(args) in (1, 2)
+		if args[0] == 'password':
+			print 'Saving password (encrypted) to', lixian_config.global_config.path
+			lixian_config.put_config(args[0], encypt_password(args[1]))
+		else:
+			print 'Saving configuration to', lixian_config.global_config.path
+			lixian_config.put_config(*args)
 
 def print_hash(args):
 	assert len(args) == 1

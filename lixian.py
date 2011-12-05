@@ -23,14 +23,17 @@ class XunleiClient:
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
 		if login:
 			if not self.has_logged_in():
+				if not username and self.has_cookie('.xunlei.com', 'usernewno'):
+					username = self.get_username()
 				if not username:
-					if self.has_cookie('.xunlei.com', 'usernewno'):
-						username = self.get_username()
-					else:
-						raise NotImplementedError('user is not logged in')
+					import lixian_config
+					username = lixian_config.get_config('username')
+#				if not username:
+#					raise NotImplementedError('user is not logged in')
 				if not password:
 					raise NotImplementedError('user is not logged in')
 				self.login(username, password)
+				assert self.has_logged_in(), 'login failed'
 			else:
 				self.id = self.get_userid()
 
@@ -95,11 +98,8 @@ class XunleiClient:
 		check_url = 'http://login.xunlei.com/check?u=%s&cachetime=%d' % (username, cachetime)
 		login_page = self.urlopen(check_url).read()
 		verifycode = self.get_cookie('.xunlei.com', 'check_result')[2:].upper()
-		def md5(s):
-			import hashlib
-			return hashlib.md5(s).hexdigest().lower()
-		if not re.match(r'^[0-9a-f]{32}$', username):
-			password = md5(md5(password))
+		if not re.match(r'^[0-9a-f]{32}$', password):
+			password = encypt_password(password)
 		password = md5(password+verifycode)
 		login_page = self.urlopen('http://login.xunlei.com/sec2login/', data={'u': username, 'p': password, 'verifycode': verifycode})
 		self.id = self.get_userid()
@@ -436,4 +436,12 @@ def parse_url_protocol(url):
 		return m.group(1)
 	else:
 		return url
+
+def md5(s):
+	import hashlib
+	return hashlib.md5(s).hexdigest().lower()
+
+def encypt_password(password):
+	return md5(md5(password))
+
 
