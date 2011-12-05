@@ -37,7 +37,7 @@ class XunleiClient:
 	def urlopen(self, url, **args):
 		#print url
 		if 'data' in args and type(args['data']) == dict:
-			args['data'] = urllib.urlencode(args['data'])
+			args['data'] = urlencode(args['data'])
 		return self.opener.open(urllib2.Request(url, **args))
 
 	def load_cookies(self):
@@ -207,7 +207,7 @@ class XunleiClient:
 			task_type = 2
 		else:
 			raise NotImplementedError()
-		task_url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_commit?'+urllib.urlencode(
+		task_url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_commit?'+urlencode(
 		   {'callback': 'ret_task',
 		    'uid': self.id,
 		    'cid': cid,
@@ -314,8 +314,8 @@ class XunleiClient:
 					'download_status[]': task['status']}
 			if task['type'] == 'ed2k':
 				data['taskname[]'] = task['name'].encode('utf-8')
-			form.append(urllib.urlencode(data))
-		form.append(urllib.urlencode({'type':1}))
+			form.append(urlencode(data))
+		form.append(urlencode({'type':1}))
 		data = '&'.join(form)
 		response = self.urlopen(url, data=data).read()
 		assert response == "<script>document.domain='xunlei.com';window.parent.redownload_resp(1)</script>"
@@ -387,6 +387,13 @@ def parse_bt_list(js):
 			'dcid': record['cid'],
 			})
 	return files
+
+def urlencode(x):
+	def unif8(u):
+		if type(u) == unicode:
+			u = u.encode('utf-8')
+		return u
+	return urllib.urlencode([(unif8(k), unif8(v)) for k, v in x.items()])
 
 def encode_multipart_formdata(fields, files):
 	#http://code.activestate.com/recipes/146306/
