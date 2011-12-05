@@ -98,8 +98,7 @@ class XunleiClient:
 		check_url = 'http://login.xunlei.com/check?u=%s&cachetime=%d' % (username, cachetime)
 		login_page = self.urlopen(check_url).read()
 		verifycode = self.get_cookie('.xunlei.com', 'check_result')[2:].upper()
-		if not re.match(r'^[0-9a-f]{32}$', password):
-			password = encypt_password(password)
+		password = encypt_password(password)
 		password = md5(password+verifycode)
 		login_page = self.urlopen('http://login.xunlei.com/sec2login/', data={'u': username, 'p': password, 'verifycode': verifycode})
 		self.id = self.get_userid()
@@ -442,6 +441,8 @@ def md5(s):
 	return hashlib.md5(s).hexdigest().lower()
 
 def encypt_password(password):
-	return md5(md5(password))
+	if not re.match(r'^[0-9a-f]{32}$', password):
+		password = md5(md5(password))
+	return password
 
 
