@@ -398,7 +398,6 @@ def download_task(args):
 		tasks = find_tasks_to_download(client, args)
 		download_multiple_tasks(client, download, tasks, **download_args)
 	elif args.torrent:
-		# TODO: --torrent should support multiple torrent tasks. Workaround: use bt://infohash without --torrent.
 		assert not(args.id or args.name or args.url)
 		assert len(args) == 1
 		tasks = find_torrents_task_to_download(client, [args[0]])
