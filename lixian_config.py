@@ -44,6 +44,10 @@ class Config:
 		dump_config(self.path, self.values)
 	def get(self, k, v=None):
 		return self.values.get(k, v)
+	def delete(self, k):
+		if k in self.values:
+			del self.values[k]
+			dump_config(self.path, self.values)
 	def source(self):
 		with open(self.path) as x:
 			return x.read()
@@ -57,6 +61,9 @@ def put_config(k, v=True):
 
 def get_config(k, v=None):
 	return global_config.get(k, v)
+
+def delete_config(k):
+	return global_config.delete(k)
 
 def source_config():
 	return global_config.source()

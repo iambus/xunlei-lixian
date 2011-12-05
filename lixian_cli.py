@@ -606,12 +606,16 @@ def lixian_info(args):
 	print 'gdriveid:', client.get_gdriveid()
 
 def lx_config(args):
-	args = parse_command_line(args, [], ['print'])
-	if args['print'] or not len(args):
+	args = parse_command_line(args, [], ['print', 'delete'])
+	if args.delete:
+		assert len(args) == 1
+		lixian_config.delete_config(args[0])
+	elif args['print'] or not len(args):
 		if len(args):
 			assert len(args) == 1
 			print lixian_config.get_config(args[0])
 		else:
+			print 'Loading', lixian_config.global_config.path, '...\n'
 			print lixian_config.source_config()
 			print lixian_config.global_config
 	else:
