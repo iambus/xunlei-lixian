@@ -38,6 +38,8 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
 				options[k[3:]] = False
 			elif k in keys:
 				options[k] = args.pop(0)
+			elif '=' in k and k[:k.index('=')] in keys:
+				options[k[:k.index('=')]] = k[k.index('=')+1:]
 			elif k in alias:
 				options[alias[k]] = args.pop(0)
 			else:
