@@ -1,3 +1,6 @@
+
+* Quick start
+
 Python script to download from xunlei cloud
 
 python lixian_cli.py login "Your Xunlei account" "Your password"
@@ -43,19 +46,12 @@ http://help.github.com/set-up-git-redirect
 2. 安装Python 2.x
 http://www.python.org/getit/
 
-3. 执行（Windows用户请在git-bash里执行）
+3. 下载代码（Windows用户请在git-bash里执行）
 git clone git://github.com/iambus/xunlei-lixian.git
 
 4. 在命令行里运行
 python lixian_cli.py
 
-5. Tip
-你可以为python lixian_cli.py创建一个别名（比如lx），以减少敲键次数。
-Linux上可以使用：
-   ln -s 你的lixian_cli.py路径 ~/bin/lx
-Windows上可以创建一个lx.bat脚本，放在你的PATH中：
-   @echo off
-   python 完整的lixian_cli.py路径 %*
 
 * 支持的下载工具：
 wget：默认下载工具。注意有些Linux发行版（比如某些运行在路由设备上的mini系统）自带的wget可能无法满足功能要求。可以尝试使用其他工具。
@@ -65,4 +61,42 @@ curl：尚未测试。
 aria2：未测试通过。好像不支持指定下载保存的文件名。
 其他工具，比如axel，ProZilla，暂时都不支持。有需要请可以我，或者直接提交一个issue。
 
+
+* 一些提示
+
+1. 你可以为python lixian_cli.py创建一个别名（比如lx），以减少敲键次数。
+Linux上可以使用：
+   ln -s 你的lixian_cli.py路径 ~/bin/lx
+Windows上可以创建一个lx.bat脚本，放在你的PATH中：
+   @echo off
+   python 完整的lixian_cli.py路径 %*
+
+注：下文中提到的lx都是指python lixian_cli.py的别名。
+
+2. 你可以使用lx config保存一些配置。
+lx config delete
+lx config tool asyn
+lx config username your-id
+lx config password your-password
+注：密码保存的时候会加密（hash）
+
+列出已保存的配置：
+lx config
+lx config --print password
+
+删除一项配置：
+lx config --delete password
+
+3. 使用lx download下载的文件会自动验证hash。其中ed2k和bt会做完整的hash校验。http下载只做部分校验（目前为止尚未发现迅雷离线能提供完整的hash码）。
+注：包含多个文件的bt种子，如果没有完整下载所有文件，对于已下载的文件，可能有少量片段无法验证。如果很重视文件的正确性请选择下载bt种子中的所有文件。（目前还没有发现由于软件问题而导致hash验证失败的情况。）
+
+4. lixian_hash.py可以用于手动计算hash。
+python lixian_hash.py --ed2k filename
+python lixian_hash.py --info-hash torrent-file
+python lixian_hash.py --verify-sha1 filename sha1
+python lixian_hash.py --verify-bt filename torrent-file
+
+* 命令详解
+
+此文档未完成。
 
