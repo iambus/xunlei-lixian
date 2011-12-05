@@ -1,10 +1,12 @@
+Python script to download from xunlei cloud
 
 * Quick start
 
-Python script to download from xunlei cloud
-
 python lixian_cli.py login "Your Xunlei account" "Your password"
 python lixian_cli.py login "Your password"
+
+python lixian_cli.py config username "Your Xunlei account"
+python lixian_cli.py config password "Your password"
 
 python lixian_cli.py list
 python lixian_cli.py list --completed
@@ -53,15 +55,6 @@ git clone git://github.com/iambus/xunlei-lixian.git
 python lixian_cli.py
 
 
-* 支持的下载工具：
-wget：默认下载工具。注意有些Linux发行版（比如某些运行在路由设备上的mini系统）自带的wget可能无法满足功能要求。可以尝试使用其他工具。
-asyn：内置的下载工具。在命令行中加上--tool asyn可以启用。注意此工具的下载表现一般，在高速下载或者设备性能不太好的情况（比如运行在低端路由上），CPU使用可能稍高。在我的RT-N16上，以250K/s的速度下载，CPU使用大概在10%~20%。
-urllib2：内置下载工具。不支持断点续传错误重连，不建议使用。
-curl：尚未测试。
-aria2：未测试通过。好像不支持指定下载保存的文件名。
-其他工具，比如axel，ProZilla，暂时都不支持。有需要请可以我，或者直接提交一个issue。
-
-
 * 一些提示
 
 1. 你可以为python lixian_cli.py创建一个别名（比如lx），以减少敲键次数。
@@ -73,30 +66,163 @@ Windows上可以创建一个lx.bat脚本，放在你的PATH中：
 
 注：下文中提到的lx都是指python lixian_cli.py的别名。
 
-2. 你可以使用lx config保存一些配置。
+2. 你可以使用lx config保存一些配置。见“命令详解”一节。
 lx config delete
 lx config tool asyn
 lx config username your-id
 lx config password your-password
 注：密码保存的时候会加密（hash）
 
-列出已保存的配置：
-lx config
-lx config --print password
-
-删除一项配置：
-lx config --delete password
-
 3. 使用lx download下载的文件会自动验证hash。其中ed2k和bt会做完整的hash校验。http下载只做部分校验（目前为止尚未发现迅雷离线能提供完整的hash码）。
 注：包含多个文件的bt种子，如果没有完整下载所有文件，对于已下载的文件，可能有少量片段无法验证。如果很重视文件的正确性请选择下载bt种子中的所有文件。（目前还没有发现由于软件问题而导致hash验证失败的情况。）
 
-4. lixian_hash.py可以用于手动计算hash。
+4. lixian_hash.py可以用于手动计算hash。见“其他工具”一节。
+
+
+* 命令详解
+
+注：下文中提到的lx都是指python lixian_cli.py的别名。
+
+常用命令：
+lx login
+lx download
+lx list
+lx add
+lx delete
+lx pause
+lx restart
+lx config
+
+1. lx login——登录，获得一个有效session，默认保存路径是~/.xunlei.lixian.cookies。一般来说，除非服务器故障或者执行了lx logout（或者你手动删除了cookies文件），否则session的有效期是一天左右。session过期之后需要手动重新执行login。但如果使用lx config password把密码保存到配置文件里，则会自动重新登录。后文会介绍lx config。
+
+lx login接受两个参数，用户名和密码。第二次登录可以只填密码。
+
+lx login username password
+lx login password
+
+可以用--cookies指定保存的session文件路径。。-表示不保存（在login这个例子里，没什么实际意义）。
+lx login username password --cookies some-path
+lx login username password --cookies -
+
+注意，除了lx login外，大多数lx命令，比如lx download，都需要先执行登录。这些命令大多支持--username和--password，以及--cookies参数，根据传递进来的参数，检查用户是否已经登录，如果尚未登录则尝试登录。一般来说不建议在其他命令里使用这些参数（因为麻烦），除非你不希望保存session信息到硬盘。
+
+2. lx download——下载。目前支持普通的http下载，ed2k下载，和bt下载。可以使用thunder/flashget/qq旋风的连接（bt任务除外）。在信息足够的情况下（见“一些提示”一节的第3条），下载的文件会自动验证hash，出错了会重新下载（我个人目前还没遇到过下载文件损坏的情况）。见“一些提示”一节的第3条。
+
+lx download http://somewhere
+lx download ed2k://somefile
+lx download bt://info-hash
+lx download link1 link2 link3 ...
+
+下载bt的时候需要加--torrent参数。可以指定本地.torrent文件路径，或者.torrent文件的http url，或者torrent文件的info hash。（很多网站使用info hash来标识一个bt种子文件，这种情况你就不需要下载种子了，lx download可以自动下载种子，不过前提是之前已经有人使用迅雷离线下载过同样的种子。如前所述，你也可以使用lixian_hash.py --info-hash来手动生成bt种子的info hash。）
+lx download --torrent Community.S03E01.720p.HDTV.X264-DIMENSION.torrent
+lx download --torrent http://tvu.org.ru/torrent.php?tid=64757
+lx download --torrent 61AAA3C6FBB8B71EBE2F5A2A3481296B51D882F6
+lx download --torrent bt://61AAA3C6FBB8B71EBE2F5A2A3481296B51D882F6
+
+注意，如果你使用最后一种方式，--torrent参数是可选的。因为lx download可以从bt://识别出来这是一个bt任务。
+
+可以把多个连接保存到文件里，使用--input参数批量下载：
+lx download --input links.txt
+
+可以使用--delete参数在下载完成之后删除任务。
+lx download link --delete
+
+如果一个文件已经存在，使用参数--continue支持断点续传，使用--overwrite覆盖已存在的文件，重新下载。
+
+你可能需要用--tool参数来指定下载工具。默认的下载工具是wget，有些环境的wget是最低功能版本，不支持指定cookie或者断点续传。这种情况可以使用--tool asyn。这在“支持的下载工具”一节有说明。
+
+lx download --tool=wget link
+lx download --tool=asyn link
+
+--output和--output-dir分别用来指定保存文件的路径和目录。
+
+如果要下载的文件尚未在离线任务里，会被自动添加。
+
+你也可以使用--id来指定要下载的任务id：
+lx download --id task-id
+
+lx list命令可以用来查看任务id。
+
+3. lx list——列出已存在的离线任务。默认只会列出任务id，任务名，以及状态。可以使用--original-url和--download-url参数来列出原始链接和下载链接。--complete参数用于忽略未完成任务。
+
+lx list
+lx list --complete
+lx list --no-status --original-url --download-url
+
+4. lx add——添加任务到迅雷离线服务器上。一般来说你可以直接使用lx download下载而无需手动添加。如果你认为这个任务还没人下载过，你可以先手动添加，稍后下载。
+此文档未完成。
+
+5. lx delete——从迅雷离线服务器上删除任务。
+这个命令其实没什么用。不方便。我一般在网页上进行任务的删除暂停重启，比较直观。
+此文档未完成。
+
+6. lx pause——暂停任务。
+这个命令其实没什么用。不方便。我一般在网页上进行任务的删除暂停重启，比较直观。
+此文档未完成。
+
+7. lx restart——重新开始任务。
+这个命令其实没什么用。不方便。我一般在网页上进行任务的删除暂停重启，比较直观。
+此文档未完成。
+
+8. lx config——保存配置。配置文件的保存路径是~/.xunlei.lixian.config。虽然你可以差不多可以保存任何参数，但是目前只有以下几个参数会真正起作用：
+username
+password
+tool
+delete
+（因为只有这几个参数我觉得是比较有用的。如果你觉得其他的参数有用可以发信给我或者直接open一个issue。）
+
+不加参数会打印当前保存的所有配置：
+lx config
+
+可以使用--print打印指定的配置：
+lx config --print password
+
+添加一个新的参数：
+lx config username your-username
+lx config password your-password
+lx config delete
+lx config no-delete
+lx config password your-password
+
+删除一个参数：
+lx config --delete password
+
+注：密码是hash过的，不是明文保存。
+
+9. lx logout——不想保留session可以使用lx logout退出。一般用不着。
+lx logout
+lx logout --cookies your-cookies-file
+
+
+* 支持的下载工具：
+wget：默认下载工具。注意有些Linux发行版（比如某些运行在路由设备上的mini系统）自带的wget可能无法满足功能要求。可以尝试使用其他工具。
+asyn：内置的下载工具。在命令行中加上--tool asyn可以启用。注意此工具的下载表现一般，在高速下载或者设备性能不太好的情况（比如运行在低端路由上），CPU使用可能稍高。在我的RT-N16上，以250K/s的速度下载，CPU使用大概在10%~20%。
+urllib2：内置下载工具。不支持断点续传错误重连，不建议使用。
+curl：尚未测试。
+aria2：未测试通过。好像不支持指定下载保存的文件名。
+其他工具，比如axel，ProZilla，暂时都不支持。有需要请可以我，或者直接提交一个issue。
+
+
+* 其他工具
+1. lixian_hash.py可以用于手动计算hash。
 python lixian_hash.py --ed2k filename
 python lixian_hash.py --info-hash torrent-file
 python lixian_hash.py --verify-sha1 filename sha1
 python lixian_hash.py --verify-bt filename torrent-file
 
-* 命令详解
+* 既知问题
 
-此文档未完成。
+1. --tool=asyn的性能不是很好。见“支持的下载工具”一节里的说明。
+2. 有些时候任务添加到服务器上，但是马上刷新拿不到这个数据。这应该是服务器同步的问题。技术上可以自动重刷一遍，但是暂时没有做。用户可以自己重试下。
+3. bt下载的校验如果失败，可能需要重新下载所有文件。从技术上来讲这是没有必要的。但是一来重下出错的片段有些繁琐，二来我自己都从来没遇到过bt校验失败需要重下的情况，所以暂时不考虑支持片段修复。
+
+* 以后
+
+其实一开始是考虑做一个可以在路由器上运行的网页版离线下载管理器的。但是这个工作量比命令行版的大很多（不是一个数量级的），在资源消耗和出错概率上也大很多，而且可能还要有更多的依赖库，安装起来也不方便。当然主要还是精力和需求的原因。现在的这个命令行本对我来说已经够用了，也挺简单，短期就不考虑增加网页版了。
+
+* 要说的话
+
+我自己也一直在用这个脚本。基本上不管白天还是黑夜，都在路由器（RT-N16）上挂着NTFS的移动硬盘下载。所以脚本的可用性和稳定性还是不错的。速度基本上是满速，有时候由于服务器原因不稳定，可以断掉重下，兴许就能分配到一个状态比较好的服务器上了。不过我只是2M的ADSL，不知道大水管上的表现如何。
+
+* 此文档未完成。
 

@@ -122,6 +122,8 @@ python lixian_cli.py pause ...
 python lixian_cli.py restart ...
 
 python lixian_cli.py logout
+
+Please check https://github.com/iambus/xunlei-lixian for detailed (and Chinese) doc.
 '''
 
 def login(args):
