@@ -621,7 +621,7 @@ def lx_config(args):
 def print_hash(args):
 	assert len(args) == 1
 	print 'ed2k:', lixian_hash_ed2k.hash_file(args[0])
-	print 'dcid:', dcid_hash_file(args[0])
+	print 'dcid:', lixian_hash.dcid_hash_file(args[0])
 
 def execute_command(args=sys.argv[1:]):
 	if not args:

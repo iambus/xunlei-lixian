@@ -87,6 +87,10 @@ def info_hash_from_content(content):
 	return hashlib.sha1(bencode(bdecode(content)['info'])).hexdigest()
 
 def info_hash(path):
+	if not path.lower().endswith('.torrent'):
+		print '[WARN] Is it really a .torrent file? '+path
+	if os.path.getsize(path) > 1000*1000:
+		raise NotImplementedError('Torrent file too big')
 	with open(path, 'rb') as stream:
 		return info_hash_from_content(stream.read())
 

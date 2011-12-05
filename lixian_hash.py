@@ -73,6 +73,7 @@ if __name__ == '__main__':
 					'--md4':md4_hash_file,
 					'--dcid':dcid_hash_file,
 					'--ed2k':lixian_hash_ed2k.generate_ed2k_link,
+					'--info-hash':lixian_hash_bt.info_hash,
 				   }[option]
 		for f in args:
 			h = hash_fun(f)
