@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from lixian import XunleiClient
+import lixian_config
 import lixian_hash
 import lixian_hash_bt
 import lixian_hash_ed2k
@@ -14,8 +15,6 @@ import urllib2
 default_encoding = sys.getfilesystemencoding()
 if default_encoding is None or default_encoding.lower() == 'ascii':
 	default_encoding = 'utf-8'
-
-LIXIAN_DEFAULT_COOKIES = os.path.join(os.getenv('USERPROFILE') or os.getenv('HOME'), '.xunlei.lixian.cookies')
 
 def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
 	options = {}
@@ -41,7 +40,11 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
 			elif '=' in k and k[:k.index('=')] in keys:
 				options[k[:k.index('=')]] = k[k.index('=')+1:]
 			elif k in alias:
-				options[alias[k]] = args.pop(0)
+				k = alias[k]
+				if k in bools:
+					options[k] = True
+				else:
+					options[k] = args.pop(0)
 			else:
 				raise RuntimeError('Unknown option '+x)
 		else:
@@ -64,14 +67,19 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
 		def __setattr__(self, k, v):
 			self._args[k] = v
 		def __getitem__(self, i):
-			return self._left[i]
+			if type(i) == int:
+				return self._left[i]
+			else:
+				return self._args[i]
 		def __len__(self):
 			return len(self._left)
+		def __str__(self):
+			return '<Args%s%s>' % (self._args, self._left)
 	return Args(options, left)
 
 def parse_login_command_line(args, keys=[], bools=[], alias={}, default={}):
 	common_keys = ['username', 'password', 'cookies']
-	common_default = {'cookies': LIXIAN_DEFAULT_COOKIES}
+	common_default = {'cookies': lixian_config.LIXIAN_DEFAULT_COOKIES}
 	common_keys.extend(keys)
 	common_default.update(default)
 	args = parse_command_line(args, common_keys, bools, alias, common_default)
@@ -140,7 +148,7 @@ def login(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 
 def logout(args):
-	args = parse_command_line(args, ['cookies'], default={'cookies': LIXIAN_DEFAULT_COOKIES})
+	args = parse_command_line(args, ['cookies'], default={'cookies': lixian_config.LIXIAN_DEFAULT_COOKIES})
 	if len(args):
 		raise RuntimeError('Too many arguments')
 	print 'logging out from', args.cookies
@@ -390,7 +398,7 @@ def find_tasks_to_download(client, args):
 	return tasks
 
 def download_task(args):
-	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'torrent', 'id', 'name', 'url'], alias={'o': 'output', 'i': 'input'}, default={'tool':'wget'})
+	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'torrent', 'id', 'name', 'url'], alias={'o': 'output', 'i': 'input'}, default={'tool':lixian_config.get_config('tool', 'wget'),'delete':lixian_config.get_config('delete')})
 	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
 	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite}
 	client = XunleiClient(args.username, args.password, args.cookies)
@@ -597,6 +605,19 @@ def lixian_info(args):
 	print 'internalid:', client.get_userid()
 	print 'gdriveid:', client.get_gdriveid()
 
+def lx_config(args):
+	args = parse_command_line(args, [], ['print'])
+	if args['print'] or not len(args):
+		if len(args):
+			assert len(args) == 1
+			print lixian_config.get_config(args[0])
+		else:
+			print lixian_config.source_config()
+			print lixian_config.global_config
+	else:
+		print 'Saving configuraion to', lixian_config.global_config.path
+		lixian_config.put_config(*args)
+
 def print_hash(args):
 	assert len(args) == 1
 	print 'ed2k:', lixian_hash_ed2k.hash_file(args[0])
@@ -616,7 +637,7 @@ def execute_command(args=sys.argv[1:]):
 			usage()
 			sys.exit(1)
 		sys.exit(0)
-	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'info': lixian_info, 'hash': print_hash}
+	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'info': lixian_info, 'config': lx_config, 'hash': print_hash}
 	if command not in commands:
 		usage()
 		sys.exit(1)
