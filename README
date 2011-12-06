@@ -97,6 +97,7 @@ lx delete
 lx pause
 lx restart
 lx config
+lx info
 
 1. lx login——登录，获得一个有效session，默认保存路径是~/.xunlei.lixian.cookies。一般来说，除非服务器故障或者执行了lx logout（或者你手动删除了cookies文件），否则session的有效期是一天左右。session过期之后需要手动重新执行login。但如果使用lx config password把密码保存到配置文件里，则会自动重新登录。后文会介绍lx config。
 
@@ -143,10 +144,16 @@ lx download --tool=asyn link
 
 如果要下载的文件尚未在离线任务里，会被自动添加。
 
-你也可以使用--id来指定要下载的任务id：
-lx download --id task-id
+你也可以使用指定要下载的任务id（lx list命令可以用来查看任务id）：
+lx download task-id
 
-lx list命令可以用来查看任务id。
+但是要注意，多任务下载的时候，不能混用id和url（以后可能会支持）。
+
+也可以使用一个简单的关键字匹配要下载的文件名：
+lx download mkv
+
+如果是多参数匹配，需要加上--search（以后可能会去掉）：
+lx download --search mkv mp4
 
 3. lx list——列出已存在的离线任务。默认只会列出任务id，任务名，以及状态。可以使用--original-url和--download-url参数来列出原始链接和下载链接。--complete参数用于忽略未完成任务。
 
@@ -155,21 +162,34 @@ lx list --complete
 lx list --no-status --original-url --download-url
 
 4. lx add——添加任务到迅雷离线服务器上。一般来说你可以直接使用lx download下载而无需手动添加。如果你认为这个任务还没人下载过，你可以先手动添加，稍后下载。
-此文档未完成。
+lx add url1 url2 url3
+lx add --input links.txt
+lx add --torrent torrent-file
+lx add --torrent torrent-url
+lx add --torrent info-hash
 
 5. lx delete——从迅雷离线服务器上删除任务。
 这个命令其实没什么用。不方便。我一般在网页上进行任务的删除暂停重启，比较直观。
-此文档未完成。
+lx delete id1 id2
+lx delete mkv
+lx delete --all mkv
+lx delete --all --search mkv mp4
 
 6. lx pause——暂停任务。
 这个命令其实没什么用。不方便。我一般在网页上进行任务的删除暂停重启，比较直观。
-此文档未完成。
+lx pause id1 id2
+lx pause --all mkv
 
 7. lx restart——重新开始任务。
 这个命令其实没什么用。不方便。我一般在网页上进行任务的删除暂停重启，比较直观。
-此文档未完成。
+lx restart id1 id2
+lx restart --all mkv
 
-8. lx config——保存配置。配置文件的保存路径是~/.xunlei.lixian.config。虽然你可以差不多可以保存任何参数，但是目前只有以下几个参数会真正起作用：
+8. lx logout——不想保留session可以使用lx logout退出。一般用不着。
+lx logout
+lx logout --cookies your-cookies-file
+
+9. lx config——保存配置。配置文件的保存路径是~/.xunlei.lixian.config。虽然你可以差不多可以保存任何参数，但是目前只有以下几个参数会真正起作用：
 username
 password
 tool
@@ -195,10 +215,8 @@ lx config --delete password
 
 注：密码是hash过的，不是明文保存。
 
-9. lx logout——不想保留session可以使用lx logout退出。一般用不着。
-lx logout
-lx logout --cookies your-cookies-file
-
+10. lx info——打印cookies文件里保存的迅雷内部id，包括登录的ID，一个内部使用的ID，以及gdriveid。
+关于gdriveid：理论上gdriveid是下载迅雷离线链接需要的唯一cookie，你可以用lx list --download-url获取下载地址，然后用lx info获取gdriveid，然后手动使用其他工具下载，比如wget "--header=Cookie: gdriveid=your-gdriveid" download-url。
 
 * 支持的下载工具：
 wget：默认下载工具。注意有些Linux发行版（比如某些运行在路由设备上的mini系统）自带的wget可能无法满足功能要求。可以尝试使用其他工具。
@@ -219,8 +237,9 @@ python lixian_hash.py --verify-bt filename torrent-file
 * 既知问题
 
 1. --tool=asyn的性能不是很好。见“支持的下载工具”一节里的说明。
-2. 有些时候任务添加到服务器上，但是马上刷新拿不到这个数据。这应该是服务器同步的问题。技术上可以自动重刷一遍，但是暂时没有做。用户可以自己重试下。
-3. bt下载的校验如果失败，可能需要重新下载所有文件。从技术上来讲这是没有必要的。但是一来重下出错的片段有些繁琐，二来我自己都从来没遇到过bt校验失败需要重下的情况，所以暂时不考虑支持片段修复。
+2. 任务匹配有点混乱。比如不能混用id和url：lx download id url；lx download mkv合法，lx download mkv mp4却非法。有时间会重构下。
+3. 有些时候任务添加到服务器上，但是马上刷新拿不到这个数据。这应该是服务器同步的问题。技术上可以自动重刷一遍，但是暂时没有做。用户可以自己重试下。
+4. bt下载的校验如果失败，可能需要重新下载所有文件。从技术上来讲这是没有必要的。但是一来重下出错的片段有些繁琐，二来我自己都从来没遇到过bt校验失败需要重下的情况，所以暂时不考虑支持片段修复。
 
 * 以后
 
