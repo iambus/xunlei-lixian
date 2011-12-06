@@ -380,7 +380,7 @@ def find_tasks_to_download(client, args):
 	if args.torrent:
 		return find_torrents_task_to_download(client, links)
 	if args.search or any(re.match(r'^\d+$', x) for x in args):
-		return search_tasks(client, args)
+		return search_tasks(client, args, check='check_none')
 	all_tasks = client.read_all_tasks()
 	to_add = set(links)
 	for t in all_tasks:
@@ -429,7 +429,7 @@ def download_task(args):
 		if len(args) == 1:
 			assert not args.url
 			args.url = args[0]
-		tasks = search_tasks(client, args, status='all', check=False)
+		tasks = search_tasks(client, args, status='all', check='check_none')
 		if not tasks:
 			assert args.url
 			print 'Adding new task %s ...' % args.url
@@ -502,8 +502,8 @@ def search_tasks(client, args, status='all', check=True):
 		if check:
 			if not matched:
 				raise RuntimeError('Not task found for '+x)
-			if (not args.all) and len(matched) > 1:
-				raise RuntimeError('Too tasks found for '+x)
+			if check != 'check_none' and (not args.all) and len(matched) > 1:
+				raise RuntimeError('Too many tasks found for '+x)
 		found.extend(matched)
 	return found
 
