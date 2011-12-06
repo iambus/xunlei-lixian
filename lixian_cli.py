@@ -91,19 +91,27 @@ def usage():
 	print '''python lixian_cli.py login "Your Xunlei account" "Your password"
 python lixian_cli.py login "Your password"
 
+python lixian_cli.py config username "Your Xunlei account"
+python lixian_cli.py config password "Your password"
+
 python lixian_cli.py list
 python lixian_cli.py list --completed
-python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-task-id
-python lixian_cli.py list --file zip
+python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-id
+python lixian_cli.py list id1 id2
+python lixian_cli.py list zip rar
+python lixian_cli.py list --search zip rar
 
+python lixian_cli.py download task-id
 python lixian_cli.py download ed2k-url
-python lixian_cli.py download --id task-id
 python lixian_cli.py download --tool wget ed2k-url
 python lixian_cli.py download --tool asyn ed2k-url
 python lixian_cli.py download ed2k-url --output "file to save"
+python lixian_cli.py download id1 id2 id3
+python lixian_cli.py download url1 url2 url3
 python lixian_cli.py download --input download-urls-file
 python lixian_cli.py download --input download-urls-file --delete
 python lixian_cli.py download --input download-urls-file --ouput-dir root-dir-to-save-files
+python lixian_cli.py download bt://torrent-info-hash
 python lixian_cli.py download --torrent 1.torrent
 python lixian_cli.py download --torrent torrent-info-hash
 python lixian_cli.py download --torrent http://xxx/xxx.torrent
@@ -113,13 +121,13 @@ python lixian_cli.py add --torrent 1.torrent
 python lixian_cli.py add --torrent torrent-info-hash
 python lixian_cli.py add --torrent http://xxx/xxx.torrent
 
+python lixian_cli.py delete task-id
 python lixian_cli.py delete url
-python lixian_cli.py delete --id task-id-to-delete
-python lixian_cli.py delete --file file-name-on-cloud-to-delete
+python lixian_cli.py delete file-name-on-cloud-to-delete
 
-python lixian_cli.py pause ...
+python lixian_cli.py pause id
 
-python lixian_cli.py restart ...
+python lixian_cli.py restart id
 
 python lixian_cli.py logout
 
@@ -371,8 +379,8 @@ def find_tasks_to_download(client, args):
 			links.extend(line.strip() for line in x.readlines() if line.strip())
 	if args.torrent:
 		return find_torrents_task_to_download(client, links)
-	if args.id or args.name or args.url:
-		return search_tasks(client, args, status='all', check=False)
+	if args.search or any(re.match(r'^\d+$', x) for x in args):
+		return search_tasks(client, args)
 	all_tasks = client.read_all_tasks()
 	to_add = set(links)
 	for t in all_tasks:
@@ -402,7 +410,7 @@ def find_tasks_to_download(client, args):
 	return tasks
 
 def download_task(args):
-	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'torrent', 'id', 'name', 'url'], alias={'o': 'output', 'i': 'input'}, default={'tool':lixian_config.get_config('tool', 'wget'),'delete':lixian_config.get_config('delete')})
+	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'torrent', 'search'], alias={'o': 'output', 'i': 'input'}, default={'tool':lixian_config.get_config('tool', 'wget'),'delete':lixian_config.get_config('delete')})
 	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
 	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite}
 	client = XunleiClient(args.username, args.password, args.cookies)
@@ -412,7 +420,7 @@ def download_task(args):
 		tasks = find_tasks_to_download(client, args)
 		download_multiple_tasks(client, download, tasks, **download_args)
 	elif args.torrent:
-		assert not(args.id or args.name or args.url)
+		assert not args.search
 		assert len(args) == 1
 		tasks = find_torrents_task_to_download(client, [args[0]])
 		assert len(tasks) == 1
@@ -482,17 +490,15 @@ def search_tasks(client, args, status='all', check=True):
 		raise NotImplementedError()
 	found = []
 	for x in args:
-		if args.id:
-			matched = filter_tasks(tasks, 'id', x)
-		elif args.file or args.name:
+		if args.search:
 			matched = filter_tasks(tasks, 'name', x)
-		elif args.url:
-			matched = filter_tasks(tasks, 'original_url', x)
 		else:
 			if re.match(r'^\d+$', x):
 				matched = filter_tasks(tasks, 'id', x)
+			elif re.match(r'\w+://', x):
+				matched = filter_tasks(tasks, 'original_url', x)
 			else:
-				matched = filter_tasks(tasks, 'original_url', x) or filter_tasks(tasks, 'name', x)
+				matched = filter_tasks(tasks, 'name', x)
 		if check:
 			if not matched:
 				raise RuntimeError('Not task found for '+x)
@@ -505,22 +511,22 @@ def search_tasks(client, args, status='all', check=True):
 def list_task(args):
 	args = parse_login_command_line(args, [],
 	                                ['all', 'completed',
-	                                 'task-id', 'name', 'status', 'size', 'dcid', 'original-url', 'download-url',
-	                                 'id', 'file', 'url',],
-									default={'task-id': True, 'name': True, 'status': True})
+	                                 'id', 'name', 'status', 'size', 'dcid', 'original-url', 'download-url',
+	                                 'search'],
+									default={'id': True, 'name': True, 'status': True})
 	client = XunleiClient(args.username, args.password, args.cookies)
 	client.set_page_size(100)
-	if args.id or args.file or args.url or len(args):
+	if len(args):
 		tasks = search_tasks(client, args, status=(args.completed and 'completed' or 'all'), check=False)
 	elif args.completed:
 		tasks = client.read_all_completed()
 	else:
 		tasks = client.read_all_tasks()
-	columns = ['task-id', 'name', 'status', 'size', 'dcid', 'original-url', 'download-url']
+	columns = ['id', 'name', 'status', 'size', 'dcid', 'original-url', 'download-url']
 	columns = filter(lambda k: getattr(args, k), columns)
 	for t in tasks:
 		for k in columns:
-			if k == 'task-id':
+			if k == 'id':
 				print t['id'],
 			elif k == 'name':
 				print t['name'].encode(default_encoding),
@@ -568,7 +574,7 @@ def add_task(args):
 			print task['status_text'], link
 
 def delete_task(args):
-	args = parse_login_command_line(args, [], ['id', 'file', 'url', 'i', 'all'])
+	args = parse_login_command_line(args, [], ['search', 'i', 'all'])
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_delete = search_tasks(client, args)
 	print "Below files are going to be deleted:"
@@ -585,7 +591,7 @@ def delete_task(args):
 	client.delete_tasks(to_delete)
 
 def pause_task(args):
-	args = parse_login_command_line(args, [], ['id', 'file', 'url', 'i', 'all'])
+	args = parse_login_command_line(args, [], ['search', 'i', 'all'])
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_pause = search_tasks(client, args)
 	print "Below files are going to be paused:"
@@ -594,7 +600,7 @@ def pause_task(args):
 	client.pause_tasks(to_pause)
 
 def restart_task(args):
-	args = parse_login_command_line(args, [], ['id', 'file', 'url', 'i', 'all'])
+	args = parse_login_command_line(args, [], ['search', 'i', 'all'])
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_restart = search_tasks(client, args)
 	print "Below files are going to be restarted:"

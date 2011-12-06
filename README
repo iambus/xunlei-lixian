@@ -10,17 +10,22 @@ python lixian_cli.py config password "Your password"
 
 python lixian_cli.py list
 python lixian_cli.py list --completed
-python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-task-id
-python lixian_cli.py list --file zip
+python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-id
+python lixian_cli.py list id1 id2
+python lixian_cli.py list zip rar
+python lixian_cli.py list --search zip rar
 
+python lixian_cli.py download task-id
 python lixian_cli.py download ed2k-url
-python lixian_cli.py download --id task-id
 python lixian_cli.py download --tool wget ed2k-url
 python lixian_cli.py download --tool asyn ed2k-url
 python lixian_cli.py download ed2k-url --output "file to save"
+python lixian_cli.py download id1 id2 id3
+python lixian_cli.py download url1 url2 url3
 python lixian_cli.py download --input download-urls-file
 python lixian_cli.py download --input download-urls-file --delete
 python lixian_cli.py download --input download-urls-file --ouput-dir root-dir-to-save-files
+python lixian_cli.py download bt://torrent-info-hash
 python lixian_cli.py download --torrent 1.torrent
 python lixian_cli.py download --torrent torrent-info-hash
 python lixian_cli.py download --torrent http://xxx/xxx.torrent
@@ -30,13 +35,13 @@ python lixian_cli.py add --torrent 1.torrent
 python lixian_cli.py add --torrent torrent-info-hash
 python lixian_cli.py add --torrent http://xxx/xxx.torrent
 
+python lixian_cli.py delete task-id
 python lixian_cli.py delete url
-python lixian_cli.py delete --id task-id-to-delete
-python lixian_cli.py delete --file file-name-on-cloud-to-delete
+python lixian_cli.py delete file-name-on-cloud-to-delete
 
-python lixian_cli.py pause ...
+python lixian_cli.py pause id
 
-python lixian_cli.py restart ...
+python lixian_cli.py restart id
 
 python lixian_cli.py logout
 
