@@ -371,6 +371,8 @@ def find_tasks_to_download(client, args):
 			links.extend(line.strip() for line in x.readlines() if line.strip())
 	if args.torrent:
 		return find_torrents_task_to_download(client, links)
+	if args.id or args.name or args.url:
+		return search_tasks(client, args, status='all', check=False)
 	all_tasks = client.read_all_tasks()
 	to_add = set(links)
 	for t in all_tasks:
@@ -406,7 +408,7 @@ def download_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
 	if len(args) > 1 or args.input:
-		assert not(args.id or args.name or args.url or args.output)
+		assert not args.output
 		tasks = find_tasks_to_download(client, args)
 		download_multiple_tasks(client, download, tasks, **download_args)
 	elif args.torrent:
