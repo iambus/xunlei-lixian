@@ -173,6 +173,7 @@ lx list --no-status --original-url --download-url
 username
 password
 tool
+continue
 delete
 （因为只有这几个参数我觉得是比较有用的。如果你觉得其他的参数有用可以发信给我或者直接open一个issue。）
 

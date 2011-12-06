@@ -410,7 +410,7 @@ def find_tasks_to_download(client, args):
 	return tasks
 
 def download_task(args):
-	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'torrent', 'search'], alias={'o': 'output', 'i': 'input'}, default={'tool':lixian_config.get_config('tool', 'wget'),'delete':lixian_config.get_config('delete')})
+	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'torrent', 'search'], alias={'o': 'output', 'i': 'input'}, default={'tool':lixian_config.get_config('tool', 'wget'),'delete':lixian_config.get_config('delete'),'continue':lixian_config.get_config('continue')})
 	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
 	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite}
 	client = XunleiClient(args.username, args.password, args.cookies)
