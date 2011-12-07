@@ -129,6 +129,7 @@ lx download --torrent bt://61AAA3C6FBB8B71EBE2F5A2A3481296B51D882F6
 
 可以把多个连接保存到文件里，使用--input参数批量下载：
 lx download --input links.txt
+注意：在断点续传的情况下，如果文件已经存在，并且文件大小相等，并且使用了--continue，重新下载并不只是简单的忽略这个文件，而是先做hash校验，如果校验通过才忽略。如果文件比较多或者比较大，可能比较耗时。建议手动从--input文件里删除已经下载过的链接。以后也可以考虑对这种情况只做简单的dcid hash。
 
 可以使用--delete参数在下载完成之后删除任务。
 lx download link --delete
@@ -233,6 +234,9 @@ python lixian_hash.py --ed2k filename
 python lixian_hash.py --info-hash torrent-file
 python lixian_hash.py --verify-sha1 filename sha1
 python lixian_hash.py --verify-bt filename torrent-file
+
+2. lixian_batch.py是我自己用的一个简单的“多任务”下载脚本。其实就是多个--input文件，每个文件里定义的链接下载到文件所在的目录里。
+python lixian_batch.py folder1/links.txt folder2/links.txt ...
 
 * 既知问题
 
