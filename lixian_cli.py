@@ -203,7 +203,7 @@ def aria2_download(client, download_url, filename, resuming=False):
 	aria2_opts = ['aria2c', '--header=Cookie: gdriveid='+gdriveid, download_url, '--out', filename, '--file-allocation=none']
 	if resuming:
 		aria2_opts.append('-c')
-	aria2_opts.extends(lixian_config.get_config('aria2-opts', '').split())
+	aria2_opts.extend(lixian_config.get_config('aria2-opts', '').split())
 	exit_code = subprocess.call(aria2_opts)
 	if exit_code != 0:
 		raise Exception('aria2c exited abnormaly')
