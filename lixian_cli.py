@@ -210,7 +210,8 @@ def aria2_download(client, download_url, filename, resuming=False):
 # TODO: support axel, ProZilla
 
 def escape_filename(name):
-	name = re.sub(r'&(amp;)+', '&', name, flags=re.I)
+	amp = re.compile(r'&(amp;)+', flags=re.I)
+	name = re.sub(amp, '&', name)
 	name = re.sub(r'[\\/:*?"<>|]', '-', name)
 	return name
 
