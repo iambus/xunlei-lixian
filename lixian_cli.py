@@ -427,7 +427,7 @@ def download_task(args):
 		if len(args) == 1:
 			assert not args.url
 			args.url = args[0]
-		tasks = search_tasks(client, args, status='all', check='check_none')
+		tasks = search_tasks(client, args, status='all', check=False)
 		if not tasks:
 			assert args.url
 			print 'Adding new task %s ...' % args.url
