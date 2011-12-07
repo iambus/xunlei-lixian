@@ -200,9 +200,7 @@ def curl_download(client, download_url, filename, resuming=False):
 
 def aria2_download(client, download_url, filename, resuming=False):
 	gdriveid = str(client.get_gdriveid())
-	aria2_opts = ['aria2c', '--header=Cookie: gdriveid='+gdriveid, download_url]
-	aria2_opts.extends(('--split', '5'))
-	aria2_opts.extends(('--output-file', filename)) # TODO: this option seems not supported by aria2c ...
+	aria2_opts = ['aria2c', '--header=Cookie: gdriveid='+gdriveid, download_url, '--out', filename, '--file-allocation=none']
 	if resuming:
 		aria2_opts.append('-c')
 	exit_code = subprocess.call(aria2_opts)
