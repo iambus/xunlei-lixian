@@ -3,7 +3,7 @@ import asyncore
 import asynchat
 import socket
 import re
-from cStringIO import StringIO
+#from cStringIO import StringIO
 from time import time, sleep
 import sys
 import os
@@ -38,7 +38,9 @@ class http_client(asynchat.async_chat):
 
 		self.headers = {} # for response headers
 
-		self.buffer = StringIO()
+		#self.buffer = StringIO()
+		self.buffer = []
+		self.buffer_size = 0
 		self.cache_size = 1024*1024
 		self.size = None
 		self.completed = 0
@@ -79,13 +81,22 @@ class http_client(asynchat.async_chat):
 
 	def collect_incoming_data(self, data):
 		if self.reading_headers:
-			self.buffer.write(data)
+			#self.buffer.write(data)
+			self.buffer.append(data)
+			self.buffer_size += len(data)
 			return
 		elif self.cache_size:
-			self.buffer.write(data)
-			if self.buffer.tell() > self.cache_size:
-				self.handle_data(self.buffer.getvalue())
-				self.buffer.truncate(0)
+			#self.buffer.write(data)
+			self.buffer.append(data)
+			self.buffer_size += len(data)
+			#if self.buffer.tell() > self.cache_size:
+			if self.buffer_size > self.cache_size:
+				#self.handle_data(self.buffer.getvalue())
+				self.handle_data(''.join(self.buffer))
+				#self.buffer.truncate(0)
+				#self.buffer.clear()
+				del self.buffer[:]
+				self.buffer_size = 0
 		else:
 			self.handle_data(data)
 
@@ -103,9 +114,12 @@ class http_client(asynchat.async_chat):
 		pass
 
 	def flush_data(self):
-		if self.buffer.tell():
-			self.handle_data(self.buffer.getvalue())
-			self.buffer.truncate(0)
+		#if self.buffer.tell():
+		if self.buffer_size:
+			#self.handle_data(self.buffer.getvalue())
+			#self.buffer.truncate(0)
+			del self.buffer[:]
+			self.buffer_size = 0
 
 	def parse_headers(self, header):
 		lines = header.split('\r\n')
@@ -134,8 +148,11 @@ class http_client(asynchat.async_chat):
 	def found_terminator(self):
 		if self.reading_headers:
 			self.reading_headers = False
-			self.parse_headers("".join(self.buffer.getvalue()))
-			self.buffer.truncate(0)
+			#self.parse_headers("".join(self.buffer.getvalue()))
+			self.parse_headers("".join(self.buffer))
+			#self.buffer.truncate(0)
+			del self.buffer[:]
+			self.buffer_size = 0
 			self.set_terminator(None)
 		else:
 			raise NotImplementedError()
