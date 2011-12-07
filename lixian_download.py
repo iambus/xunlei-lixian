@@ -315,3 +315,10 @@ def download(url, path, headers=None, resuming=False):
 			break
 
 
+def main():
+	url, path = sys.argv[1:]
+	download(url, path)
+
+if __name__ == '__main__':
+	main()
+
