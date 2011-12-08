@@ -217,7 +217,10 @@ def escape_filename(name):
 	return name
 
 def verify_hash(path, task):
-	if os.path.getsize(path) == task['size'] and lixian_hash.verify_dcid(path, task['dcid']):
+	if os.path.getsize(path) != task['size']:
+		print 'hash error: incorrect file size'
+		return False
+	if lixian_hash.verify_dcid(path, task['dcid']):
 		if task['type'] == 'ed2k':
 			return lixian_hash_ed2k.verify_ed2k_link(path, task['original_url'])
 		else:
