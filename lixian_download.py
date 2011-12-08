@@ -117,6 +117,7 @@ class http_client(asynchat.async_chat):
 		#if self.buffer.tell():
 		if self.buffer_size:
 			#self.handle_data(self.buffer.getvalue())
+			self.handle_data(''.join(self.buffer))
 			#self.buffer.truncate(0)
 			del self.buffer[:]
 			self.buffer_size = 0
