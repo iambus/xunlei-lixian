@@ -33,7 +33,6 @@ class XunleiClient:
 				if not password:
 					raise NotImplementedError('user is not logged in')
 				self.login(username, password)
-				assert self.has_logged_in(), 'login failed'
 			else:
 				self.id = self.get_userid()
 
@@ -90,8 +89,11 @@ class XunleiClient:
 			return '; '.join(k+'='+root[k].value for k in root)
 		return  domain_header('.xunlei.com') + '; ' + domain_header('.vip.xunlei.com')
 
+	def is_login_ok(self, html):
+		return len(html) > 512
+
 	def has_logged_in(self):
-		return len(self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d'%current_timestamp()).read()) > 512
+		return self.is_login_ok(self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d'%current_timestamp()).read())
 
 	def login(self, username, password):
 		cachetime = current_timestamp()
@@ -102,7 +104,8 @@ class XunleiClient:
 		password = md5(password+verifycode)
 		login_page = self.urlopen('http://login.xunlei.com/sec2login/', data={'u': username, 'p': password, 'verifycode': verifycode})
 		self.id = self.get_userid()
-		login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp())
+		login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp()).read()
+		assert self.is_login_ok(login_page), 'login failed'
 		self.save_cookies()
 
 	def logout(self):
