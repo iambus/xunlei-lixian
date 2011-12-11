@@ -67,7 +67,7 @@ class encoder:
 			for x in v:
 				self.encode(x)
 			self.stream.write('e')
-		elif type(v) == int:
+		elif type(v) in (int, long):
 			self.stream.write('i')
 			self.stream.write(str(v))
 			self.stream.write('e')
