@@ -50,7 +50,8 @@ class XunleiClient:
 			self.cookiejar.save(self.cookie_path, ignore_discard=True)
 
 	def get_cookie(self, domain, k):
-		return self.cookiejar._cookies[domain]['/'][k].value
+		if self.has_cookie(domain, k):
+			return self.cookiejar._cookies[domain]['/'][k].value
 
 	def has_cookie(self, domain, k):
 		return domain in self.cookiejar._cookies and k in self.cookiejar._cookies[domain]['/']

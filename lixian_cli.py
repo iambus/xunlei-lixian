@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from lixian import XunleiClient, encypt_password
-import lixian_config
+from lixian_config import *
 import lixian_hash
 import lixian_hash_bt
 import lixian_hash_ed2k
@@ -11,6 +11,7 @@ import os
 import os.path
 import re
 import urllib2
+from getpass import getpass
 
 default_encoding = sys.getfilesystemencoding()
 if default_encoding is None or default_encoding.lower() == 'ascii':
@@ -79,10 +80,12 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
 
 def parse_login_command_line(args, keys=[], bools=[], alias={}, default={}):
 	common_keys = ['username', 'password', 'cookies']
-	common_default = {'cookies': lixian_config.LIXIAN_DEFAULT_COOKIES, 'username': lixian_config.get_config('username'), 'password': lixian_config.get_config('password')}
+	common_default = {'cookies': LIXIAN_DEFAULT_COOKIES, 'username': get_config('username'), 'password': get_config('password')}
 	common_keys.extend(keys)
 	common_default.update(default)
 	args = parse_command_line(args, common_keys, bools, alias, common_default)
+	if args.password == '-':
+		args.password = getpass('Password: ')
 	if args.cookies == '-':
 		args._args['cookies'] = None
 	return args
@@ -139,14 +142,21 @@ def login(args):
 	if args.cookies == '-':
 		args._args['cookies'] = None
 	if len(args) < 1:
-		raise RuntimeError('Not enough arguments')
+		args.username = args.username or XunleiClient(cookie_path=args.cookies, login=False).get_username() or get_config('username') or raw_input('ID: ')
+		args.password = args.password or get_config('password') or getpass('Password: ')
 	elif len(args) == 1:
-		args.username = XunleiClient(cookie_path=args.cookies, login=False).get_username()
+		args.username = args.username or XunleiClient(cookie_path=args.cookies, login=False).get_username() or get_config('username')
 		args.password = args[0]
+		if args.password == '-':
+			args.password = getpass('Password: ')
 	elif len(args) == 2:
 		args.username, args.password = list(args)
+		if args.password == '-':
+			args.password = getpass('Password: ')
 	elif len(args) == 3:
 		args.username, args.password, args.cookies = list(args)
+		if args.password == '-':
+			args.password = getpass('Password: ')
 	elif len(args) > 3:
 		raise RuntimeError('Too many arguments')
 	if not args.username:
@@ -158,7 +168,7 @@ def login(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 
 def logout(args):
-	args = parse_command_line(args, ['cookies'], default={'cookies': lixian_config.LIXIAN_DEFAULT_COOKIES})
+	args = parse_command_line(args, ['cookies'], default={'cookies': LIXIAN_DEFAULT_COOKIES})
 	if len(args):
 		raise RuntimeError('Too many arguments')
 	print 'logging out from', args.cookies
@@ -203,7 +213,7 @@ def aria2_download(client, download_url, filename, resuming=False):
 	aria2_opts = ['aria2c', '--header=Cookie: gdriveid='+gdriveid, download_url, '--out', filename, '--file-allocation=none']
 	if resuming:
 		aria2_opts.append('-c')
-	aria2_opts.extend(lixian_config.get_config('aria2-opts', '').split())
+	aria2_opts.extend(get_config('aria2-opts', '').split())
 	exit_code = subprocess.call(aria2_opts)
 	if exit_code != 0:
 		raise Exception('aria2c exited abnormaly')
@@ -253,6 +263,7 @@ class SimpleProgressBar:
 			self.displayed = False
 
 def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False, overwrite=False):
+	assert client.get_gdriveid()
 	if task['status_text'] != 'completed':
 		print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
 		return
@@ -416,7 +427,7 @@ def find_tasks_to_download(client, args):
 	return tasks
 
 def download_task(args):
-	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'torrent', 'search'], alias={'o': 'output', 'i': 'input'}, default={'tool':lixian_config.get_config('tool', 'wget'),'delete':lixian_config.get_config('delete'),'continue':lixian_config.get_config('continue')})
+	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'torrent', 'search'], alias={'o': 'output', 'i': 'input'}, default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue')})
 	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
 	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite}
 	client = XunleiClient(args.username, args.password, args.cookies)
@@ -619,29 +630,33 @@ def lixian_info(args):
 	client = XunleiClient(args.username, args.password, args.cookies, login=False)
 	print 'id:', client.get_username()
 	print 'internalid:', client.get_userid()
-	print 'gdriveid:', client.get_gdriveid()
+	print 'gdriveid:', client.get_gdriveid() or ''
 
 def lx_config(args):
 	args = parse_command_line(args, [], ['print', 'delete'])
 	if args.delete:
 		assert len(args) == 1
-		lixian_config.delete_config(args[0])
+		delete_config(args[0])
 	elif args['print'] or not len(args):
 		if len(args):
 			assert len(args) == 1
-			print lixian_config.get_config(args[0])
+			print get_config(args[0])
 		else:
-			print 'Loading', lixian_config.global_config.path, '...\n'
-			print lixian_config.source_config()
-			print lixian_config.global_config
+			print 'Loading', global_config.path, '...\n'
+			print source_config()
+			print global_config
 	else:
 		assert len(args) in (1, 2)
 		if args[0] == 'password':
-			print 'Saving password (encrypted) to', lixian_config.global_config.path
-			lixian_config.put_config(args[0], encypt_password(args[1]))
+			if len(args) == 1 or args[1] == '-':
+				password = getpass('Password: ')
+			else:
+				password = args[1]
+			print 'Saving password (encrypted) to', global_config.path
+			put_config('password', encypt_password(password))
 		else:
-			print 'Saving configuration to', lixian_config.global_config.path
-			lixian_config.put_config(*args)
+			print 'Saving configuration to', global_config.path
+			put_config(*args)
 
 def print_hash(args):
 	assert len(args) == 1
