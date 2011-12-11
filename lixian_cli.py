@@ -293,16 +293,19 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 	gdriveid = str(client.get_gdriveid())
 
 	if task['type'] == 'bt':
-		dirname = filename
-		if not os.path.exists(dirname):
-			os.makedirs(dirname)
 		files = client.list_bt(task)
+		if len(files) == 1 and files[0]['name'] == task['name']:
+			dirname = os.path.dirname(filename)
+		else:
+			dirname = filename
+		if dirname and not os.path.exists(dirname):
+			os.makedirs(dirname)
 		for f in files:
 			name = f['name'].encode(default_encoding)
 			print 'Downloading', name, '...'
 			path = os.path.join(dirname, *name.split('\\'))
 			subdir = os.path.dirname(path)
-			if not os.path.exists(subdir):
+			if subdir and not os.path.exists(subdir):
 				os.makedirs(subdir)
 			download_url = str(f['xunlei_url'])
 			download2(client, download_url, path, f)
