@@ -89,14 +89,45 @@ def readme():
 	with open(doc) as txt:
 		return txt.read().decode('utf-8')
 
-login    = 'doc not ready'
-download = 'doc not ready'
-list     = 'doc not ready'
-add      = 'doc not ready'
-delete   = 'doc not ready'
-pause    = 'doc not ready'
-restart  = 'doc not ready'
-config   = 'doc not ready'
-info     = 'doc not ready'
-logout   = 'doc not ready'
+
+login    = '''python lixian_cli.py login <username> <password>
+
+login Xunlei cloud'''
+
+download = '''python lixian_cli.py download url...
+
+download tasks from Xunlei cloud'''
+
+list     = '''python lixian_cli.py list
+
+list tasks on Xunlei cloud'''
+
+add      = '''python lixian_cli.py add url...
+
+add tasks to Xunlei cloud'''
+
+delete   = '''python lixian_cli.py delete id...
+
+delete tasks from Xunlei cloud'''
+
+pause    = '''python lixian_cli.py pause id...
+
+pause tasks on Xunlei cloud'''
+
+restart  = '''python lixian_cli.py restart id...
+
+restart tasks on Xunlei cloud'''
+
+config   = '''python lixian_cli.py config key [value]
+
+save configuration so you don't have to repeat it'''
+
+info     = '''python lixian_cli.py info
+
+print user id, internal user id, and gdriveid'''
+
+logout   = '''python lixian_cli.py logout
+
+logout from Xunlei cloud'''
+
 

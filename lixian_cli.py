@@ -651,7 +651,10 @@ def execute_command(args=sys.argv[1:]):
 	if command not in commands:
 		usage()
 		sys.exit(1)
-	commands[command](args[1:])
+	if '-h' in args or '--help' in args:
+		lx_help([command])
+	else:
+		commands[command](args[1:])
 
 if __name__ == '__main__':
 	execute_command()
