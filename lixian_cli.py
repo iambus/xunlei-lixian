@@ -622,12 +622,12 @@ def usage():
 
 def lx_help(args):
 	if len(args) == 1:
-		helper = getattr(lixian_help, args[0], lixian_help.help)
-		if hasattr(helper, '__call__'):
-			print helper()
-		else:
-			assert type(helper) in (str, unicode)
-			print helper
+		helper = getattr(lixian_help, args[0].lower(), lixian_help.help)
+		doc = helper() if hasattr(helper, '__call__') else helper
+		assert type(doc) in (str, unicode)
+		if type(doc) == unicode:
+			doc = doc.encode(default_encoding)
+		print doc
 	elif len(args) == 0:
 		print lixian_help.welcome
 	else:
