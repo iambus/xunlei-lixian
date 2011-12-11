@@ -4,6 +4,7 @@ Python script to download from xunlei cloud
 
 python lixian_cli.py login "Your Xunlei account" "Your password"
 python lixian_cli.py login "Your password"
+python lixian_cli.py login
 
 python lixian_cli.py config username "Your Xunlei account"
 python lixian_cli.py config password "Your password"
@@ -105,6 +106,12 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 lx login username password
 lx login password
+
+如果不希望明文显示密码，也可以直接运行
+lx login
+或者使用-代替密码
+lx login username -
+会进入交互式不回显的密码输入。
 
 可以用--cookies指定保存的session文件路径。。-表示不保存（在login这个例子里，没什么实际意义）。
 lx login username password --cookies some-path
@@ -210,12 +217,12 @@ lx config username your-username
 lx config password your-password
 lx config delete
 lx config no-delete
-lx config password your-password
 
 删除一个参数：
 lx config --delete password
 
 注：密码是hash过的，不是明文保存。
+注：如果不希望在命令行参数中明文保存密码，可以运行lx config password，或者lx config password -，会进入交互式不回显密码输入（只支持password配置）。
 
 10. lx info——打印cookies文件里保存的迅雷内部id，包括登录的ID，一个内部使用的ID，以及gdriveid。
 关于gdriveid：理论上gdriveid是下载迅雷离线链接需要的唯一cookie，你可以用lx list --download-url获取下载地址，然后用lx info获取gdriveid，然后手动使用其他工具下载，比如wget "--header=Cookie: gdriveid=your-gdriveid" download-url。

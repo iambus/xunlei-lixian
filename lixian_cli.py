@@ -93,6 +93,7 @@ def parse_login_command_line(args, keys=[], bools=[], alias={}, default={}):
 def usage():
 	print '''python lixian_cli.py login "Your Xunlei account" "Your password"
 python lixian_cli.py login "Your password"
+python lixian_cli.py login
 
 python lixian_cli.py config username "Your Xunlei account"
 python lixian_cli.py config password "Your password"
