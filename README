@@ -99,6 +99,7 @@ lx pause
 lx restart
 lx config
 lx info
+lx help
 
 1. lx login——登录，获得一个有效session，默认保存路径是~/.xunlei.lixian.cookies。一般来说，除非服务器故障或者执行了lx logout（或者你手动删除了cookies文件），否则session的有效期是一天左右。session过期之后需要手动重新执行login。但如果使用lx config password把密码保存到配置文件里，则会自动重新登录。后文会介绍lx config。
 
@@ -226,6 +227,12 @@ lx config --delete password
 
 10. lx info——打印cookies文件里保存的迅雷内部id，包括登录的ID，一个内部使用的ID，以及gdriveid。
 关于gdriveid：理论上gdriveid是下载迅雷离线链接需要的唯一cookie，你可以用lx list --download-url获取下载地址，然后用lx info获取gdriveid，然后手动使用其他工具下载，比如wget "--header=Cookie: gdriveid=your-gdriveid" download-url。
+
+11. lx help——打印帮助信息。
+lx help
+lx help examples
+lx help readme
+lx help download
 
 * 支持的下载工具：
 wget：默认下载工具。注意有些Linux发行版（比如某些运行在路由设备上的mini系统）自带的wget可能无法满足功能要求。可以尝试使用其他工具。

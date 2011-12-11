@@ -2,6 +2,7 @@
 
 from lixian import XunleiClient, encypt_password
 from lixian_config import *
+import lixian_help
 import lixian_hash
 import lixian_hash_bt
 import lixian_hash_ed2k
@@ -89,54 +90,6 @@ def parse_login_command_line(args, keys=[], bools=[], alias={}, default={}):
 	if args.cookies == '-':
 		args._args['cookies'] = None
 	return args
-
-def usage():
-	print '''python lixian_cli.py login "Your Xunlei account" "Your password"
-python lixian_cli.py login "Your password"
-python lixian_cli.py login
-
-python lixian_cli.py config username "Your Xunlei account"
-python lixian_cli.py config password "Your password"
-
-python lixian_cli.py list
-python lixian_cli.py list --completed
-python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-id
-python lixian_cli.py list id1 id2
-python lixian_cli.py list zip rar
-python lixian_cli.py list --search zip rar
-
-python lixian_cli.py download task-id
-python lixian_cli.py download ed2k-url
-python lixian_cli.py download --tool wget ed2k-url
-python lixian_cli.py download --tool asyn ed2k-url
-python lixian_cli.py download ed2k-url --output "file to save"
-python lixian_cli.py download id1 id2 id3
-python lixian_cli.py download url1 url2 url3
-python lixian_cli.py download --input download-urls-file
-python lixian_cli.py download --input download-urls-file --delete
-python lixian_cli.py download --input download-urls-file --ouput-dir root-dir-to-save-files
-python lixian_cli.py download bt://torrent-info-hash
-python lixian_cli.py download --torrent 1.torrent
-python lixian_cli.py download --torrent torrent-info-hash
-python lixian_cli.py download --torrent http://xxx/xxx.torrent
-
-python lixian_cli.py add url
-python lixian_cli.py add --torrent 1.torrent
-python lixian_cli.py add --torrent torrent-info-hash
-python lixian_cli.py add --torrent http://xxx/xxx.torrent
-
-python lixian_cli.py delete task-id
-python lixian_cli.py delete url
-python lixian_cli.py delete file-name-on-cloud-to-delete
-
-python lixian_cli.py pause id
-
-python lixian_cli.py restart id
-
-python lixian_cli.py logout
-
-Please check https://github.com/iambus/xunlei-lixian for detailed (and Chinese) doc.
-'''
 
 def login(args):
 	args = parse_login_command_line(args)
@@ -664,6 +617,22 @@ def print_hash(args):
 	print 'ed2k:', lixian_hash_ed2k.hash_file(args[0])
 	print 'dcid:', lixian_hash.dcid_hash_file(args[0])
 
+def usage():
+	print lixian_help.usage()
+
+def lx_help(args):
+	if len(args) == 1:
+		helper = getattr(lixian_help, args[0], lixian_help.help)
+		if hasattr(helper, '__call__'):
+			print helper()
+		else:
+			assert type(helper) in (str, unicode)
+			print helper
+	elif len(args) == 0:
+		print lixian_help.welcome
+	else:
+		print lixian_help.help
+
 def execute_command(args=sys.argv[1:]):
 	if not args:
 		usage()
@@ -678,7 +647,7 @@ def execute_command(args=sys.argv[1:]):
 			usage()
 			sys.exit(1)
 		sys.exit(0)
-	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'info': lixian_info, 'config': lx_config, 'hash': print_hash}
+	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'info': lixian_info, 'config': lx_config, 'hash': print_hash, 'help': lx_help}
 	if command not in commands:
 		usage()
 		sys.exit(1)
