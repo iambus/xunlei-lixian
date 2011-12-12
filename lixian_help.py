@@ -105,12 +105,12 @@ download = '''python lixian_cli.py download [options] [id|url]...
 download tasks from Xunlei cloud
 
 Options:
- --input=[file]                  Download URLs found in file.
- --output=[file]                 Download task to file.
+ --input=[file]    -i            Download URLs found in file.
+ --output=[file]   -o            Download task to file.
  --output-dir=[dir]              Download task to dir.
  --tool=[wget|asyn|aria2|curl]   Choose download tool.
                                  Default: wget
- --continue                      Continue downloading a partially downloaded file.
+ --continue        -c            Continue downloading a partially downloaded file.
                                  Default: false.
  --overwrite                     Overwrite partially downloaded file.
                                  Default: false.
@@ -138,6 +138,7 @@ Examples:
  python lixian_cli.py download --torrent 1.torrent
  python lixian_cli.py download --torrent torrent-info-hash
  python lixian_cli.py download --torrent http://xxx/xxx.torrent
+ python lixian_cli.py download bt-task-id/file-id
 '''
 
 list     = '''python lixian_cli.py list
@@ -155,6 +156,8 @@ Options:
 
 Examples:
  python lixian_cli.py list
+ python lixian_cli.py list id
+ python lixian_cli.py list bt-task-id/
  python lixian_cli.py list --completed
  python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-id
  python lixian_cli.py list id1 id2

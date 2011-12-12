@@ -283,6 +283,14 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			dirname = filename
 		if dirname and not os.path.exists(dirname):
 			os.makedirs(dirname)
+		if 'files' in task:
+			ordered_files = []
+			indexed_files = dict((f['index'], f) for f in files)
+			for index in task['files']:
+				t = indexed_files[int(index)]
+				if t not in ordered_files:
+					ordered_files.append(t)
+			files = ordered_files
 		if mini_hash and resuming and verify_mini_bt_hash(dirname, files):
 			print task['name'].encode(default_encoding), 'is already done'
 			return
@@ -301,6 +309,7 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 		verified = lixian_hash_bt.verify_bt(filename, lixian_hash_bt.bdecode(torrent_file)['info'], progress_callback=bar.update)
 		bar.done()
 		if not verified:
+			# note that we don't delete bt download folder if hash failed
 			raise Exception('bt hash check failed')
 	else:
 		dirname = os.path.dirname(filename)
@@ -371,7 +380,7 @@ def find_tasks_to_download(client, args):
 			links.extend(line.strip() for line in x.readlines() if line.strip())
 	if args.torrent:
 		return find_torrents_task_to_download(client, links)
-	if args.search or any(re.match(r'^\d+$', x) for x in args):
+	if args.search or any(re.match(r'^\d+(/\d+)?$', x) for x in args):
 		return search_tasks(client, args, check='check_none')
 	all_tasks = client.read_all_tasks()
 	to_add = set(links)
@@ -401,11 +410,31 @@ def find_tasks_to_download(client, args):
 			raise NotImplementedError('task not found, wired: '+link)
 	return tasks
 
+def merge_bt_sub_tasks(tasks):
+	result_tasks = []
+	task_mapping = {}
+	for task in tasks:
+		id = task['id']
+		if id in task_mapping:
+			if 'index' in task and 'files' in task_mapping[id]:
+				task_mapping[id]['files'].append(task['index'])
+		else:
+			if 'index' in task:
+				t = dict(task)
+				t['files'] = [t['index']]
+				del t['index']
+				result_tasks.append(t)
+				task_mapping[id] = t
+			else:
+				result_tasks.append(task)
+				task_mapping[id] = task
+	return result_tasks
+
 def download_task(args):
 	args = parse_login_command_line(args,
 	                                ['tool', 'output', 'output-dir', 'input'],
 	                                ['delete', 'continue', 'overwrite', 'torrent', 'search', 'mini-hash'],
-	                                alias={'o': 'output', 'i': 'input'},
+									alias={'o': 'output', 'i': 'input', 'c':'continue'},
 									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'output-dir':get_config('output-dir'), 'mini-hash':get_config('mini-hash')},
 	                                help=lixian_help.download)
 	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
@@ -415,6 +444,7 @@ def download_task(args):
 	if len(args) > 1 or args.input:
 		assert not args.output
 		tasks = find_tasks_to_download(client, args)
+		tasks = merge_bt_sub_tasks(tasks)
 		download_multiple_tasks(client, download, tasks, **download_args)
 	elif args.torrent:
 		assert not args.search
@@ -432,6 +462,7 @@ def download_task(args):
 			tasks = client.read_all_completed()
 			tasks = filter_tasks(tasks, 'original_url', url)
 			assert tasks, 'task not found, wired'
+		tasks = merge_bt_sub_tasks(tasks)
 		if args.output:
 			assert len(tasks) == 1
 			download_single_task(client, download, tasks[0], args.output, **download_args)
@@ -468,7 +499,18 @@ def link_in(url, links):
 			return True
 
 def filter_tasks(tasks, k, v):
-	if k == 'name':
+	if k == 'id':
+		task_id, sub_id = re.match(r'^(\d+)(?:/(\d+))?$', v).groups()
+		matched = filter(lambda t: t['id'] == task_id, tasks)
+		if matched:
+			assert len(matched) == 1
+			task = matched[0]
+			if sub_id:
+				assert task['type'] == 'bt', 'task %s is not a bt task' % task['name'].encode(default_encoding)
+				task = dict(task)
+				task['index'] = sub_id
+			matched = [task]
+	elif k == 'name':
 		matched = filter(lambda t: t[k].find(v) != -1, tasks)
 	elif k == 'original_url':
 		matched = filter(lambda t: link_equals(t[k], v), tasks)
@@ -488,7 +530,7 @@ def search_tasks(client, args, status='all', check=True):
 		if args.search:
 			matched = filter_tasks(tasks, 'name', x)
 		else:
-			if re.match(r'^\d+$', x):
+			if re.match(r'^\d+(/\d+)?$', x):
 				matched = filter_tasks(tasks, 'id', x)
 			elif re.match(r'\w+://', x):
 				matched = filter_tasks(tasks, 'original_url', x)
@@ -514,14 +556,14 @@ def list_task(args):
 	parent_ids = [a[:-1] for a in args if re.match(r'^\d+/$', a)]
 	if parent_ids and not all(re.match(r'^\d+/$', a) for a in args):
 		raise NotImplementedError("Can't mix 'id/' with others")
-	assert len(parent_ids) == 1, "sub-tasks listing only supports single task id"
+	assert len(parent_ids) <= 1, "sub-tasks listing only supports single task id"
 	ids = [a[:-1] if re.match(r'^\d+/$', a) else a for a in args]
 
 	client = XunleiClient(args.username, args.password, args.cookies)
 	client.set_page_size(100)
 	if parent_ids:
 		tasks = client.list_bt(client.get_task_by_id(parent_ids[0]))
-		tasks.sort(key=lambda x: x['index'])
+		tasks.sort(key=lambda x: int(x['index']))
 	elif len(ids):
 		tasks = search_tasks(client, args, status=(args.completed and 'completed' or 'all'), check=False)
 	elif args.completed:
@@ -533,7 +575,7 @@ def list_task(args):
 	for t in tasks:
 		for k in columns:
 			if k == 'id':
-				print t.get('index', ['id']),
+				print t.get('index', t['id']),
 			elif k == 'name':
 				print t['name'].encode(default_encoding),
 			elif k == 'status':

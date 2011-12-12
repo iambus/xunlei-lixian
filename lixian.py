@@ -383,19 +383,15 @@ def parse_bt_list(js):
 	result = json.loads(re.match(r'^fill_bt_list\((.+)\)\s*$', js).group(1))['Result']
 	files = []
 	for record in result['Record']:
-		sub_task_id = record['taskid'],
-		url = record['url']
-		assert re.match(r'bt://[0-9A-F]{40}/\d+$', url), url
-		index = re.sub(r'^.*/', '', url)
 		files.append({
-			'id': sub_task_id,
-			'index': index,
+			'id': int(record['taskid']),
+			'index': record['id'],
 			'type': 'bt',
 			'name': record['title'], # TODO: support folder
 			'status': int(record['download_status']),
 			'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed'}[record['download_status']],
 			'size': int(record['filesize']),
-			'original_url': url,
+			'original_url': record['url'],
 			'xunlei_url': record['downurl'],
 			'dcid': record['cid'],
 			})
