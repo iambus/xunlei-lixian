@@ -277,7 +277,7 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 		torrent_file = client.get_torrent_file(task)
 		print 'Hashing bt ...'
 		bar = SimpleProgressBar()
-		verified = lixian_hash_bt.verify_bt(dirname, lixian_hash_bt.bdecode(torrent_file)['info'], progress_callback=bar.update)
+		verified = lixian_hash_bt.verify_bt(filename, lixian_hash_bt.bdecode(torrent_file)['info'], progress_callback=bar.update)
 		bar.done()
 		if not verified:
 			raise Exception('bt hash check failed')
