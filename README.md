@@ -137,7 +137,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 上面的命令会进入交互式不回显的密码输入。
 
-可以用--cookies指定保存的session文件路径。。-表示不保存（在login这个例子里，没什么实际意义）。
+可以用--cookies指定保存的session文件路径。-表示不保存（在login这个例子里，没什么实际意义）。
 
     lx login username password --cookies some-path
     lx login username password --cookies -
