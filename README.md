@@ -244,6 +244,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
     lx logout --cookies your-cookies-file
 
 ### lx config <a id="config"/>
+
 保存配置。配置文件的保存路径是~/.xunlei.lixian.config。虽然你可以差不多可以保存任何参数，但是目前只有以下几个参数会真正起作用：
 
 * username
@@ -257,12 +258,15 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 （因为只有这几个参数我觉得是比较有用的。如果你觉得其他的参数有用可以发信给我或者直接open一个issue。）
 
 不加参数会打印当前保存的所有配置：
+
         lx config
 
 可以使用--print打印指定的配置：
+
 	lx config --print password
 
 添加一个新的参数：
+
 	lx config username your-username
 	lx config password your-password
 	lx config delete
