@@ -406,7 +406,7 @@ def download_task(args):
 	                                ['tool', 'output', 'output-dir', 'input'],
 	                                ['delete', 'continue', 'overwrite', 'torrent', 'search', 'mini-hash'],
 	                                alias={'o': 'output', 'i': 'input'},
-									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'mini-hash':get_config('mini-hash')},
+									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'output-dir':get_config('output-dir'), 'mini-hash':get_config('mini-hash')},
 	                                help=lixian_help.download)
 	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
 	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash}

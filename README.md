@@ -253,6 +253,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 * tool
 * continue
 * delete
+* output-dir
 * mini-hash
 * aria2-opts（见支持的下载工具一节）
 
