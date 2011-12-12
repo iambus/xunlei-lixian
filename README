@@ -180,6 +180,7 @@ lx add --torrent info-hash
 5. lx delete——从迅雷离线服务器上删除任务。
 这个命令其实没什么用。不方便。我一般在网页上进行任务的删除暂停重启，比较直观。
 lx delete id1 id2
+lx delete ed2k://...
 lx delete mkv
 lx delete --all mkv
 lx delete --all --search mkv mp4

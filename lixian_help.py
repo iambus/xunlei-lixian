@@ -92,35 +92,86 @@ def readme():
 
 login    = '''python lixian_cli.py login <username> <password>
 
-login Xunlei cloud'''
+login Xunlei cloud
+ python lixian_cli.py login "Your Xunlei account" "Your password"
+ python lixian_cli.py login "Your password"
+ python lixian_cli.py login
+'''
 
 download = '''python lixian_cli.py download url...
 
-download tasks from Xunlei cloud'''
+download tasks from Xunlei cloud
+
+Examples:
+ python lixian_cli.py download task-id
+ python lixian_cli.py download ed2k-url
+ python lixian_cli.py download --tool wget ed2k-url
+ python lixian_cli.py download --tool asyn ed2k-url
+ python lixian_cli.py download ed2k-url --output "file to save"
+ python lixian_cli.py download id1 id2 id3
+ python lixian_cli.py download url1 url2 url3
+ python lixian_cli.py download --input download-urls-file
+ python lixian_cli.py download --input download-urls-file --delete
+ python lixian_cli.py download --input download-urls-file --ouput-dir root-dir-to-save-files
+ python lixian_cli.py download bt://torrent-info-hash
+ python lixian_cli.py download --torrent 1.torrent
+ python lixian_cli.py download --torrent torrent-info-hash
+ python lixian_cli.py download --torrent http://xxx/xxx.torrent
+'''
 
 list     = '''python lixian_cli.py list
 
-list tasks on Xunlei cloud'''
+list tasks on Xunlei cloud
+
+Examples:
+ python lixian_cli.py list
+ python lixian_cli.py list --completed
+ python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-id
+ python lixian_cli.py list id1 id2
+ python lixian_cli.py list zip rar
+ python lixian_cli.py list --search zip rar
+'''
 
 add      = '''python lixian_cli.py add url...
 
-add tasks to Xunlei cloud'''
+add tasks to Xunlei cloud
 
-delete   = '''python lixian_cli.py delete id...
+Examples:
+ python lixian_cli.py add url
+ python lixian_cli.py add --torrent 1.torrent
+ python lixian_cli.py add --torrent torrent-info-hash
+ python lixian_cli.py add --torrent http://xxx/xxx.torrent
+'''
 
-delete tasks from Xunlei cloud'''
+delete   = '''python lixian_cli.py delete [id|url]...
+
+delete tasks from Xunlei cloud
+
+Examples:
+ python lixian_cli.py delete task-id
+ python lixian_cli.py delete url
+ python lixian_cli.py delete file-name-on-cloud-to-delete
+'''
 
 pause    = '''python lixian_cli.py pause id...
 
-pause tasks on Xunlei cloud'''
+pause tasks on Xunlei cloud
+'''
 
 restart  = '''python lixian_cli.py restart id...
 
-restart tasks on Xunlei cloud'''
+restart tasks on Xunlei cloud
+'''
 
 config   = '''python lixian_cli.py config key [value]
 
-save configuration so you don't have to repeat it'''
+save configuration so you don't have to repeat it
+
+Examples:
+ python lixian_cli.py config username "your xunlei id"
+ python lixian_cli.py config password "your xunlei password"
+ python lixian_cli.py config continue
+'''
 
 info     = '''python lixian_cli.py info
 
@@ -128,6 +179,7 @@ print user id, internal user id, and gdriveid'''
 
 logout   = '''python lixian_cli.py logout
 
-logout from Xunlei cloud'''
+logout from Xunlei cloud
+'''
 
 

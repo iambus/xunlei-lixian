@@ -627,7 +627,7 @@ def lx_help(args):
 		assert type(doc) in (str, unicode)
 		if type(doc) == unicode:
 			doc = doc.encode(default_encoding)
-		print doc
+		print doc.strip()
 	elif len(args) == 0:
 		print lixian_help.welcome
 	else:
