@@ -93,14 +93,33 @@ def readme():
 login    = '''python lixian_cli.py login <username> <password>
 
 login Xunlei cloud
+
+Examples:
  python lixian_cli.py login "Your Xunlei account" "Your password"
  python lixian_cli.py login "Your password"
  python lixian_cli.py login
 '''
 
-download = '''python lixian_cli.py download url...
+download = '''python lixian_cli.py download [options] [id|url]...
 
 download tasks from Xunlei cloud
+
+Options:
+ --input=[file]                  Download URLs found in file.
+ --output=[file]                 Download task to file.
+ --output-dir=[dir]              Download task to dir.
+ --tool=[wget|asyn|aria2|curl]   Choose download tool.
+                                 Default: wget
+ --continue                      Continue downloading a partially downloaded file.
+                                 Default: false.
+ --overwrite                     Overwrite partially downloaded file.
+                                 Default: false.
+ --delete                        Delete task from Xunlei cloud after download is finished.
+                                 Default: false.
+ --torrent                       Treat all arguments as torrent files (e.g. local torrent file, torrent http url, torrent info hash)
+                                 Default: false.
+ --search                        Treat all arguments as keywords of cloud tasks
+                                 Default: false.
 
 Examples:
  python lixian_cli.py download task-id
@@ -123,6 +142,15 @@ list     = '''python lixian_cli.py list
 
 list tasks on Xunlei cloud
 
+Options:
+ --complete           Print only complete tasks. Default: no
+ --[no]-id            Print task id. Default: yes
+ --[no]-name          Print task name. Default: yes
+ --[no]-status        Print task status. Default: yes
+ --[no]-size          Print task size. Default: no
+ --[no]-original-url  Print the original URL. Default: no
+ --[no]-download-url  Print the download URL used to download from Xunlei cloud. Default: no
+
 Examples:
  python lixian_cli.py list
  python lixian_cli.py list --completed
@@ -132,9 +160,14 @@ Examples:
  python lixian_cli.py list --search zip rar
 '''
 
-add      = '''python lixian_cli.py add url...
+add      = '''python lixian_cli.py add [options] url...
 
 add tasks to Xunlei cloud
+
+Options:
+ --input=[file]                  Download URLs found in file.
+ --torrent                       Treat all arguments as torrent files (e.g. local torrent file, torrent http url, torrent info hash)
+                                 Default: false.
 
 Examples:
  python lixian_cli.py add url
@@ -143,9 +176,13 @@ Examples:
  python lixian_cli.py add --torrent http://xxx/xxx.torrent
 '''
 
-delete   = '''python lixian_cli.py delete [id|url]...
+delete   = '''python lixian_cli.py delete [options] [id|url|filename|keyword]...
 
 delete tasks from Xunlei cloud
+
+Options:
+ -i     prompt before delete
+ --all  delete all tasks if there are multiple matches
 
 Examples:
  python lixian_cli.py delete task-id
@@ -153,14 +190,22 @@ Examples:
  python lixian_cli.py delete file-name-on-cloud-to-delete
 '''
 
-pause    = '''python lixian_cli.py pause id...
+pause    = '''python lixian_cli.py pause [options] [id|url|filename|keyword]...
 
 pause tasks on Xunlei cloud
+
+Options:
+ -i     prompt before pausing tasks
+ --all  pause all tasks if there are multiple matches
 '''
 
-restart  = '''python lixian_cli.py restart id...
+restart  = '''python lixian_cli.py restart [id|url|filename|keyword]...
 
 restart tasks on Xunlei cloud
+
+Options:
+ -i     prompt before restart
+ --all  restart all tasks if there are multiple matches
 '''
 
 config   = '''python lixian_cli.py config key [value]
