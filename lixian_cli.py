@@ -196,6 +196,17 @@ def verify_hash(path, task):
 		else:
 			return True
 
+def verify_mini_hash(path, task):
+	return os.path.exists(path) and os.path.getsize(path) == task['size'] and lixian_hash.verify_dcid(path, task['dcid'])
+
+def verify_mini_bt_hash(dirname, files):
+	for f in files:
+		name = f['name'].encode(default_encoding)
+		path = os.path.join(dirname, *name.split('\\'))
+		if not verify_mini_hash(path, f):
+			return False
+	return True
+
 class SimpleProgressBar:
 	def __init__(self):
 		self.displayed = False
@@ -222,7 +233,7 @@ class SimpleProgressBar:
 			print
 			self.displayed = False
 
-def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False, overwrite=False):
+def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False, overwrite=False, mini_hash=False):
 	assert client.get_gdriveid()
 	if task['status_text'] != 'completed':
 		print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
@@ -245,6 +256,8 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 				raise NotImplementedError()
 	def download2(client, url, path, task):
 		size = task['size']
+		if mini_hash and resuming and verify_mini_hash(path, task):
+			return
 		download1(client, url, path, size)
 		if not verify_hash(path, task):
 			print 'hash error, redownloading...'
@@ -253,7 +266,6 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			if not verify_hash(path, task):
 				raise Exception('hash check failed')
 	download_url = str(task['xunlei_url'])
-	#filename = output or escape_filename(task['name']).encode(default_encoding)
 	if output:
 		filename = output
 	else:
@@ -271,6 +283,8 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			dirname = filename
 		if dirname and not os.path.exists(dirname):
 			os.makedirs(dirname)
+		if mini_hash and resuming and verify_mini_bt_hash(dirname, files):
+			return
 		for f in files:
 			name = f['name'].encode(default_encoding)
 			print 'Downloading', name, '...'
@@ -297,9 +311,9 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 	if delete:
 		client.delete_task(task)
 
-def download_multiple_tasks(client, download, tasks, output_dir=None, delete=False, resuming=False, overwrite=False):
+def download_multiple_tasks(client, download, tasks, output_dir=None, delete=False, resuming=False, overwrite=False, mini_hash=False):
 	for task in tasks:
-		download_single_task(client, download, task, output_dir=output_dir, delete=delete, resuming=resuming, overwrite=overwrite)
+		download_single_task(client, download, task, output_dir=output_dir, delete=delete, resuming=resuming, overwrite=overwrite, mini_hash=mini_hash)
 	skipped = filter(lambda t: t['status_text'] != 'completed', tasks)
 	if skipped:
 		print "Below tasks were skipped as they were not ready:"
@@ -387,9 +401,14 @@ def find_tasks_to_download(client, args):
 	return tasks
 
 def download_task(args):
-	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'torrent', 'search'], alias={'o': 'output', 'i': 'input'}, default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue')}, help=lixian_help.download)
+	args = parse_login_command_line(args,
+	                                ['tool', 'output', 'output-dir', 'input'],
+	                                ['delete', 'continue', 'overwrite', 'torrent', 'search'],
+	                                alias={'o': 'output', 'i': 'input'},
+									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'mini-hash':get_config('mini-hash')},
+	                                help=lixian_help.download)
 	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
-	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite}
+	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash_':args.mini_hash}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
 	if len(args) > 1 or args.input:

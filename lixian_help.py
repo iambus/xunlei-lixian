@@ -120,6 +120,8 @@ Options:
                                  Default: false.
  --search                        Treat all arguments as keywords of cloud tasks
                                  Default: false.
+ --mini-hash                     If the target file already exists, and the file size is complete, do a minimal hash (instead of full hash, which would be much more expensive). This is useful when you are resuming a batch download.
+                                 Default: false.
 
 Examples:
  python lixian_cli.py download task-id
