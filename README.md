@@ -240,8 +240,9 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 ### lx logout
 不想保留session可以使用lx logout退出。一般用不着。
-    lx logout
-    lx logout --cookies your-cookies-file
+
+     lx logout
+     lx logout --cookies your-cookies-file
 
 ### lx config <a id="config"/>
 
@@ -259,7 +260,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 不加参数会打印当前保存的所有配置：
 
-        lx config
+    lx config
 
 可以使用--print打印指定的配置：
 
@@ -267,12 +268,13 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 添加一个新的参数：
 
-	lx config username your-username
-	lx config password your-password
-	lx config delete
-	lx config no-delete
+    lx config username your-username
+    lx config password your-password
+    lx config delete
+    lx config no-delete
 
 删除一个参数：
+
     lx config --delete password
 
 注：密码是hash过的，不是明文保存。
