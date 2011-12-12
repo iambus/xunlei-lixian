@@ -257,16 +257,16 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 （因为只有这几个参数我觉得是比较有用的。如果你觉得其他的参数有用可以发信给我或者直接open一个issue。）
 
 不加参数会打印当前保存的所有配置：
-    lx config
+        lx config
 
 可以使用--print打印指定的配置：
-    lx config --print password
+	lx config --print password
 
 添加一个新的参数：
-    lx config username your-username
-    lx config password your-password
-    lx config delete
-    lx config no-delete
+	lx config username your-username
+	lx config password your-password
+	lx config delete
+	lx config no-delete
 
 删除一个参数：
     lx config --delete password
@@ -301,14 +301,14 @@ aria2：测试通过。注意某些环境里的aria2c需要加上额外的参数
 
 * lixian_hash.py可以用于手动计算hash。
 
-    python lixian_hash.py --ed2k filename
-    python lixian_hash.py --info-hash torrent-file
-    python lixian_hash.py --verify-sha1 filename sha1
-    python lixian_hash.py --verify-bt filename torrent-file
+        python lixian_hash.py --ed2k filename
+        python lixian_hash.py --info-hash torrent-file
+        python lixian_hash.py --verify-sha1 filename sha1
+        python lixian_hash.py --verify-bt filename torrent-file
 
 * lixian_batch.py是我自己用的一个简单的“多任务”下载脚本。其实就是多个--input文件，每个文件里定义的链接下载到文件所在的目录里。
 
-    python lixian_batch.py folder1/links.txt folder2/links.txt ...
+        python lixian_batch.py folder1/links.txt folder2/links.txt ...
 
 既知问题
 --------
