@@ -18,7 +18,7 @@ default_encoding = sys.getfilesystemencoding()
 if default_encoding is None or default_encoding.lower() == 'ascii':
 	default_encoding = 'utf-8'
 
-def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
+def parse_command_line(args, keys=[], bools=[], alias={}, default={}, help=None):
 	options = {}
 	for k in keys:
 		options[k] = None
@@ -48,7 +48,13 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
 				else:
 					options[k] = args.pop(0)
 			else:
-				raise RuntimeError('Unknown option '+x)
+				if help:
+					print 'Unknown option ' + x
+					print
+					print help
+					exit(1)
+				else:
+					raise RuntimeError('Unknown option '+x)
 		else:
 			left.append(x)
 
@@ -79,12 +85,12 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}):
 			return '<Args%s%s>' % (self._args, self._left)
 	return Args(options, left)
 
-def parse_login_command_line(args, keys=[], bools=[], alias={}, default={}):
+def parse_login_command_line(args, keys=[], bools=[], alias={}, default={}, help=None):
 	common_keys = ['username', 'password', 'cookies']
 	common_default = {'cookies': LIXIAN_DEFAULT_COOKIES, 'username': get_config('username'), 'password': get_config('password')}
 	common_keys.extend(keys)
 	common_default.update(default)
-	args = parse_command_line(args, common_keys, bools, alias, common_default)
+	args = parse_command_line(args, common_keys, bools, alias, common_default, help=help)
 	if args.password == '-':
 		args.password = getpass('Password: ')
 	if args.cookies == '-':
@@ -92,7 +98,7 @@ def parse_login_command_line(args, keys=[], bools=[], alias={}, default={}):
 	return args
 
 def login(args):
-	args = parse_login_command_line(args)
+	args = parse_login_command_line(args, help=lixian_help.login)
 	if args.cookies == '-':
 		args._args['cookies'] = None
 	if len(args) < 1:
@@ -122,7 +128,7 @@ def login(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 
 def logout(args):
-	args = parse_command_line(args, ['cookies'], default={'cookies': LIXIAN_DEFAULT_COOKIES})
+	args = parse_command_line(args, ['cookies'], default={'cookies': LIXIAN_DEFAULT_COOKIES}, help=lixian_help.logout)
 	if len(args):
 		raise RuntimeError('Too many arguments')
 	print 'logging out from', args.cookies
@@ -381,7 +387,7 @@ def find_tasks_to_download(client, args):
 	return tasks
 
 def download_task(args):
-	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'torrent', 'search'], alias={'o': 'output', 'i': 'input'}, default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue')})
+	args = parse_login_command_line(args, ['tool', 'output', 'output-dir', 'input'], ['delete', 'continue', 'overwrite', 'torrent', 'search'], alias={'o': 'output', 'i': 'input'}, default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue')}, help=lixian_help.download)
 	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
 	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite}
 	client = XunleiClient(args.username, args.password, args.cookies)
@@ -484,7 +490,8 @@ def list_task(args):
 	                                ['all', 'completed',
 	                                 'id', 'name', 'status', 'size', 'dcid', 'original-url', 'download-url',
 	                                 'search'],
-									default={'id': True, 'name': True, 'status': True})
+									default={'id': True, 'name': True, 'status': True},
+									help=lixian_help.list)
 	client = XunleiClient(args.username, args.password, args.cookies)
 	client.set_page_size(100)
 	if len(args):
@@ -516,7 +523,7 @@ def list_task(args):
 		print
 
 def add_task(args):
-	args = parse_login_command_line(args, ['input'], ['torrent'], alias={'i':'input'})
+	args = parse_login_command_line(args, ['input'], ['torrent'], alias={'i':'input'}, help=lixian_help.add)
 	assert len(args) or args.input
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = []
@@ -545,7 +552,7 @@ def add_task(args):
 			print task['status_text'], link
 
 def delete_task(args):
-	args = parse_login_command_line(args, [], ['search', 'i', 'all'])
+	args = parse_login_command_line(args, [], ['search', 'i', 'all'], help=lixian_help.delete)
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_delete = search_tasks(client, args)
 	print "Below files are going to be deleted:"
@@ -562,7 +569,7 @@ def delete_task(args):
 	client.delete_tasks(to_delete)
 
 def pause_task(args):
-	args = parse_login_command_line(args, [], ['search', 'i', 'all'])
+	args = parse_login_command_line(args, [], ['search', 'i', 'all'], help=lixian_help.pause)
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_pause = search_tasks(client, args)
 	print "Below files are going to be paused:"
@@ -571,7 +578,7 @@ def pause_task(args):
 	client.pause_tasks(to_pause)
 
 def restart_task(args):
-	args = parse_login_command_line(args, [], ['search', 'i', 'all'])
+	args = parse_login_command_line(args, [], ['search', 'i', 'all'], help=lixian_help.restart)
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_restart = search_tasks(client, args)
 	print "Below files are going to be restarted:"
@@ -580,14 +587,14 @@ def restart_task(args):
 	client.restart_tasks(to_restart)
 
 def lixian_info(args):
-	args = parse_login_command_line(args)
+	args = parse_login_command_line(args, help=lixian_help.info)
 	client = XunleiClient(args.username, args.password, args.cookies, login=False)
 	print 'id:', client.get_username()
 	print 'internalid:', client.get_userid()
 	print 'gdriveid:', client.get_gdriveid() or ''
 
 def lx_config(args):
-	args = parse_command_line(args, [], ['print', 'delete'])
+	args = parse_command_line(args, [], ['print', 'delete'], help=lixian_help.config)
 	if args.delete:
 		assert len(args) == 1
 		delete_config(args[0])
