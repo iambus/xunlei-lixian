@@ -423,16 +423,14 @@ def download_task(args):
 		assert len(tasks) == 1
 		download_single_task(client, download, tasks[0], args.output, **download_args)
 	else:
-		if len(args) == 1:
-			assert not args.url
-			args.url = args[0]
+		assert len(args) == 1, 'Not enough argument'
 		tasks = search_tasks(client, args, status='all', check=False)
 		if not tasks:
-			assert args.url
-			print 'Adding new task %s ...' % args.url
-			client.add_task(args.url)
+			url = args[0]
+			print 'Adding new task %s ...' % url
+			client.add_task(url)
 			tasks = client.read_all_completed()
-			tasks = filter_tasks(tasks, 'original_url', args.url)
+			tasks = filter_tasks(tasks, 'original_url', url)
 			assert tasks, 'task not found, wired'
 		if args.output:
 			assert len(tasks) == 1
@@ -512,9 +510,19 @@ def list_task(args):
 	                                 'search'],
 									default={'id': True, 'name': True, 'status': True},
 									help=lixian_help.list)
+
+	parent_ids = [a[:-1] for a in args if re.match(r'^\d+/$', a)]
+	if parent_ids and not all(re.match(r'^\d+/$', a) for a in args):
+		raise NotImplementedError("Can't mix 'id/' with others")
+	assert len(parent_ids) == 1, "sub-tasks listing only supports single task id"
+	ids = [a[:-1] if re.match(r'^\d+/$', a) else a for a in args]
+
 	client = XunleiClient(args.username, args.password, args.cookies)
 	client.set_page_size(100)
-	if len(args):
+	if parent_ids:
+		tasks = client.list_bt(client.get_task_by_id(parent_ids[0]))
+		tasks.sort(key=lambda x: x['index'])
+	elif len(ids):
 		tasks = search_tasks(client, args, status=(args.completed and 'completed' or 'all'), check=False)
 	elif args.completed:
 		tasks = client.read_all_completed()
@@ -525,7 +533,7 @@ def list_task(args):
 	for t in tasks:
 		for k in columns:
 			if k == 'id':
-				print t['id'],
+				print t.get('index', ['id']),
 			elif k == 'name':
 				print t['name'].encode(default_encoding),
 			elif k == 'status':

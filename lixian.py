@@ -130,10 +130,12 @@ class XunleiClient:
 			gdriveid = re.search(r'id="cok" value="([^"]+)"', page).group(1)
 			self.set_gdriveid(gdriveid)
 			self.save_cookies()
-		links = parse_links(page)
+		tasks = parse_tasks(page)
+		for t in tasks:
+			t['client'] = self
 		pginfo = re.search(r'<div class="pginfo">.*?</div>', page)
 		match_next_page = re.search(r'<li class="next"><a href="([^"]+)">[^<>]*</a></li>', page)
-		return links, match_next_page and 'http://dynamic.cloud.vip.xunlei.com'+match_next_page.group(1)
+		return tasks, match_next_page and 'http://dynamic.cloud.vip.xunlei.com'+match_next_page.group(1)
 
 	def read_task_page(self, st, pg=None):
 		if pg is None:
@@ -343,7 +345,7 @@ def current_random():
 	from random import randint
 	return '%s%06d.%s' % (current_timestamp(), randint(0, 999999), randint(100000000, 9999999999))
 
-def parse_link(html):
+def parse_task(html):
 	inputs = re.findall(r'<input[^<>]+/>', html)
 	def parse_attrs(html):
 		return dict((k, v1 or v2) for k, v1, v2 in re.findall(r'''\b(\w+)=(?:'([^']*)'|"([^"]*)")''', html))
@@ -372,23 +374,28 @@ def parse_link(html):
 	# XXX: should I return bt files?
 	return task
 
-def parse_links(html):
+def parse_tasks(html):
 	rwbox = re.search(r'<div class="rwbox".*<!--rwbox-->', html, re.S).group()
 	rw_lists = re.findall(r'<div class="rw_list".*?<!-- rw_list -->', rwbox, re.S)
-	return map(parse_link, rw_lists)
+	return map(parse_task, rw_lists)
 
 def parse_bt_list(js):
 	result = json.loads(re.match(r'^fill_bt_list\((.+)\)\s*$', js).group(1))['Result']
 	files = []
 	for record in result['Record']:
+		sub_task_id = record['taskid'],
+		url = record['url']
+		assert re.match(r'bt://[0-9A-F]{40}/\d+$', url), url
+		index = re.sub(r'^.*/', '', url)
 		files.append({
-			'id': record['taskid'],
+			'id': sub_task_id,
+			'index': index,
 			'type': 'bt',
 			'name': record['title'], # TODO: support folder
 			'status': int(record['download_status']),
 			'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed'}[record['download_status']],
 			'size': int(record['filesize']),
-			'original_url': record['url'],
+			'original_url': url,
 			'xunlei_url': record['downurl'],
 			'dcid': record['cid'],
 			})
