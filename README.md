@@ -74,16 +74,16 @@ Quick start
 
 1. 你可以为python lixian_cli.py创建一个别名（比如lx），以减少敲键次数。
 
-   Linux上可以使用：
+        Linux上可以使用：
 
         ln -s 你的lixian_cli.py路径 ~/bin/lx
 
-   Windows上可以创建一个lx.bat脚本，放在你的PATH中：
+        Windows上可以创建一个lx.bat脚本，放在你的PATH中：
 
         @echo off
         python 完整的lixian_cli.py路径 %*
 
-   注：下文中提到的lx都是指python lixian_cli.py的别名。
+        注：下文中提到的lx都是指python lixian_cli.py的别名。
 
 2. 你可以使用lx config保存一些配置。见“命令详解”一节。
 
@@ -92,7 +92,7 @@ Quick start
         lx config username your-id
         lx config password your-password
 
-   注：密码保存的时候会加密（hash）
+      注：密码保存的时候会加密（hash）
 
 3. 使用lx download下载的文件会自动验证hash。其中ed2k和bt会做完整的hash校验。http下载只做部分校验（目前为止尚未发现迅雷离线能提供完整的hash码）。
 
@@ -282,6 +282,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 ### lx info
 打印cookies文件里保存的迅雷内部id，包括登录的ID，一个内部使用的ID，以及gdriveid。
+
 关于gdriveid：理论上gdriveid是下载迅雷离线链接需要的唯一cookie，你可以用lx list --download-url获取下载地址，然后用lx info获取gdriveid，然后手动使用其他工具下载，比如wget "--header=Cookie: gdriveid=your-gdriveid" download-url。
 
 ### lx help
@@ -294,12 +295,13 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 支持的下载工具
 --------------
-wget：默认下载工具。注意有些Linux发行版（比如某些运行在路由设备上的mini系统）自带的wget可能无法满足功能要求。可以尝试使用其他工具。
-asyn：内置的下载工具。在命令行中加上--tool asyn可以启用。注意此工具的下载表现一般，在高速下载或者设备性能不太好的情况（比如运行在低端路由上），CPU使用可能稍高。在我的RT-N16上，以250K/s的速度下载，CPU使用大概在10%~20%。
-urllib2：内置下载工具。不支持断点续传错误重连，不建议使用。
-curl：尚未测试。
-aria2：测试通过。注意某些环境里的aria2c需要加上额外的参数才能运行。可以使用lx config进行配置：lx config -- aria2-opts --event-poll=select
-其他工具，比如axel，ProZilla，暂时都不支持。有需要请可以我，或者直接提交一个issue。
+
+* wget：默认下载工具。注意有些Linux发行版（比如某些运行在路由设备上的mini系统）自带的wget可能无法满足功能要求。可以尝试使用其他工具。
+* asyn：内置的下载工具。在命令行中加上--tool asyn可以启用。注意此工具的下载表现一般，在高速下载或者设备性能不太好的情况（比如运行在低端路由上），CPU使用可能稍高。在我的RT-N16上，以250K/s的速度下载，CPU使用大概在10%~20%。
+* urllib2：内置下载工具。不支持断点续传错误重连，不建议使用。
+* curl：尚未测试。
+* aria2：测试通过。注意某些环境里的aria2c需要加上额外的参数才能运行。可以使用lx config进行配置：lx config -- aria2-opts --event-poll=select
+* 其他工具，比如axel，ProZilla，暂时都不支持。有需要请可以我，或者直接提交一个issue。
 
 
 其他工具
