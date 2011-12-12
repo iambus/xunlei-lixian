@@ -74,16 +74,16 @@ Quick start
 
 1. 你可以为python lixian_cli.py创建一个别名（比如lx），以减少敲键次数。
 
-        Linux上可以使用：
+      Linux上可以使用：
 
         ln -s 你的lixian_cli.py路径 ~/bin/lx
 
-        Windows上可以创建一个lx.bat脚本，放在你的PATH中：
+      Windows上可以创建一个lx.bat脚本，放在你的PATH中：
 
         @echo off
         python 完整的lixian_cli.py路径 %*
 
-        注：下文中提到的lx都是指python lixian_cli.py的别名。
+      注：下文中提到的lx都是指python lixian_cli.py的别名。
 
 2. 你可以使用lx config保存一些配置。见“命令详解”一节。
 
@@ -96,7 +96,7 @@ Quick start
 
 3. 使用lx download下载的文件会自动验证hash。其中ed2k和bt会做完整的hash校验。http下载只做部分校验（目前为止尚未发现迅雷离线能提供完整的hash码）。
 
-   注：包含多个文件的bt种子，如果没有完整下载所有文件，对于已下载的文件，可能有少量片段无法验证。如果很重视文件的正确性请选择下载bt种子中的所有文件。（目前还没有发现由于软件问题而导致hash验证失败的情况。）
+      注：包含多个文件的bt种子，如果没有完整下载所有文件，对于已下载的文件，可能有少量片段无法验证。如果很重视文件的正确性请选择下载bt种子中的所有文件。（目前还没有发现由于软件问题而导致hash验证失败的情况。）
 
 4. lixian_hash.py可以用于手动计算hash。见“其他工具”一节。
 
