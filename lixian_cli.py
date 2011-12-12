@@ -284,7 +284,7 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 		if dirname and not os.path.exists(dirname):
 			os.makedirs(dirname)
 		if mini_hash and resuming and verify_mini_bt_hash(dirname, files):
-			print task['name'].encode(default_encoding), 'is arealdy done'
+			print task['name'].encode(default_encoding), 'is already done'
 			return
 		for f in files:
 			name = f['name'].encode(default_encoding)
