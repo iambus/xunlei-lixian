@@ -247,7 +247,7 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			else:
 				raise Exception('%s already exists. Please specify --continue or --overwrite' % path)
 		else:
-			assert os.path.getsize(path) <= size
+			assert os.path.getsize(path) <= size, 'existing file bigger than expected, unsafe to continue nor overwrite'
 			if os.path.getsize(path) < size:
 				download(client, url, path, resuming)
 			elif os.path.getsize(path) == size:
@@ -306,7 +306,8 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 		torrent_file = client.get_torrent_file(task)
 		print 'Hashing bt ...'
 		bar = SimpleProgressBar()
-		verified = lixian_hash_bt.verify_bt(filename, lixian_hash_bt.bdecode(torrent_file)['info'], progress_callback=bar.update)
+		file_set = [f['name'].encode('utf-8').split('\\') for f in files] if 'files' in task else None
+		verified = lixian_hash_bt.verify_bt(filename, lixian_hash_bt.bdecode(torrent_file)['info'], file_set=file_set, progress_callback=bar.update)
 		bar.done()
 		if not verified:
 			# note that we don't delete bt download folder if hash failed

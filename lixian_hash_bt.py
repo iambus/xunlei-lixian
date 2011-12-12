@@ -141,11 +141,11 @@ def verify_bt_single_file(path, info, progress_callback=None):
 		assert sha1_stream.next_sha1() == ''
 	return True
 
-def verify_bt_multiple(folder, info, progress_callback=None):
+def verify_bt_multiple(folder, info, file_set=None, progress_callback=None):
 	# TODO: check md5sum if available
 	piece_length = info['piece length']
 	assert piece_length > 0
-	files = [{'path':os.path.join(folder, apply(os.path.join, x['path'])), 'length':x['length']} for x in info['files']]
+	files = [{'path':os.path.join(folder, apply(os.path.join, x['path'])), 'length':x['length'], 'file':x['path']} for x in info['files']]
 
 	sha1_stream = sha1_reader(info['pieces'], progress_callback=progress_callback)
 	sha1sum = hashlib.sha1()
@@ -157,7 +157,7 @@ def verify_bt_multiple(folder, info, progress_callback=None):
 		f = files.pop(0)
 		path = f['path']
 		size = f['length']
-		if os.path.exists(path):
+		if os.path.exists(path) and ((not file_set) or (f['file'] in file_set)):
 			if os.path.getsize(path) != size:
 				return False
 			if size <= piece_left:
@@ -206,7 +206,7 @@ def verify_bt_multiple(folder, info, progress_callback=None):
 
 	return True
 
-def verify_bt(path, info, progress_callback=None):
+def verify_bt(path, info, file_set=None, progress_callback=None):
 	if not os.path.exists(path):
 		raise Exception("File doesn't exist: %s" % path)
 	if 'files' not in info:
@@ -216,10 +216,10 @@ def verify_bt(path, info, progress_callback=None):
 			path = os.path.join(path, encode_path(info['name']))
 			return verify_bt_single_file(path, info, progress_callback=progress_callback)
 	else:
-		return verify_bt_multiple(path, info, progress_callback=progress_callback)
+		return verify_bt_multiple(path, info, file_set=file_set, progress_callback=progress_callback)
 
-def verify_bt_file(path, torrent_path, progress_callback=None):
+def verify_bt_file(path, torrent_path, file_set=None, progress_callback=None):
 	with open(torrent_path, 'rb') as x:
-		return verify_bt(path, bdecode(x.read())['info'], progress_callback)
+		return verify_bt(path, bdecode(x.read())['info'], file_set, progress_callback)
 
 
