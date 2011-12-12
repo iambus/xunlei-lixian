@@ -1,6 +1,9 @@
+xunlei-lixian
+=============
 Python script to download from xunlei cloud
 
-* Quick start
+Quick start
+-----------
 
 python lixian_cli.py login "Your Xunlei account" "Your password"
 python lixian_cli.py login "Your password"
@@ -46,7 +49,8 @@ python lixian_cli.py restart id
 
 python lixian_cli.py logout
 
-* 安装指南：
+安装指南
+--------
 
 1. 安装git（非github用户应该只需要执行第一步Download and Install Git）
 http://help.github.com/set-up-git-redirect
@@ -61,7 +65,8 @@ git clone git://github.com/iambus/xunlei-lixian.git
 python lixian_cli.py
 
 
-* 一些提示
+一些提示
+--------
 
 1. 你可以为python lixian_cli.py创建一个别名（比如lx），以减少敲键次数。
 Linux上可以使用：
@@ -85,7 +90,8 @@ lx config password your-password
 4. lixian_hash.py可以用于手动计算hash。见“其他工具”一节。
 
 
-* 命令详解
+命令详解
+--------
 
 注：下文中提到的lx都是指python lixian_cli.py的别名。
 
@@ -238,7 +244,8 @@ lx help examples
 lx help readme
 lx help download
 
-* 支持的下载工具：
+支持的下载工具
+--------------
 wget：默认下载工具。注意有些Linux发行版（比如某些运行在路由设备上的mini系统）自带的wget可能无法满足功能要求。可以尝试使用其他工具。
 asyn：内置的下载工具。在命令行中加上--tool asyn可以启用。注意此工具的下载表现一般，在高速下载或者设备性能不太好的情况（比如运行在低端路由上），CPU使用可能稍高。在我的RT-N16上，以250K/s的速度下载，CPU使用大概在10%~20%。
 urllib2：内置下载工具。不支持断点续传错误重连，不建议使用。
@@ -247,7 +254,9 @@ aria2：测试通过。注意某些环境里的aria2c需要加上额外的参数
 其他工具，比如axel，ProZilla，暂时都不支持。有需要请可以我，或者直接提交一个issue。
 
 
-* 其他工具
+其他工具
+--------
+
 1. lixian_hash.py可以用于手动计算hash。
 python lixian_hash.py --ed2k filename
 python lixian_hash.py --info-hash torrent-file
@@ -257,20 +266,24 @@ python lixian_hash.py --verify-bt filename torrent-file
 2. lixian_batch.py是我自己用的一个简单的“多任务”下载脚本。其实就是多个--input文件，每个文件里定义的链接下载到文件所在的目录里。
 python lixian_batch.py folder1/links.txt folder2/links.txt ...
 
-* 既知问题
+既知问题
+--------
 
 1. --tool=asyn的性能不是很好。见“支持的下载工具”一节里的说明。
 2. 任务匹配有点混乱。比如不能混用id和url：lx download id url；lx download mkv合法，lx download mkv mp4却非法。有时间会重构下。
 3. 有些时候任务添加到服务器上，但是马上刷新拿不到这个数据。这应该是服务器同步的问题。技术上可以自动重刷一遍，但是暂时没有做。用户可以自己重试下。
 4. bt下载的校验如果失败，可能需要重新下载所有文件。从技术上来讲这是没有必要的。但是一来重下出错的片段有些繁琐，二来我自己都从来没遇到过bt校验失败需要重下的情况，所以暂时不考虑支持片段修复。
 
-* 以后
+以后
+----
 
 其实一开始是考虑做一个可以在路由器上运行的网页版离线下载管理器的。但是这个工作量比命令行版的大很多（不是一个数量级的），在资源消耗和出错概率上也大很多，而且可能还要有更多的依赖库，安装起来也不方便。当然主要还是精力和需求的原因。现在的这个命令行本对我来说已经够用了，也挺简单，短期就不考虑增加网页版了。
 
-* 要说的话
+要说的话
+--------
 
 我自己也一直在用这个脚本。基本上不管白天还是黑夜，都在路由器（RT-N16）上挂着NTFS的移动硬盘下载。所以脚本的可用性和稳定性还是不错的。速度基本上是满速，有时候由于服务器原因不稳定，可以断掉重下，兴许就能分配到一个状态比较好的服务器上了。不过我只是2M的ADSL，不知道大水管上的表现如何。
 
-* 此文档未完成。
+此文档未完成。
+--------------
 
