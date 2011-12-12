@@ -54,19 +54,19 @@ Quick start
 
 1. 安装git（非github用户应该只需要执行第一步Download and Install Git）
 
-   http://help.github.com/set-up-git-redirect
+      http://help.github.com/set-up-git-redirect
 
 2. 安装Python 2.x（请下载最新的2.7版本。3.x版本不支持。）
 
-   http://www.python.org/getit/
+      http://www.python.org/getit/
 
 3. 下载代码（Windows用户请在git-bash里执行）
 
-   git clone git://github.com/iambus/xunlei-lixian.git
+        git clone git://github.com/iambus/xunlei-lixian.git
 
 4. 在命令行里运行
 
-   python lixian_cli.py
+        python lixian_cli.py
 
 
 一些提示
