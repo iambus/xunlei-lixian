@@ -85,7 +85,7 @@ Please check https://github.com/iambus/xunlei-lixian for detailed (and Chinese) 
 def readme():
 	import sys
 	import os.path
-	doc = os.path.join(sys.path[0], 'README')
+	doc = os.path.join(sys.path[0], 'README.md')
 	with open(doc) as txt:
 		return txt.read().decode('utf-8')
 
