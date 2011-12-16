@@ -241,7 +241,8 @@ class ProgressBar:
 			minutes = seconds/60
 			seconds -= minutes*60
 			seconds = '%dd%dh%dm%ds' % (days, hours, minutes, seconds)
-		bar = '{:>3}%[{:<40}] {:<12,} {:>4} in {:>6s}'.format(percent, bar, self.completed, speed, seconds)
+		completed = ','.join((x[::-1] for x in reversed(re.findall('..?.?', str(self.completed)[::-1]))))
+		bar = '{0:>3}%[{1:<40}] {2:<12} {3:>4} in {4:>6s}'.format(percent, bar, completed, speed, seconds)
 		bar = bar.ljust(self.bar_width)
 		self.bar_width = len(bar)
 		sys.stdout.write('\r'+bar)

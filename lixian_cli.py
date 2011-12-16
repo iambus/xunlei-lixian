@@ -225,7 +225,7 @@ class SimpleProgressBar:
 		else:
 			plus = ''
 		bar = '=' * dots + plus
-		bar = '{:>3}%[{:<40}]'.format(percent, bar)
+		bar = '{0:>3}%[{1:<40}]'.format(percent, bar)
 		sys.stdout.write('\r'+bar)
 		sys.stdout.flush()
 	def done(self):
