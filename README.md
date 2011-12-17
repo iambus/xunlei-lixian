@@ -228,7 +228,6 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 ### lx delete
 从迅雷离线服务器上删除任务。
-这个命令其实没什么用。不方便。我一般在网页上进行任务的删除暂停重启，比较直观。
 
     lx delete id1 id2
     lx delete ed2k://...
@@ -238,14 +237,12 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 ### lx pause
 暂停任务。
-这个命令其实没什么用。不方便。我一般在网页上进行任务的删除暂停重启，比较直观。
 
     lx pause id1 id2
     lx pause --all mkv
 
 ### lx restart
 重新开始任务。
-这个命令其实没什么用。不方便。我一般在网页上进行任务的删除暂停重启，比较直观。
 
     lx restart id1 id2
     lx restart --all mkv
