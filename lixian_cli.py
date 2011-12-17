@@ -168,9 +168,13 @@ def curl_download(client, download_url, filename, resuming=False):
 	if exit_code != 0:
 		raise Exception('curl exited abnormaly')
 
-def aria2_download(client, download_url, filename, resuming=False):
+def aria2_download(client, download_url, path, resuming=False):
 	gdriveid = str(client.get_gdriveid())
+	dir = os.path.dirname(path)
+	filename = os.path.basename(path)
 	aria2_opts = ['aria2c', '--header=Cookie: gdriveid='+gdriveid, download_url, '--out', filename, '--file-allocation=none']
+	if dir:
+		aria2_opts.extend(('--dir', dir))
 	if resuming:
 		aria2_opts.append('-c')
 	aria2_opts.extend(get_config('aria2-opts', '').split())
@@ -438,7 +442,7 @@ def download_task(args):
 									alias={'o': 'output', 'i': 'input', 'c':'continue'},
 									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'output-dir':get_config('output-dir'), 'mini-hash':get_config('mini-hash')},
 	                                help=lixian_help.download)
-	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
+	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'aria2c':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
 	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
