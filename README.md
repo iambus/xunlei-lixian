@@ -1,6 +1,8 @@
 xunlei-lixian
 =============
-Python script to download from xunlei cloud
+迅雷离线下载脚本。
+
+声明：迅雷离线下载为会员功能。非会员无法使用。
 
 Quick start
 -----------
