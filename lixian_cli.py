@@ -553,7 +553,7 @@ def search_tasks(client, args, status='all', check=True):
 def list_task(args):
 	args = parse_login_command_line(args, [],
 	                                ['all', 'completed',
-	                                 'id', 'name', 'status', 'size', 'dcid', 'original-url', 'download-url',
+	                                 'id', 'name', 'status', 'size', 'dcid', 'original-url', 'download-url', 'speed', 'progress',
 	                                 'search'],
 									default={'id': True, 'name': True, 'status': True},
 									help=lixian_help.list)
@@ -575,7 +575,7 @@ def list_task(args):
 		tasks = client.read_all_completed()
 	else:
 		tasks = client.read_all_tasks()
-	columns = ['id', 'name', 'status', 'size', 'dcid', 'original-url', 'download-url']
+	columns = ['id', 'name', 'status', 'size', 'progress', 'speed', 'dcid', 'original-url', 'download-url']
 	columns = filter(lambda k: getattr(args, k), columns)
 	for t in tasks:
 		for k in columns:
@@ -587,6 +587,10 @@ def list_task(args):
 				print t['status_text'],
 			elif k == 'size':
 				print t['size'],
+			elif k == 'progress':
+				print t['progress'],
+			elif k == 'speed':
+				print t['speed'],
 			elif k == 'dcid':
 				print t['dcid'],
 			elif k == 'original-url':

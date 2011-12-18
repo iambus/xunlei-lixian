@@ -371,7 +371,12 @@ def parse_task(html):
 			'bt_hash': mini_info['dcid'],
 			'dcid': mini_info['dcid'],
 			}
-	# XXX: should I return bt files?
+
+	m = re.search(r'<em class="loadnum"[^<>]*>([^<>]*)</em>', html)
+	task['progress'] = m and m.group(1) or ''
+	m = re.search(r'<em [^<>]*id="speed\d+">([^<>]*)</em>', html)
+	task['speed'] = m and m.group(1) or ''
+
 	return task
 
 def parse_tasks(html):
@@ -394,6 +399,8 @@ def parse_bt_list(js):
 			'original_url': record['url'],
 			'xunlei_url': record['downurl'],
 			'dcid': record['cid'],
+			'speed': '',
+			'progress': '%s%%' % record['percent'],
 			})
 	return files
 

@@ -151,6 +151,8 @@ Options:
  --[no]-name          Print task name. Default: yes
  --[no]-status        Print task status. Default: yes
  --[no]-size          Print task size. Default: no
+ --[no]-progress      Print task progress (in percent). Default: no
+ --[no]-speed         Print task speed. Default: no
  --[no]-original-url  Print the original URL. Default: no
  --[no]-download-url  Print the download URL used to download from Xunlei cloud. Default: no
 
