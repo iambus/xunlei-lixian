@@ -249,7 +249,7 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			if overwrite:
 				download(client, url, path)
 			else:
-				raise Exception('%s already exists. Please specify --continue or --overwrite' % path)
+				raise Exception('%s already exists. Please try --continue or --overwrite' % path)
 		else:
 			assert os.path.getsize(path) <= size, 'existing file bigger than expected, unsafe to continue nor overwrite'
 			if os.path.getsize(path) < size:
@@ -297,6 +297,8 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 			files = ordered_files
 		if mini_hash and resuming and verify_mini_bt_hash(dirname, files):
 			print task['name'].encode(default_encoding), 'is already done'
+			if delete and 'files' not in task:
+				client.delete_task(task)
 			return
 		for f in files:
 			name = f['name'].encode(default_encoding)
@@ -323,7 +325,7 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 		print 'Downloading', os.path.basename(filename), '...'
 		download2(client, download_url, filename, task)
 
-	if delete:
+	if delete and 'files' not in task:
 		client.delete_task(task)
 
 def download_multiple_tasks(client, download, tasks, output_dir=None, delete=False, resuming=False, overwrite=False, mini_hash=False):
