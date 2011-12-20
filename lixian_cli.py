@@ -638,7 +638,7 @@ def delete_task(args):
 	to_delete = search_tasks(client, args)
 	print "Below files are going to be deleted:"
 	for x in to_delete:
-		print x['name']
+		print x['name'].encode(default_encoding)
 	if args.i:
 		yes_or_no = raw_input('Are your sure to delete below files from Xunlei cloud? ')
 		while yes_or_no.lower() not in ('y', 'yes', 'n', 'no'):
@@ -655,7 +655,7 @@ def pause_task(args):
 	to_pause = search_tasks(client, args)
 	print "Below files are going to be paused:"
 	for x in to_pause:
-		print x['name']
+		print x['name'].encode(default_encoding)
 	client.pause_tasks(to_pause)
 
 def restart_task(args):
@@ -664,7 +664,7 @@ def restart_task(args):
 	to_restart = search_tasks(client, args)
 	print "Below files are going to be restarted:"
 	for x in to_restart:
-		print x['name']
+		print x['name'].encode(default_encoding)
 	client.restart_tasks(to_restart)
 
 def lixian_info(args):
