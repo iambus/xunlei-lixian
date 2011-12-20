@@ -315,13 +315,13 @@ class XunleiClient:
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/redownload'
 		form = []
 		for task in tasks:
-			assert task['type'] in ('ed2k', 'http', 'https'), "'%s' is not tested" % task['type']
+			assert task['type'] in ('ed2k', 'http', 'https', 'bt'), "'%s' is not tested" % task['type']
 			data = {'id[]': task['id'],
-					'cid[]': '',
+					'cid[]': '', # XXX: should I set this?
 					'url[]': task['original_url'],
 					'download_status[]': task['status']}
 			if task['type'] == 'ed2k':
-				data['taskname[]'] = task['name'].encode('utf-8')
+				data['taskname[]'] = task['name'].encode('utf-8') # XXX: shouldn't I set this for other task types?
 			form.append(urlencode(data))
 		form.append(urlencode({'type':1}))
 		data = '&'.join(form)
