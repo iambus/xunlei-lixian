@@ -18,6 +18,12 @@ default_encoding = sys.getfilesystemencoding()
 if default_encoding is None or default_encoding.lower() == 'ascii':
 	default_encoding = 'utf-8'
 
+def to_utf_8(url):
+	try:
+		return url.decode(default_encoding).encode('utf-8')
+	except:
+		return url
+
 def parse_command_line(args, keys=[], bools=[], alias={}, default={}, help=None):
 	options = {}
 	for k in keys:
@@ -401,7 +407,7 @@ def find_tasks_to_download(client, args):
 		for link in links:
 			if link in to_add:
 				print link
-		client.add_batch_tasks(to_add)
+		client.add_batch_tasks(map(to_utf_8, to_add))
 		for link in to_add:
 			# add_batch_tasks doesn't work for bt task, add bt task one by one...
 			if link.startswith('bt://'):
@@ -465,7 +471,7 @@ def download_task(args):
 		if not tasks:
 			url = args[0]
 			print 'Adding new task %s ...' % url
-			client.add_task(url)
+			client.add_task(to_utf_8(url))
 			tasks = client.read_all_completed()
 			tasks = filter_tasks(tasks, 'original_url', url)
 			assert tasks, 'task not found, wired'
@@ -616,7 +622,7 @@ def add_task(args):
 		print 'Adding below tasks:'
 		for link in links:
 			print link
-		client.add_batch_tasks(links)
+		client.add_batch_tasks(map(to_utf_8, links))
 		print 'All tasks added. Checking status...'
 		tasks = client.read_all_tasks()
 		for link in links:
