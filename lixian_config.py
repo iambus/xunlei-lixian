@@ -49,8 +49,9 @@ class Config:
 			del self.values[k]
 			dump_config(self.path, self.values)
 	def source(self):
-		with open(self.path) as x:
-			return x.read()
+        if os.path.exists(self.path):
+            with open(self.path) as x:
+                return x.read()
 	def __str__(self):
 		return '<Config{%s}>' % self.values
 
