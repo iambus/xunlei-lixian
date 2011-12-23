@@ -196,11 +196,14 @@ def escape_filename(name):
 	name = re.sub(r'[\\/:*?"<>|]', '-', name)
 	return name
 
-def verify_hash(path, task):
+def verify_basic_hash(path, task):
 	if os.path.getsize(path) != task['size']:
 		print 'hash error: incorrect file size'
 		return False
-	if lixian_hash.verify_dcid(path, task['dcid']):
+	return lixian_hash.verify_dcid(path, task['dcid'])
+
+def verify_hash(path, task):
+	if verify_basic_hash(path, task):
 		if task['type'] == 'ed2k':
 			return lixian_hash_ed2k.verify_ed2k_link(path, task['original_url'])
 		else:
@@ -243,7 +246,7 @@ class SimpleProgressBar:
 			print
 			self.displayed = False
 
-def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False, overwrite=False, mini_hash=False):
+def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False, overwrite=False, mini_hash=False, no_hash=False):
 	assert client.get_gdriveid()
 	if task['status_text'] != 'completed':
 		print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
@@ -269,11 +272,12 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 		if mini_hash and resuming and verify_mini_hash(path, task):
 			return
 		download1(client, url, path, size)
-		if not verify_hash(path, task):
+		verify = verify_basic_hash if no_hash else verify_hash
+		if not verify(path, task):
 			print 'hash error, redownloading...'
 			os.remove(path)
 			download1(client, url, path, size)
-			if not verify_hash(path, task):
+			if not verify(path, task):
 				raise Exception('hash check failed')
 	download_url = str(task['xunlei_url'])
 	if output:
@@ -315,15 +319,16 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 				os.makedirs(subdir)
 			download_url = str(f['xunlei_url'])
 			download2(client, download_url, path, f)
-		torrent_file = client.get_torrent_file(task)
-		print 'Hashing bt ...'
-		bar = SimpleProgressBar()
-		file_set = [f['name'].encode('utf-8').split('\\') for f in files] if 'files' in task else None
-		verified = lixian_hash_bt.verify_bt(filename, lixian_hash_bt.bdecode(torrent_file)['info'], file_set=file_set, progress_callback=bar.update)
-		bar.done()
-		if not verified:
-			# note that we don't delete bt download folder if hash failed
-			raise Exception('bt hash check failed')
+		if not no_hash:
+			torrent_file = client.get_torrent_file(task)
+			print 'Hashing bt ...'
+			bar = SimpleProgressBar()
+			file_set = [f['name'].encode('utf-8').split('\\') for f in files] if 'files' in task else None
+			verified = lixian_hash_bt.verify_bt(filename, lixian_hash_bt.bdecode(torrent_file)['info'], file_set=file_set, progress_callback=bar.update)
+			bar.done()
+			if not verified:
+				# note that we don't delete bt download folder if hash failed
+				raise Exception('bt hash check failed')
 	else:
 		dirname = os.path.dirname(filename)
 		if dirname and not os.path.exists(dirname):
@@ -334,9 +339,9 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 	if delete and 'files' not in task:
 		client.delete_task(task)
 
-def download_multiple_tasks(client, download, tasks, output_dir=None, delete=False, resuming=False, overwrite=False, mini_hash=False):
+def download_multiple_tasks(client, download, tasks, output_dir=None, delete=False, resuming=False, overwrite=False, mini_hash=False, no_hash=False):
 	for task in tasks:
-		download_single_task(client, download, task, output_dir=output_dir, delete=delete, resuming=resuming, overwrite=overwrite, mini_hash=mini_hash)
+		download_single_task(client, download, task, output_dir=output_dir, delete=delete, resuming=resuming, overwrite=overwrite, mini_hash=mini_hash, no_hash=no_hash)
 	skipped = filter(lambda t: t['status_text'] != 'completed', tasks)
 	if skipped:
 		print "Below tasks were skipped as they were not ready:"
@@ -446,12 +451,12 @@ def merge_bt_sub_tasks(tasks):
 def download_task(args):
 	args = parse_login_command_line(args,
 	                                ['tool', 'output', 'output-dir', 'input'],
-	                                ['delete', 'continue', 'overwrite', 'torrent', 'search', 'mini-hash'],
+	                                ['delete', 'continue', 'overwrite', 'torrent', 'search', 'mini-hash', 'hash'],
 									alias={'o': 'output', 'i': 'input', 'c':'continue'},
-									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'output-dir':get_config('output-dir'), 'mini-hash':get_config('mini-hash')},
+									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'output-dir':get_config('output-dir'), 'mini-hash':get_config('mini-hash'), 'hash':get_config('hash', True)},
 	                                help=lixian_help.download)
 	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'aria2c':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
-	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash}
+	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
 	if len(args) > 1 or args.input:
