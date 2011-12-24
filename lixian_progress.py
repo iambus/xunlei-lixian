@@ -1,4 +1,6 @@
 
+import sys
+
 class SimpleProgressBar:
 	def __init__(self):
 		self.displayed = False
