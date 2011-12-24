@@ -154,32 +154,6 @@ def verify_mini_bt_hash(dirname, files):
 			return False
 	return True
 
-class SimpleProgressBar:
-	def __init__(self):
-		self.displayed = False
-	def update(self, percent):
-		self.displayed = True
-		bar_size = 40
-		percent = int(percent*100)
-		if percent > 100:
-			percent = 100
-		dots = bar_size * percent / 100
-		plus = percent - dots / bar_size * 100
-		if plus > 0.8:
-			plus = '='
-		elif plus > 0.4:
-			plu = '>'
-		else:
-			plus = ''
-		bar = '=' * dots + plus
-		bar = '{0:>3}%[{1:<40}]'.format(percent, bar)
-		sys.stdout.write('\r'+bar)
-		sys.stdout.flush()
-	def done(self):
-		if self.displayed:
-			print
-			self.displayed = False
-
 def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False, overwrite=False, mini_hash=False, no_hash=False):
 	assert client.get_gdriveid()
 	if task['status_text'] != 'completed':
@@ -256,6 +230,7 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 		if not no_hash:
 			torrent_file = client.get_torrent_file(task)
 			print 'Hashing bt ...'
+			from lixian_progress import SimpleProgressBar
 			bar = SimpleProgressBar()
 			file_set = [f['name'].encode('utf-8').split('\\') for f in files] if 'files' in task else None
 			verified = lixian_hash_bt.verify_bt(filename, lixian_hash_bt.bdecode(torrent_file)['info'], file_set=file_set, progress_callback=bar.update)
