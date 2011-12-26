@@ -349,7 +349,7 @@ def parse_task(html):
 	inputs = re.findall(r'<input[^<>]+/>', html)
 	def parse_attrs(html):
 		return dict((k, v1 or v2) for k, v1, v2 in re.findall(r'''\b(\w+)=(?:'([^']*)'|"([^"]*)")''', html))
-	info = dict((x['id'], x['value']) for x in map(parse_attrs, inputs))
+	info = dict((x['id'], unescape_html(x['value'])) for x in map(parse_attrs, inputs))
 	mini_info = {}
 	mini_map = {}
 	#mini_info = dict((re.sub(r'\d+$', '', k), info[k]) for k in info)
@@ -452,6 +452,10 @@ def parse_url_protocol(url):
 		return m.group(1)
 	else:
 		return url
+
+def unescape_html(html):
+	import xml.sax.saxutils
+	return xml.sax.saxutils.unescape(html)
 
 def md5(s):
 	import hashlib
