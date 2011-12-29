@@ -118,6 +118,8 @@ Options:
                                  Default: false.
  --torrent                       Treat all arguments as torrent files (e.g. local torrent file, torrent http url, torrent info hash)
                                  Default: false.
+ --all                           Download all tasks. This option will be ignored if specific download URLs or task ids can be found. 
+                                 Default: false.
  --search                        Treat all arguments as keywords of cloud tasks
                                  Default: false.
  --hash                          When this option is false (--no-hash), never do full hash, but a minimal hash will be performed (supposed to be very fast).
@@ -141,6 +143,7 @@ Examples:
  python lixian_cli.py download --torrent torrent-info-hash
  python lixian_cli.py download --torrent http://xxx/xxx.torrent
  python lixian_cli.py download bt-task-id/file-id
+ python lixian_cli.py download --all
 '''
 
 list     = '''python lixian_cli.py list

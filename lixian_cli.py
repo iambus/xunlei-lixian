@@ -25,6 +25,10 @@ def to_utf_8(url):
 	except:
 		return url
 
+def to_str(s):
+	assert type(s) in (str, unicode)
+	return s.encode(default_encoding) if type(s) == unicode else s
+
 def parse_login_command_line(args, keys=[], bools=[], alias={}, default={}, help=None):
 	common_keys = ['username', 'password', 'cookies']
 	common_default = {'cookies': LIXIAN_DEFAULT_COOKIES, 'username': get_config('username'), 'password': get_config('password')}
@@ -360,7 +364,7 @@ def merge_bt_sub_tasks(tasks):
 def download_task(args):
 	args = parse_login_command_line(args,
 	                                ['tool', 'output', 'output-dir', 'input'],
-	                                ['delete', 'continue', 'overwrite', 'torrent', 'search', 'mini-hash', 'hash'],
+	                                ['delete', 'continue', 'overwrite', 'torrent', 'all', 'search', 'mini-hash', 'hash'],
 									alias={'o': 'output', 'i': 'input', 'c':'continue'},
 									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'output-dir':get_config('output-dir'), 'mini-hash':get_config('mini-hash'), 'hash':get_config('hash', True)},
 	                                help=lixian_help.download)
@@ -379,8 +383,8 @@ def download_task(args):
 		tasks = find_torrents_task_to_download(client, [args[0]])
 		assert len(tasks) == 1
 		download_single_task(client, download, tasks[0], args.output, **download_args)
-	else:
-		assert len(args) == 1, 'Not enough argument'
+	elif len(args):
+		assert len(args) == 1
 		tasks = search_tasks(client, args, status='all', check=False)
 		if not tasks:
 			url = args[0]
@@ -395,6 +399,12 @@ def download_task(args):
 			download_single_task(client, download, tasks[0], args.output, **download_args)
 		else:
 			download_multiple_tasks(client, download, tasks, **download_args)
+	elif args.all:
+		#tasks = client.read_all_completed()
+		tasks = client.read_all_tasks()
+		download_multiple_tasks(client, download, tasks, **download_args)
+	else:
+		usage(doc=lixian_help.download, message='Not enough arguments')
 
 
 def link_equals(x1, x2):
@@ -625,17 +635,17 @@ def print_hash(args):
 	print 'ed2k:', lixian_hash_ed2k.hash_file(args[0])
 	print 'dcid:', lixian_hash.dcid_hash_file(args[0])
 
-def usage():
-	print lixian_help.usage()
+def usage(doc=lixian_help.usage, message=None):
+	if hasattr(doc, '__call__'):
+		doc = doc()
+	if message:
+		print to_str(message)
+	print to_str(doc).strip()
 
 def lx_help(args):
 	if len(args) == 1:
 		helper = getattr(lixian_help, args[0].lower(), lixian_help.help)
-		doc = helper() if hasattr(helper, '__call__') else helper
-		assert type(doc) in (str, unicode)
-		if type(doc) == unicode:
-			doc = doc.encode(default_encoding)
-		print doc.strip()
+		usage(helper)
 	elif len(args) == 0:
 		print lixian_help.welcome
 	else:

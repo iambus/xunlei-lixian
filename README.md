@@ -36,6 +36,8 @@ Quick start
 	python lixian_cli.py download --torrent 1.torrent
 	python lixian_cli.py download --torrent torrent-info-hash
 	python lixian_cli.py download --torrent http://xxx/xxx.torrent
+	python lixian_cli.py download bt-task-id/file-id
+	python lixian_cli.py download --all
 
 	python lixian_cli.py add url
 	python lixian_cli.py add --torrent 1.torrent
@@ -166,6 +168,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
     lx download ed2k://somefile
     lx download bt://info-hash
     lx download link1 link2 link3 ...
+    lx download --all
 
 下载bt的时候需要加--torrent参数。可以指定本地.torrent文件路径，或者.torrent文件的http url，或者torrent文件的info hash。（很多网站使用info hash来标识一个bt种子文件，这种情况你就不需要下载种子了，lx download可以自动下载种子，不过前提是之前已经有人使用迅雷离线下载过同样的种子。[如后所述](#hash_tool)，你也可以使用lixian_hash.py --info-hash来手动生成bt种子的info hash。）
 
@@ -210,6 +213,10 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 对于bt任务，如果只想下载部分文件，可以在task id后指定文件id：
 
     lx download bt-task-id/file-id bt-task-id/file-id2
+
+可以使用--all参数下载所有的任务（如果已经在参数中指定了要下载的链接或者任务id，--all参数会被忽略）：
+
+    lx download --all
 
 也可以使用一个简单的关键字匹配要下载的文件名：
 
