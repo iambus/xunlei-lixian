@@ -158,7 +158,15 @@ def verify_mini_bt_hash(dirname, files):
 			return False
 	return True
 
-def download_single_task(client, download, task, output=None, output_dir=None, delete=False, resuming=False, overwrite=False, mini_hash=False, no_hash=False):
+def download_single_task(client, download, task, options):
+	output = options.get('output')
+	output_dir = options.get('output_dir')
+	delete = options.get('delete')
+	resuming = options.get('resuming')
+	overwrite = options.get('overwrite')
+	mini_hash = options.get('mini_hash')
+	no_hash = options.get('no_hash')
+
 	assert client.get_gdriveid()
 	if task['status_text'] != 'completed':
 		print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
@@ -252,9 +260,9 @@ def download_single_task(client, download, task, output=None, output_dir=None, d
 	if delete and 'files' not in task:
 		client.delete_task(task)
 
-def download_multiple_tasks(client, download, tasks, output_dir=None, delete=False, resuming=False, overwrite=False, mini_hash=False, no_hash=False):
+def download_multiple_tasks(client, download, tasks, options):
 	for task in tasks:
-		download_single_task(client, download, task, output_dir=output_dir, delete=delete, resuming=resuming, overwrite=overwrite, mini_hash=mini_hash, no_hash=no_hash)
+		download_single_task(client, download, task, options)
 	skipped = filter(lambda t: t['status_text'] != 'completed', tasks)
 	if skipped:
 		print "Below tasks were skipped as they were not ready:"
@@ -376,13 +384,13 @@ def download_task(args):
 		assert not args.output
 		tasks = find_tasks_to_download(client, args)
 		tasks = merge_bt_sub_tasks(tasks)
-		download_multiple_tasks(client, download, tasks, **download_args)
+		download_multiple_tasks(client, download, tasks, download_args)
 	elif args.torrent:
 		assert not args.search
 		assert len(args) == 1
 		tasks = find_torrents_task_to_download(client, [args[0]])
 		assert len(tasks) == 1
-		download_single_task(client, download, tasks[0], args.output, **download_args)
+		download_single_task(client, download, tasks[0], args.output, download_args)
 	elif len(args):
 		assert len(args) == 1
 		tasks = search_tasks(client, args, status='all', check=False)
@@ -396,13 +404,13 @@ def download_task(args):
 		tasks = merge_bt_sub_tasks(tasks)
 		if args.output:
 			assert len(tasks) == 1
-			download_single_task(client, download, tasks[0], args.output, **download_args)
+			download_single_task(client, download, tasks[0], args.output, download_args)
 		else:
-			download_multiple_tasks(client, download, tasks, **download_args)
+			download_multiple_tasks(client, download, tasks, download_args)
 	elif args.all:
 		#tasks = client.read_all_completed()
 		tasks = client.read_all_tasks()
-		download_multiple_tasks(client, download, tasks, **download_args)
+		download_multiple_tasks(client, download, tasks, download_args)
 	else:
 		usage(doc=lixian_help.download, message='Not enough arguments')
 
