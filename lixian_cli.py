@@ -377,7 +377,7 @@ def download_task(args):
 									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'output-dir':get_config('output-dir'), 'mini-hash':get_config('mini-hash'), 'hash':get_config('hash', True)},
 	                                help=lixian_help.download)
 	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'aria2c':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
-	download_args = {'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash}
+	download_args = {'output':args.output, 'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
 	if len(args) > 1 or args.input:
@@ -390,7 +390,7 @@ def download_task(args):
 		assert len(args) == 1
 		tasks = find_torrents_task_to_download(client, [args[0]])
 		assert len(tasks) == 1
-		download_single_task(client, download, tasks[0], args.output, download_args)
+		download_single_task(client, download, tasks[0], download_args)
 	elif len(args):
 		assert len(args) == 1
 		tasks = search_tasks(client, args, status='all', check=False)
@@ -404,7 +404,7 @@ def download_task(args):
 		tasks = merge_bt_sub_tasks(tasks)
 		if args.output:
 			assert len(tasks) == 1
-			download_single_task(client, download, tasks[0], args.output, download_args)
+			download_single_task(client, download, tasks[0], download_args)
 		else:
 			download_multiple_tasks(client, download, tasks, download_args)
 	elif args.all:
