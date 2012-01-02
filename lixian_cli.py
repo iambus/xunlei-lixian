@@ -555,6 +555,10 @@ def add_task(args):
 		for link in links:
 			print link
 		client.add_batch_tasks(map(to_utf_8, links))
+		for link in links:
+			# add_batch_tasks doesn't work for bt task, add bt task one by one...
+			if link.startswith('bt://'):
+				client.add_task(link)
 		print 'All tasks added. Checking status...'
 		tasks = client.read_all_tasks()
 		for link in links:
