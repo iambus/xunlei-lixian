@@ -1,8 +1,16 @@
 
 import os
+import os.path
 
-LIXIAN_DEFAULT_CONFIG = os.path.join(os.getenv('USERPROFILE') or os.getenv('HOME'), '.xunlei.lixian.config')
-LIXIAN_DEFAULT_COOKIES = os.path.join(os.getenv('USERPROFILE') or os.getenv('HOME'), '.xunlei.lixian.cookies')
+def get_config_path(filename):
+	if os.path.exists(filename):
+		return filename
+	user_home = os.getenv('USERPROFILE') or os.getenv('HOME')
+	lixian_home = os.getenv('LIXIAN_HOME') or user_home
+	return os.path.join(lixian_home, filename)
+
+LIXIAN_DEFAULT_CONFIG = get_config_path('.xunlei.lixian.config')
+LIXIAN_DEFAULT_COOKIES = get_config_path('.xunlei.lixian.cookies')
 
 def load_config(path):
 	values = {}
