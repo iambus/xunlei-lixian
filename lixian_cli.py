@@ -231,9 +231,10 @@ def download_single_task(client, download, task, options):
 				client.delete_task(task)
 			return
 		for f in files:
-			name = f['name'].encode(default_encoding)
-			print 'Downloading', name, '...'
-			path = os.path.join(dirname, *name.split('\\'))
+			name = f['name']
+			print 'Downloading', name.encode(default_encoding), '...'
+			# XXX: if file name is escaped, hashing bt won't get correct file
+			path = os.path.join(dirname, *[p.encode(default_encoding) for p in map(escape_filename, name.split('\\'))])
 			subdir = os.path.dirname(path)
 			if subdir and not os.path.exists(subdir):
 				os.makedirs(subdir)
