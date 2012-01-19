@@ -215,7 +215,7 @@ class ProgressBar:
 		speed = self.speed
 		if speed < 1000:
 			speed = '%sB/s' % int(speed)
-		elif speed < 1000*100:
+		elif speed < 1000*10:
 			speed = '%.1fK/s' % (speed/1000.0)
 		elif speed < 1000*1000:
 			speed = '%dK/s' % int(speed/1000)
