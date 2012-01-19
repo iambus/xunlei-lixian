@@ -52,6 +52,8 @@ Quick start
 
 	python lixian_cli.py restart id
 
+	python lixian_cli.py rename id name
+
 	python lixian_cli.py logout
 
 安装指南
@@ -132,6 +134,7 @@ https://github.com/iambus/xunlei-lixian/downloads
 * lx delete
 * lx pause
 * lx restart
+* lx rename
 * lx config
 * lx info
 * lx help
@@ -268,6 +271,11 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
     lx restart id1 id2
     lx restart --all mkv
+
+### lx rename
+重命名任务
+
+	lx rename task-id task-name
 
 ### lx logout
 不想保留session可以使用lx logout退出。一般用不着。

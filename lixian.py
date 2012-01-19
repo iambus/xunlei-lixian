@@ -328,6 +328,15 @@ class XunleiClient:
 		response = self.urlopen(url, data=data).read()
 		assert response == "<script>document.domain='xunlei.com';window.parent.redownload_resp(1)</script>"
 
+	def rename_task(self, task, new_name):
+		assert type(new_name) == unicode
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/rename'
+		taskid = task['id']
+		bt = '1' if task['type'] == 'bt' else '0'
+		url = url+'?'+urlencode({'taskid':taskid, 'bt':bt, 'filename':new_name.encode('utf-8')})
+		response = self.urlopen(url).read()
+		assert '"result":0' in response, response
+
 	def restart_task(self, task):
 		self.restart_tasks([task])
 

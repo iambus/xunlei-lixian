@@ -19,6 +19,9 @@ default_encoding = sys.getfilesystemencoding()
 if default_encoding is None or default_encoding.lower() == 'ascii':
 	default_encoding = 'utf-8'
 
+def from_native(s):
+	return s.decode(default_encoding)
+
 def to_utf_8(url):
 	try:
 		return url.decode(default_encoding).encode('utf-8')
@@ -610,6 +613,16 @@ def restart_task(args):
 		print x['name'].encode(default_encoding)
 	client.restart_tasks(to_restart)
 
+def rename_task(args):
+	args = parse_login_command_line(args, [], [], help=lixian_help.rename)
+	if len(args) != 2 or not re.match(r'\d+$', args[0]):
+		usage(lixian_help.rename, 'Incorrect arguments')
+		sys.exit(1)
+	client = XunleiClient(args.username, args.password, args.cookies)
+	taskid, new_name = args
+	task = client.get_task_by_id(taskid)
+	client.rename_task(task, from_native(new_name))
+
 def lixian_info(args):
 	args = parse_login_command_line(args, help=lixian_help.info)
 	client = XunleiClient(args.username, args.password, args.cookies, login=False)
@@ -678,7 +691,7 @@ def execute_command(args=sys.argv[1:]):
 			usage()
 			sys.exit(1)
 		sys.exit(0)
-	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'info': lixian_info, 'config': lx_config, 'hash': print_hash, 'help': lx_help}
+	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'rename': rename_task, 'info': lixian_info, 'config': lx_config, 'hash': print_hash, 'help': lx_help}
 	if command not in commands:
 		usage()
 		sys.exit(1)

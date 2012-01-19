@@ -10,6 +10,7 @@ Basic commands
  delete     delete tasks from Xunlei cloud
  pause      pause tasks on Xunlei cloud
  restart    restart tasks on Xunlei cloud
+ rename     rename task
  config     save configuration so you don't have to repeat it
  info       print user id, internal user id, and gdriveid
  logout     logout from Xunlei cloud
@@ -76,6 +77,8 @@ python lixian_cli.py delete file-name-on-cloud-to-delete
 python lixian_cli.py pause id
 
 python lixian_cli.py restart id
+
+python lixian_cli.py rename id name
 
 python lixian_cli.py logout
 
@@ -218,6 +221,11 @@ restart tasks on Xunlei cloud
 Options:
  -i     prompt before restart
  --all  restart all tasks if there are multiple matches
+'''
+
+rename   = '''python lixian_cli.py rename task-id task-name
+
+rename task
 '''
 
 config   = '''python lixian_cli.py config key [value]
