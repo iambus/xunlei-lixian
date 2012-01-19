@@ -243,8 +243,9 @@ class ProgressBar:
 			seconds = '%dd%dh%dm%ds' % (days, hours, minutes, seconds)
 		completed = ','.join((x[::-1] for x in reversed(re.findall('..?.?', str(self.completed)[::-1]))))
 		bar = '{0:>3}%[{1:<40}] {2:<12} {3:>4} in {4:>6s}'.format(percent, bar, completed, speed, seconds)
+		new_bar_width = len(bar)
 		bar = bar.ljust(self.bar_width)
-		self.bar_width = len(bar)
+		self.bar_width = new_bar_width
 		sys.stdout.write('\r'+bar)
 		sys.stdout.flush()
 	def update_status(self, total, completed):
