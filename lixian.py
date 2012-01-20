@@ -115,8 +115,8 @@ class XunleiClient:
 		#url = 'http://login.xunlei.com/unregister?sessionid=%s&cachetime=%s&noCacheIE=%s' % (session_id, timestamp, timestamp)
 		#self.urlopen(url).read()
 		#self.urlopen('http://dynamic.vip.xunlei.com/login/indexlogin_contr/logout/').read()
-		ckeys = ["vip_isvip","lx_sessionid","vip_level","lx_login","dl_enable","in_xl","ucid","lixian_section"];
-		ckeys1 = ["sessionid","usrname","nickname","usernewno","userid"];
+		ckeys = ["vip_isvip","lx_sessionid","vip_level","lx_login","dl_enable","in_xl","ucid","lixian_section"]
+		ckeys1 = ["sessionid","usrname","nickname","usernewno","userid"]
 		for k in ckeys:
 			self.set_cookie('.vip.xunlei.com', k, '')
 		for k in ckeys1:
@@ -205,7 +205,6 @@ class XunleiClient:
 		assert goldbean_need == 0
 		assert silverbean_need == 0
 
-
 		if url.startswith('http:'):
 			task_type = 0
 		elif url.startswith('ed2k://'):
@@ -243,7 +242,7 @@ class XunleiClient:
 		for i in range(len(urls)):
 			data['cid[%d]' % i] = ''
 			data['url[%d]' % i] = urls[i]
-		data['batch_old_taskid' ] = batch_old_taskid
+		data['batch_old_taskid'] = batch_old_taskid
 		response = self.urlopen(url, data=data).read()
 		assert_default_page(response, self.id)
 
@@ -345,7 +344,8 @@ class XunleiClient:
 		for x in tasks:
 			if x['id'] == id:
 				return x
-		raise Exception, 'Not task found for id '+id
+		raise Exception('Not task found for id '+id)
+
 
 def current_timestamp():
 	return int(time.time()*1000)
