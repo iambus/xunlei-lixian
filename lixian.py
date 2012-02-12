@@ -181,15 +181,17 @@ class XunleiClient:
 
 	def add_task(self, url):
 		protocol = parse_url_protocol(url)
-		assert protocol in ('ed2k', 'http', 'thunder', 'Flashget', 'qqdl', 'bt'), 'protocol "%s" is not suppoted' % protocol
+		assert protocol in ('ed2k', 'http', 'thunder', 'Flashget', 'qqdl', 'bt', 'magnet'), 'protocol "%s" is not suppoted' % protocol
 
 		from lixian_url import url_unmask
 		url = url_unmask(url)
 		protocol = parse_url_protocol(url)
-		assert protocol in ('ed2k', 'http', 'bt'), 'protocol "%s" is not suppoted' % protocol
+		assert protocol in ('ed2k', 'http', 'bt', 'magnet'), 'protocol "%s" is not suppoted' % protocol
 
 		if protocol == 'bt':
 			return self.add_torrent_task_by_info_hash(url[5:])
+		elif protocol == 'magnet':
+			return self.add_magnet_task(url)
 
 		random = current_random()
 		check_url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_check?callback=queryCid&url=%s&random=%s&tcache=%s' % (urllib.quote(url), random, current_timestamp())
@@ -233,8 +235,11 @@ class XunleiClient:
 		assert urls
 		urls = list(urls)
 		for url in urls:
-			if parse_url_protocol(url) not in ('http', 'ed2k', 'bt', 'thunder'):
+			if parse_url_protocol(url) not in ('http', 'ed2k', 'bt', 'thunder', 'magnet'):
 				raise NotImplementedError('Unsupported: '+url)
+		urls = filter(lambda u: parse_url_protocol(u) in ('http', 'ed2k', 'thunder'), urls)
+		if not urls:
+			return
 		#self.urlopen('http://dynamic.cloud.vip.xunlei.com/interface/batch_task_check', data={'url':'\r\n'.join(urls), 'random':current_random()})
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/batch_task_commit'
 		batch_old_taskid = '0' + ',' * (len(urls) - 1) # XXX: what is it?
@@ -281,6 +286,32 @@ class XunleiClient:
 	def add_torrent_task(self, path):
 		with open(path, 'rb') as x:
 			return self.add_torrent_task_by_content(x.read(), os.path.basename(path))
+
+	def add_magnet_task(self, link):
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/url_query?callback=queryUrl&u=%s&random=%s' % (urllib.quote(link), current_timestamp())
+		response = self.urlopen(url).read()
+		success = re.search(r'queryUrl(\(1,.*\))\s*$', response, flags=re.S)
+		if not success:
+			already_exists = re.search(r"queryUrl\(-1,'([^']{40})", response, flags=re.S)
+			if already_exists:
+				return already_exists.group(1)
+			raise NotImplementedError(repr(response))
+		args = success.group(1).decode('utf-8')
+		args = literal_eval(args.replace('new Array', ''))
+		_, cid, tsize, btname, _, names, sizes_, sizes, _, types, findexes, timestamp = args
+		def toList(x):
+			if type(x) in (list, tuple):
+				return x
+			else:
+				return [x]
+		data = {'uid':self.id, 'btname':btname, 'cid':cid, 'tsize':tsize,
+				'findex':''.join(x+'_' for x in toList(findexes)),
+				'size':''.join(x+'_' for x in toList(sizes)),
+				'from':'0'}
+		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit'
+		response = self.urlopen(commit_url, data=data).read()
+		assert_default_page(response, self.id)
+		return cid
 
 	def delete_tasks_by_id(self, ids):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_delete?type=%s&taskids=%s&noCacheIE=%s' % (2, ','.join(ids)+',', current_timestamp()) # XXX: what is 'type'?
@@ -459,6 +490,8 @@ def parse_url_protocol(url):
 	m = re.match(r'([^:]+)://', url)
 	if m:
 		return m.group(1)
+	elif url.startswith('magnet:'):
+		return 'magnet'
 	else:
 		return url
 

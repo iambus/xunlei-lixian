@@ -8,6 +8,14 @@ default_encoding = sys.getfilesystemencoding()
 if default_encoding is None or default_encoding.lower() == 'ascii':
 	default_encoding = 'utf-8'
 
+def magnet_to_infohash(magnet):
+	import re
+	import base64
+	m = re.match(r'magnet:\?xt=urn:btih:(.*)', magnet)
+	assert m, magnet
+	code = m.group(1)
+	return base64.b32decode(code)
+
 class decoder:
 	def __init__(self, bytes):
 		self.bytes = bytes

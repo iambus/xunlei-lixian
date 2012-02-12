@@ -423,6 +423,10 @@ def link_equals(x1, x2):
 	from lixian_url import url_unmask, normalize_unicode_link
 	x1 = url_unmask(x1)
 	x2 = url_unmask(x2)
+	if x1.startswith('magnet:'):
+		x1 = 'bt://'+lixian_hash_bt.magnet_to_infohash(x1).encode('hex')
+	if x2.startswith('magnet:'):
+		x2 = 'bt://'+lixian_hash_bt.magnet_to_infohash(x2).encode('hex')
 	if x1.startswith('ed2k://') and x2.startswith('ed2k://'):
 		return lixian_hash_ed2k.parse_ed2k_link(x1) == lixian_hash_ed2k.parse_ed2k_link(x2)
 		#import urllib
@@ -561,7 +565,7 @@ def add_task(args):
 		client.add_batch_tasks(map(to_utf_8, links))
 		for link in links:
 			# add_batch_tasks doesn't work for bt task, add bt task one by one...
-			if link.startswith('bt://'):
+			if link.startswith('bt://') or link.startswith('magnet:'):
 				client.add_task(link)
 		print 'All tasks added. Checking status...'
 		tasks = client.read_all_tasks()
