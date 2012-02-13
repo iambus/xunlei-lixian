@@ -513,7 +513,6 @@ def list_task(args):
 	ids = [a[:-1] if re.match(r'^\d+/$', a) else a for a in args]
 
 	client = XunleiClient(args.username, args.password, args.cookies)
-	client.set_page_size(100)
 	if parent_ids:
 		tasks = client.list_bt(client.get_task_by_id(parent_ids[0]))
 		tasks.sort(key=lambda x: int(x['index']))

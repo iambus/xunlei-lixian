@@ -20,6 +20,7 @@ class XunleiClient:
 				self.load_cookies()
 		else:
 			self.cookiejar = cookielib.CookieJar()
+		self.set_page_size(9999)
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
 		if login:
 			if not self.has_logged_in():
