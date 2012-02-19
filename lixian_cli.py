@@ -172,8 +172,9 @@ def download_single_task(client, download, task, options):
 
 	assert client.get_gdriveid()
 	if task['status_text'] != 'completed':
-		print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
-		return
+		if 'files' not in task:
+			print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
+			return
 	def download1(client, url, path, size):
 		if not os.path.exists(path):
 			download(client, url, path)
@@ -226,7 +227,10 @@ def download_single_task(client, download, task, options):
 			for index in task['files']:
 				t = indexed_files[int(index)]
 				if t not in ordered_files:
-					ordered_files.append(t)
+					if t['status_text'] != 'completed':
+						print 'skip task %s/%s (%s) as the status is %s' % (t['id'], index, t['name'].encode(default_encoding), t['status_text'])
+					else:
+						ordered_files.append(t)
 			files = ordered_files
 		if mini_hash and resuming and verify_mini_bt_hash(dirname, files):
 			print task['name'].encode(default_encoding), 'is already done'
