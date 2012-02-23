@@ -15,9 +15,7 @@ import re
 import urllib2
 from getpass import getpass
 
-default_encoding = sys.getfilesystemencoding()
-if default_encoding is None or default_encoding.lower() == 'ascii':
-	default_encoding = 'utf-8'
+from lixian_encoding import default_encoding
 
 def from_native(s):
 	return s.decode(default_encoding)

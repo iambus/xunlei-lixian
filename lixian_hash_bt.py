@@ -4,9 +4,7 @@ import sys
 import hashlib
 from cStringIO import StringIO
 
-default_encoding = sys.getfilesystemencoding()
-if default_encoding is None or default_encoding.lower() == 'ascii':
-	default_encoding = 'utf-8'
+from lixian_encoding import default_encoding
 
 def magnet_to_infohash(magnet):
 	import re
