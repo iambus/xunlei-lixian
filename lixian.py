@@ -10,6 +10,21 @@ import os.path
 import json
 from ast import literal_eval
 
+def retry(f):
+	#retry_sleeps = [1, 1, 1]
+	retry_sleeps = [1, 2, 3, 5, 10, 20, 30, 60] + [60] * 60
+	def withretry(*args, **kwargs):
+		for second in retry_sleeps:
+			try:
+				return f(*args, **kwargs)
+			except:
+				import traceback
+				import sys
+				print "Exception in user code:"
+				traceback.print_exc(file=sys.stdout)
+				time.sleep(second)
+		raise
+	return withretry
 
 class XunleiClient:
 	def __init__(self, username=None, password=None, cookie_path=None, login=True):
@@ -37,6 +52,7 @@ class XunleiClient:
 			else:
 				self.id = self.get_userid()
 
+	@retry
 	def urlopen(self, url, **args):
 		#print url
 		if 'data' in args and type(args['data']) == dict:
