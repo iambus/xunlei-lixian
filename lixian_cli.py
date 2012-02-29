@@ -342,7 +342,7 @@ def find_tasks_to_download(client, args):
 		client.add_batch_tasks(map(to_utf_8, to_add))
 		for link in to_add:
 			# add_batch_tasks doesn't work for bt task, add bt task one by one...
-			if link.startswith('bt://'):
+			if link.startswith('bt://') or link.startswith('magnet:'):
 				client.add_task(link)
 		all_tasks = client.read_all_tasks()
 	tasks = []
