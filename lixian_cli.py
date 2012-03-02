@@ -100,6 +100,7 @@ def wget_download(client, download_url, filename, resuming=False):
 	wget_opts = ['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename]
 	if resuming:
 		wget_opts.append('-c')
+	wget_opts.extend(get_config('wget-opts', '').split())
 	exit_code = subprocess.call(wget_opts)
 	if exit_code != 0:
 		raise Exception('wget exited abnormaly')
