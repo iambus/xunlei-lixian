@@ -66,6 +66,9 @@ class Config:
 global_config = Config()
 
 def put_config(k, v=True):
+	if k.startswith('no-') and v is True:
+		k = k[3:]
+		v = False
 	global_config.put(k, v)
 
 def get_config(k, v=None):
