@@ -341,7 +341,8 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 * urllib2：内置下载工具。不支持断点续传错误重连，不建议使用。
 * curl：尚未测试。
 * aria2：测试通过。注意某些环境里的aria2c需要加上额外的参数才能运行。可以使用lx config进行配置：lx config -- aria2-opts --event-poll=select
-* 其他工具，比如axel，ProZilla，暂时都不支持。有需要请可以我，或者直接提交一个issue。
+* axel: 测试通过。注意官方版本的axel有一个URL重定向长度超过255被截断的bug，需要手动修改源代码编译。见issue #44。
+* 其他工具，比如ProZilla，暂时都不支持。有需要请可以我，或者直接提交一个issue。
 
 
 其他工具

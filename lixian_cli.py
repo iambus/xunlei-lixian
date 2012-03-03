@@ -128,6 +128,14 @@ def aria2_download(client, download_url, path, resuming=False):
 	if exit_code != 0:
 		raise Exception('aria2c exited abnormaly')
 
+def axel_download(client, download_url, path, resuming=False):
+	gdriveid = str(client.get_gdriveid())
+	axel_opts = ['axel', '--header=Cookie: gdriveid='+gdriveid, download_url, '--output', path]
+	axel_opts.extend(get_config('axel-opts', '').split())
+	exit_code = subprocess.call(axel_opts)
+	if exit_code != 0:
+		raise Exception('axel exited abnormaly')
+
 # TODO: support axel, ProZilla
 
 def escape_filename(name):
@@ -383,7 +391,7 @@ def download_task(args):
 									alias={'o': 'output', 'i': 'input', 'c':'continue'},
 									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'output-dir':get_config('output-dir'), 'mini-hash':get_config('mini-hash'), 'hash':get_config('hash', True)},
 	                                help=lixian_help.download)
-	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'aria2c':aria2_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
+	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'aria2c':aria2_download, 'axel':axel_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
 	download_args = {'output':args.output, 'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
