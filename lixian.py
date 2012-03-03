@@ -198,12 +198,12 @@ class XunleiClient:
 
 	def add_task(self, url):
 		protocol = parse_url_protocol(url)
-		assert protocol in ('ed2k', 'http', 'thunder', 'Flashget', 'qqdl', 'bt', 'magnet'), 'protocol "%s" is not suppoted' % protocol
+		assert protocol in ('ed2k', 'http', 'ftp', 'thunder', 'Flashget', 'qqdl', 'bt', 'magnet'), 'protocol "%s" is not suppoted' % protocol
 
 		from lixian_url import url_unmask
 		url = url_unmask(url)
 		protocol = parse_url_protocol(url)
-		assert protocol in ('ed2k', 'http', 'bt', 'magnet'), 'protocol "%s" is not suppoted' % protocol
+		assert protocol in ('ed2k', 'http', 'ftp', 'bt', 'magnet'), 'protocol "%s" is not suppoted' % protocol
 
 		if protocol == 'bt':
 			return self.add_torrent_task_by_info_hash(url[5:])
@@ -224,7 +224,7 @@ class XunleiClient:
 		assert goldbean_need == 0
 		assert silverbean_need == 0
 
-		if url.startswith('http:'):
+		if url.startswith('http://') or url.startswith('ftp://'):
 			task_type = 0
 		elif url.startswith('ed2k://'):
 			task_type = 2
@@ -252,9 +252,9 @@ class XunleiClient:
 		assert urls
 		urls = list(urls)
 		for url in urls:
-			if parse_url_protocol(url) not in ('http', 'ed2k', 'bt', 'thunder', 'magnet'):
+			if parse_url_protocol(url) not in ('http', 'ftp', 'ed2k', 'bt', 'thunder', 'magnet'):
 				raise NotImplementedError('Unsupported: '+url)
-		urls = filter(lambda u: parse_url_protocol(u) in ('http', 'ed2k', 'thunder'), urls)
+		urls = filter(lambda u: parse_url_protocol(u) in ('http', 'ftp', 'ed2k', 'thunder'), urls)
 		if not urls:
 			return
 		#self.urlopen('http://dynamic.cloud.vip.xunlei.com/interface/batch_task_check', data={'url':'\r\n'.join(urls), 'random':current_random()})
@@ -362,7 +362,7 @@ class XunleiClient:
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/redownload'
 		form = []
 		for task in tasks:
-			assert task['type'] in ('ed2k', 'http', 'https', 'bt'), "'%s' is not tested" % task['type']
+			assert task['type'] in ('ed2k', 'http', 'ftp', 'https', 'bt'), "'%s' is not tested" % task['type']
 			data = {'id[]': task['id'],
 					'cid[]': '', # XXX: should I set this?
 					'url[]': task['original_url'],
