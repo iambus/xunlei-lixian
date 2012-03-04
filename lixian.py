@@ -142,7 +142,7 @@ class XunleiClient:
 
 	def read_task_page_url(self, url):
 		req = self.urlopen(url)
-		page = req.read().decode('utf-8')
+		page = req.read().decode('utf-8', 'ignore')
 		if not self.has_gdriveid():
 			gdriveid = re.search(r'id="cok" value="([^"]+)"', page).group(1)
 			self.set_gdriveid(gdriveid)
