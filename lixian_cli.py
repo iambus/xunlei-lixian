@@ -334,7 +334,7 @@ def find_tasks_to_download(client, args):
 			links.extend(line.strip() for line in x.readlines() if line.strip())
 	if args.torrent:
 		return find_torrents_task_to_download(client, links)
-	if args.search or any(re.match(r'^\d+(/\d+)?$', x) for x in args):
+	if args.search or any(re.match(r'^\d+(/[-\d\[\],\s]+)?$', x) for x in args):
 		return search_tasks(client, args, check='check_none')
 	all_tasks = client.read_all_tasks()
 	to_add = set(links)
@@ -464,16 +464,35 @@ def link_in(url, links):
 
 def filter_tasks(tasks, k, v):
 	if k == 'id':
-		task_id, sub_id = re.match(r'^(\d+)(?:/(\d+))?$', v).groups()
+		task_id, sub_id = re.match(r'^(\d+)(?:/([-\d\[\],\s]+))?$', v).groups()
 		matched = filter(lambda t: t['id'] == task_id, tasks)
 		if matched:
 			assert len(matched) == 1
 			task = matched[0]
 			if sub_id:
 				assert task['type'] == 'bt', 'task %s is not a bt task' % task['name'].encode(default_encoding)
-				task = dict(task)
-				task['index'] = sub_id
-			matched = [task]
+				matched = []
+				if re.match(r'\[.*\]', sub_id):
+					for sub_id in re.split(r'\s*,\s*', sub_id[1:-1]):
+						assert re.match(r'^\d+(-\d+)?$', sub_id), sub_id
+						if '-' in sub_id:
+							start, end = sub_id.split('-')
+							for i in range(int(start), int(end)+1):
+								t = dict(task)
+								t['index'] = str(i)
+								matched.append(t)
+						else:
+							assert re.match(r'^\d+$', sub_id), sub_id
+							t = dict(task)
+							t['index'] = sub_id
+							matched.append(t)
+				else:
+					assert re.match(r'^\d+$', sub_id), sub_id
+					t = dict(task)
+					t['index'] = sub_id
+					matched.append(t)
+			else:
+				matched = [task]
 	elif k == 'name':
 		matched = filter(lambda t: t[k].find(v) != -1, tasks)
 	elif k == 'original_url':
@@ -494,7 +513,7 @@ def search_tasks(client, args, status='all', check=True):
 		if args.search:
 			matched = filter_tasks(tasks, 'name', x)
 		else:
-			if re.match(r'^\d+(/\d+)?$', x):
+			if re.match(r'^\d+(/[-\d\[\],\s]+)?$', x):
 				matched = filter_tasks(tasks, 'id', x)
 			elif re.match(r'\w+://', x):
 				matched = filter_tasks(tasks, 'original_url', x)
