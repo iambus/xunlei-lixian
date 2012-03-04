@@ -217,6 +217,12 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
     lx download bt-task-id/file-id bt-task-id/file-id2
 
+或者：
+
+    lx download bt-task-id/[1,3,5-7]
+
+注：上面的命令下载对应bt任务里文件id为1，3，5，6，7的五个文件。
+
 可以使用--all参数下载所有的任务（如果已经在参数中指定了要下载的链接或者任务id，--all参数会被忽略）：
 
     lx download --all
