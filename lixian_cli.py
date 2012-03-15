@@ -515,7 +515,7 @@ def search_tasks(client, args, status='all', check=True):
 		else:
 			if re.match(r'^\d+(/[-\d\[\],\s]+)?$', x):
 				matched = filter_tasks(tasks, 'id', x)
-			elif re.match(r'\w+://', x):
+			elif re.match(r'\w+://', x) or x.startswith('magnet:'):
 				matched = filter_tasks(tasks, 'original_url', x)
 			else:
 				matched = filter_tasks(tasks, 'name', x)
