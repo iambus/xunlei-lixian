@@ -3,6 +3,7 @@ import os.path
 import sys
 import hashlib
 from cStringIO import StringIO
+import re
 
 from lixian_encoding import default_encoding
 
@@ -12,7 +13,10 @@ def magnet_to_infohash(magnet):
 	m = re.match(r'magnet:\?xt=urn:btih:(.*)', magnet)
 	assert m, magnet
 	code = m.group(1)
-	return base64.b32decode(code)
+	if re.match(r'^[a-zA-Z0-9]{40}$', code):
+		return code.decode('hex')
+	else:
+		return base64.b32decode(code)
 
 class decoder:
 	def __init__(self, bytes):
