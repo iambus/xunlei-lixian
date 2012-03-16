@@ -10,7 +10,7 @@ from lixian_encoding import default_encoding
 def magnet_to_infohash(magnet):
 	import re
 	import base64
-	m = re.match(r'magnet:\?xt=urn:btih:(.*)', magnet)
+	m = re.match(r'magnet:\?xt=urn:btih:(\w+)', magnet)
 	assert m, magnet
 	code = m.group(1)
 	if re.match(r'^[a-zA-Z0-9]{40}$', code):
