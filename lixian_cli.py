@@ -430,32 +430,22 @@ def download_task(args):
 		usage(doc=lixian_help.download, message='Not enough arguments')
 
 
-def link_equals(x1, x2):
+def link_normalize(url):
 	from lixian_url import url_unmask, normalize_unicode_link
-	x1 = url_unmask(x1)
-	x2 = url_unmask(x2)
-	if x1.startswith('magnet:'):
-		x1 = 'bt://'+lixian_hash_bt.magnet_to_infohash(x1).encode('hex')
-	if x2.startswith('magnet:'):
-		x2 = 'bt://'+lixian_hash_bt.magnet_to_infohash(x2).encode('hex')
-	if x1.startswith('ed2k://') and x2.startswith('ed2k://'):
-		return lixian_hash_ed2k.parse_ed2k_link(x1) == lixian_hash_ed2k.parse_ed2k_link(x2)
-		#import urllib
-		#if type(x1) == unicode:
-		#	x1 = x1.encode('utf-8')
-		#if type(x2) == unicode:
-		#	x2 = x2.encode('utf-8')
-		#x1 = urllib.unquote(x1)
-		#x2 = urllib.unquote(x2)
-		#x1 = x1.replace('&amp;', '&')
-		#x2 = x2.replace('&amp;', '&')
-	elif x1.startswith('bt://') and x2.startswith('bt://'):
-		x1 = x1.lower()
-		x2 = x2.lower()
-	elif x1.startswith('http://') and x2.startswith('http://'):
-		x1 = normalize_unicode_link(x1)
-		x2 = normalize_unicode_link(x2)
-	return x1 == x2
+	from lixian_url import url_unmask, normalize_unicode_link
+	url = url_unmask(url)
+	if url.startswith('magnet:'):
+		return 'bt://'+lixian_hash_bt.magnet_to_infohash(url).encode('hex')
+	elif url.startswith('ed2k://'):
+		return lixian_hash_ed2k.parse_ed2k_link(url)
+	elif url.startswith('bt://'):
+		return url.lower()
+	elif url.startswith('http://') or url.startswith('ftp://'):
+		return normalize_unicode_link(url)
+	return url
+
+def link_equals(x1, x2):
+	return link_normalize(x1) == link_normalize(x2)
 
 def link_in(url, links):
 	for link in links:
@@ -599,7 +589,7 @@ def add_task(args):
 		print 'All tasks added. Checking status...'
 		tasks = client.read_all_tasks()
 		for link in links:
-			found = filter_tasks(tasks, 'original_url', link)
+			found = filter_tasks(tasks, 'original_url', to_utf_8(link))
 			if found:
 				print found[0]['status_text'], link
 			else:
