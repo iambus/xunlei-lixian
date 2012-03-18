@@ -414,7 +414,7 @@ def download_task(args):
 			print 'Adding new task %s ...' % url
 			client.add_task(to_utf_8(url))
 			tasks = client.read_all_completed()
-			tasks = filter_tasks(tasks, 'original_url', url)
+			tasks = filter_tasks(tasks, 'original_url', to_utf_8(url))
 			assert tasks, 'task not found, wired'
 		tasks = merge_bt_sub_tasks(tasks)
 		if args.output:
