@@ -591,7 +591,7 @@ def add_task(args):
 		for link in links:
 			found = filter_tasks(tasks, 'original_url', to_utf_8(link))
 			if found:
-				print found[0]['status_text'], link
+				print found[0]['id'], found[0]['status_text'], link
 			else:
 				print 'unknown', link
 	else:
@@ -599,7 +599,7 @@ def add_task(args):
 		assert len(tasks) == len(links)
 		print 'All tasks added:'
 		for link, task in zip(links, tasks):
-			print task['status_text'], link
+			print task['id'], task['status_text'], link
 
 def delete_task(args):
 	args = parse_login_command_line(args, [], ['search', 'i', 'all'], help=lixian_help.delete)
