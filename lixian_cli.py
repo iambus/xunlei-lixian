@@ -501,14 +501,14 @@ def search_tasks(client, args, status='all', check=True):
 	found = []
 	for x in args:
 		if args.search:
-			matched = filter_tasks(tasks, 'name', x)
+			matched = filter_tasks(tasks, 'name', x.decode(default_encoding))
 		else:
 			if re.match(r'^\d+(/[-\d\[\],\s]+)?$', x):
 				matched = filter_tasks(tasks, 'id', x)
 			elif re.match(r'\w+://', x) or x.startswith('magnet:'):
-				matched = filter_tasks(tasks, 'original_url', x)
+				matched = filter_tasks(tasks, 'original_url', to_utf_8(x))
 			else:
-				matched = filter_tasks(tasks, 'name', x)
+				matched = filter_tasks(tasks, 'name', x.decode(default_encoding))
 		if check:
 			if not matched:
 				raise RuntimeError('Not task found for '+x)
