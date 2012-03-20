@@ -122,9 +122,9 @@ class XunleiClient:
 		password = md5(password+verifycode)
 		login_page = self.urlopen('http://login.xunlei.com/sec2login/', data={'u': username, 'p': password, 'verifycode': verifycode})
 		self.id = self.get_userid()
-		set.set_page_size(1)
+		self.set_page_size(1)
 		login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp()).read()
-		set.set_page_size(9999)
+		self.set_page_size(9999)
 		assert self.is_login_ok(login_page), 'login failed'
 		self.save_cookies()
 
