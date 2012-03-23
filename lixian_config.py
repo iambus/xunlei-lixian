@@ -5,6 +5,10 @@ import os.path
 def get_config_path(filename):
 	if os.path.exists(filename):
 		return filename
+	import sys
+	local_path = os.path.join(sys.path[0], filename)
+	if os.path.exists(local_path):
+		return local_path
 	user_home = os.getenv('USERPROFILE') or os.getenv('HOME')
 	lixian_home = os.getenv('LIXIAN_HOME') or user_home
 	return os.path.join(lixian_home, filename)
