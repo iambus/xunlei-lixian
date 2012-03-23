@@ -429,6 +429,7 @@ def parse_task(html):
 			'xunlei_url': mini_info['dl_url'],
 			'bt_hash': mini_info['dcid'],
 			'dcid': mini_info['dcid'],
+			'gcid': parse_gcid(mini_info['dl_url']),
 			}
 
 	m = re.search(r'<em class="loadnum"[^<>]*>([^<>]*)</em>', html)
@@ -458,10 +459,19 @@ def parse_bt_list(js):
 			'original_url': record['url'],
 			'xunlei_url': record['downurl'],
 			'dcid': record['cid'],
+			'gcid': parse_gcid(mini_info['downurl']),
 			'speed': '',
 			'progress': '%s%%' % record['percent'],
 			})
 	return files
+
+def parse_gcid(url):
+	if not url:
+		return
+	m = re.search(r'&g=([A-F0-9]{40})&', url)
+	if not m:
+		return
+	return m.group(1)
 
 def urlencode(x):
 	def unif8(u):
