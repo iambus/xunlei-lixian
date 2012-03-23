@@ -459,7 +459,7 @@ def parse_bt_list(js):
 			'original_url': record['url'],
 			'xunlei_url': record['downurl'],
 			'dcid': record['cid'],
-			'gcid': parse_gcid(mini_info['downurl']),
+			'gcid': parse_gcid(record['downurl']),
 			'speed': '',
 			'progress': '%s%%' % record['percent'],
 			})
