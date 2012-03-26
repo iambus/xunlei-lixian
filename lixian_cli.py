@@ -681,6 +681,10 @@ def lx_config(args):
 			print 'Saving configuration to', global_config.path
 			put_config(*args)
 
+def lx_diagnostics(args):
+	import lixian_diagnostics
+	lixian_diagnostics.diagnostics()
+
 def print_hash(args):
 	assert len(args) == 1
 	print 'ed2k:', lixian_hash_ed2k.hash_file(args[0])
@@ -716,7 +720,7 @@ def execute_command(args=sys.argv[1:]):
 			usage()
 			sys.exit(1)
 		sys.exit(0)
-	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'rename': rename_task, 'info': lixian_info, 'config': lx_config, 'hash': print_hash, 'help': lx_help}
+	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'rename': rename_task, 'info': lixian_info, 'config': lx_config, 'diagnostics': lx_diagnostics, 'hash': print_hash, 'help': lx_help}
 	if command not in commands:
 		usage()
 		sys.exit(1)
