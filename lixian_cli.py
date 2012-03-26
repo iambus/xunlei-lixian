@@ -484,7 +484,7 @@ def filter_tasks(tasks, k, v):
 			else:
 				matched = [task]
 	elif k == 'name':
-		matched = filter(lambda t: t[k].find(v) != -1, tasks)
+		matched = filter(lambda t: t[k].lower().find(v.lower()) != -1, tasks)
 	elif k == 'original_url':
 		matched = filter(lambda t: link_equals(t[k], v), tasks)
 	else:
