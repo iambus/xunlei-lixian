@@ -222,8 +222,7 @@ class XunleiClient:
 		elif len(qcid) == 9:
 			cid, gcid, size_required, filename, goldbean_need, silverbean_need, is_full, random, ext = qcid
 		elif len(qcid) == 10:
-			cid, gcid, size_required, filename, goldbean_need, silverbean_need, is_full, xxx, random, ext = qcid
-			assert xxx == 1, "I don't know what it means..."
+			cid, gcid, size_required, some_key, filename, goldbean_need, silverbean_need, is_full, random, ext = qcid
 		else:
 			raise NotImplementedError(qcid)
 		assert goldbean_need == 0
