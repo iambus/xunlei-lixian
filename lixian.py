@@ -437,7 +437,7 @@ def parse_task(html):
 	m = re.search(r'<em class="loadnum"[^<>]*>([^<>]*)</em>', html)
 	task['progress'] = m and m.group(1) or ''
 	m = re.search(r'<em [^<>]*id="speed\d+">([^<>]*)</em>', html)
-	task['speed'] = m and m.group(1) or ''
+	task['speed'] = m and m.group(1).replace('&nbsp;', '') or ''
 
 	return task
 
