@@ -49,6 +49,7 @@ python lixian_cli.py list --completed --name --original-url --download-url --no-
 python lixian_cli.py list id1 id2
 python lixian_cli.py list zip rar
 python lixian_cli.py list --search zip rar
+python lixian_cli.py list 2012.04.04 2012.04.05
 
 python lixian_cli.py download task-id
 python lixian_cli.py download ed2k-url
@@ -64,6 +65,10 @@ python lixian_cli.py download bt://torrent-info-hash
 python lixian_cli.py download --torrent 1.torrent
 python lixian_cli.py download --torrent torrent-info-hash
 python lixian_cli.py download --torrent http://xxx/xxx.torrent
+python lixian_cli.py download bt-task-id/file-id
+python lixian_cli.py download --all
+python lixian_cli.py download --search mkv
+python lixian_cli.py download --search 2012.04.04
 
 python lixian_cli.py add url
 python lixian_cli.py add --torrent 1.torrent
@@ -147,6 +152,8 @@ Examples:
  python lixian_cli.py download --torrent http://xxx/xxx.torrent
  python lixian_cli.py download bt-task-id/file-id
  python lixian_cli.py download --all
+ python lixian_cli.py download --search mkv
+ python lixian_cli.py download --search 2012.04.04
 '''
 
 list     = '''python lixian_cli.py list
@@ -161,6 +168,7 @@ Options:
  --[no]-size          Print task size. Default: no
  --[no]-progress      Print task progress (in percent). Default: no
  --[no]-speed         Print task speed. Default: no
+ --[no]-date          Print the date task added. Default: no
  --[no]-original-url  Print the original URL. Default: no
  --[no]-download-url  Print the download URL used to download from Xunlei cloud. Default: no
 
@@ -173,6 +181,7 @@ Examples:
  python lixian_cli.py list id1 id2
  python lixian_cli.py list zip rar
  python lixian_cli.py list --search zip rar
+ python lixian_cli.py list 2012.04.04 2012.04.05
 '''
 
 add      = '''python lixian_cli.py add [options] url...
@@ -191,7 +200,7 @@ Examples:
  python lixian_cli.py add --torrent http://xxx/xxx.torrent
 '''
 
-delete   = '''python lixian_cli.py delete [options] [id|url|filename|keyword]...
+delete   = '''python lixian_cli.py delete [options] [id|url|filename|keyword|date]...
 
 delete tasks from Xunlei cloud
 
@@ -205,7 +214,7 @@ Examples:
  python lixian_cli.py delete file-name-on-cloud-to-delete
 '''
 
-pause    = '''python lixian_cli.py pause [options] [id|url|filename|keyword]...
+pause    = '''python lixian_cli.py pause [options] [id|url|filename|keyword|date]...
 
 pause tasks on Xunlei cloud
 
@@ -214,7 +223,7 @@ Options:
  --all  pause all tasks if there are multiple matches
 '''
 
-restart  = '''python lixian_cli.py restart [id|url|filename|keyword]...
+restart  = '''python lixian_cli.py restart [id|url|filename|keyword|date]...
 
 restart tasks on Xunlei cloud
 

@@ -484,7 +484,7 @@ def filter_tasks(tasks, k, v):
 			else:
 				matched = [task]
 	elif k == 'name':
-		matched = filter(lambda t: t[k].lower().find(v.lower()) != -1, tasks)
+		matched = filter(lambda t: t[k].lower().find(v.lower()) != -1 or t['date'] == v, tasks) # XXX: a dirty trick: support search by date
 	elif k == 'original_url':
 		matched = filter(lambda t: link_equals(t[k], v), tasks)
 	else:
@@ -505,6 +505,8 @@ def search_tasks(client, args, status='all', check=True):
 		else:
 			if re.match(r'^\d+(/[-\d\[\],\s]+)?$', x):
 				matched = filter_tasks(tasks, 'id', x)
+			#elif re.match(r'^\d{4}\.\d{2}\.\d{2}$', x):
+			#	matched = filter_tasks(tasks, 'date', x)
 			elif re.match(r'\w+://', x) or x.startswith('magnet:'):
 				matched = filter_tasks(tasks, 'original_url', to_utf_8(x))
 			else:
@@ -521,7 +523,7 @@ def search_tasks(client, args, status='all', check=True):
 def list_task(args):
 	args = parse_login_command_line(args, [],
 	                                ['all', 'completed',
-	                                 'id', 'name', 'status', 'size', 'dcid', 'gcid', 'original-url', 'download-url', 'speed', 'progress',
+	                                 'id', 'name', 'status', 'size', 'dcid', 'gcid', 'original-url', 'download-url', 'speed', 'progress', 'date',
 	                                 'search'],
 									default={'id': True, 'name': True, 'status': True},
 									help=lixian_help.list)
@@ -542,7 +544,7 @@ def list_task(args):
 		tasks = client.read_all_completed()
 	else:
 		tasks = client.read_all_tasks()
-	columns = ['id', 'name', 'status', 'size', 'progress', 'speed', 'dcid', 'gcid', 'original-url', 'download-url']
+	columns = ['id', 'name', 'status', 'size', 'progress', 'speed', 'date', 'dcid', 'gcid', 'original-url', 'download-url']
 	columns = filter(lambda k: getattr(args, k), columns)
 	for t in tasks:
 		for k in columns:
@@ -558,6 +560,8 @@ def list_task(args):
 				print t['progress'],
 			elif k == 'speed':
 				print t['speed'],
+			elif k == 'date':
+				print t['date'],
 			elif k == 'dcid':
 				print t['dcid'],
 			elif k == 'gcid':

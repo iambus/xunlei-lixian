@@ -79,6 +79,9 @@ class XunleiClient:
 		else:
 			raise Exception('Probably login failed')
 
+	def get_userid_or_none(self):
+		return self.get_cookie('.xunlei.com', 'userid')
+
 	def get_username(self):
 		return self.get_cookie('.xunlei.com', 'usernewno')
 
@@ -111,7 +114,14 @@ class XunleiClient:
 		return len(html) > 512
 
 	def has_logged_in(self):
-		return self.is_login_ok(self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d'%current_timestamp()).read())
+		id = self.get_userid_or_none()
+		if not id:
+			return False
+		#print self.urlopen('http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0' % id).read().decode('utf-8')
+		self.set_page_size(1)
+		r = self.is_login_ok(self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d'%current_timestamp()).read())
+		self.set_page_size(9999)
+		return r
 
 	def login(self, username, password):
 		cachetime = current_timestamp()
@@ -184,7 +194,10 @@ class XunleiClient:
 	def list_bt(self, task):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/fill_bt_list?callback=fill_bt_list&tid=%s&infoid=%s&g_net=1&p=1&uid=%s&noCacheIE=%s' % (task['id'], task['bt_hash'], self.id, current_timestamp())
 		html = self.urlopen(url).read().decode('utf-8')
-		return parse_bt_list(html)
+		sub_tasks = parse_bt_list(html)
+		for t in sub_tasks:
+			t['date'] = task['date']
+		return sub_tasks
 
 	def get_torrent_file_by_info_hash(self, info_hash):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/get_torrent?userid=%s&infoid=%s' % (self.id, info_hash.upper())
@@ -438,6 +451,8 @@ def parse_task(html):
 	task['progress'] = m and m.group(1) or ''
 	m = re.search(r'<em [^<>]*id="speed\d+">([^<>]*)</em>', html)
 	task['speed'] = m and m.group(1).replace('&nbsp;', '') or ''
+	m = re.search(r'<span class="c_addtime">([^<>]*)</span>', html)
+	task['date'] = m and m.group(1) or ''
 
 	return task
 
@@ -464,6 +479,7 @@ def parse_bt_list(js):
 			'gcid': parse_gcid(record['downurl']),
 			'speed': '',
 			'progress': '%s%%' % record['percent'],
+			'date': '',
 			})
 	return files
 
