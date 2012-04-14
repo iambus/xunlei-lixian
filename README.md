@@ -309,8 +309,11 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 * continue
 * delete
 * output-dir
+* hash
 * mini-hash
+* wget-opts
 * aria2-opts（见支持的下载工具一节）
+* axel-opts
 
 （因为只有这几个参数我觉得是比较有用的。如果你觉得其他的参数有用可以发信给我或者直接open一个issue。）
 
