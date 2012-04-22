@@ -246,10 +246,10 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
     lx download --search 2012.04.04 2012.04.05
 
 ### lx list
-列出已存在的离线任务。默认只会列出任务id，任务名，以及状态。可以使用--original-url和--download-url参数来列出原始链接和下载链接。--complete参数用于忽略未完成任务。
+列出已存在的离线任务。默认只会列出任务id，任务名，以及状态。可以使用--original-url和--download-url参数来列出原始链接和下载链接。--completed参数用于忽略未完成任务。
 
     lx list
-    lx list --complete
+    lx list --completed
     lx list --no-status --original-url --download-url
 
 如果要列出bt任务的子文件，可以在任务id后面加上/：

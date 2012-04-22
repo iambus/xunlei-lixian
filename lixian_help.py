@@ -161,7 +161,7 @@ list     = '''python lixian_cli.py list
 list tasks on Xunlei cloud
 
 Options:
- --complete           Print only complete tasks. Default: no
+ --completed          Print only complete tasks. Default: no
  --[no]-id            Print task id. Default: yes
  --[no]-name          Print task name. Default: yes
  --[no]-status        Print task status. Default: yes
