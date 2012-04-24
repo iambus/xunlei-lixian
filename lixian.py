@@ -59,6 +59,22 @@ class XunleiClient:
 			args['data'] = urlencode(args['data'])
 		return self.opener.open(urllib2.Request(url, **args))
 
+	def urlread(self, url, **args):
+		args.setdefault('headers', {})
+		headers = args['headers']
+		headers.setdefault('Accept-Encoding', 'gzip, deflate')
+#		headers.setdefault('Referer', 'http://lixian.vip.xunlei.com/task.html')
+#		headers.setdefault('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:11.0) Gecko/20100101 Firefox/11.0')
+#		headers.setdefault('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8')
+#		headers.setdefault('Accept-Language', 'zh-cn,zh;q=0.7,en-us;q=0.3')
+		response = self.urlopen(url, **args)
+		data = response.read()
+		if response.info().get('Content-Encoding') == 'gzip':
+			data = ungzip(data)
+		elif response.info().get('Content-Encoding') == 'deflate':
+			data = undeflate(data)
+		return data
+
 	def load_cookies(self):
 		self.cookiejar.load(self.cookie_path, ignore_discard=True, ignore_expires=True)
 
@@ -119,7 +135,9 @@ class XunleiClient:
 			return False
 		#print self.urlopen('http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0' % id).read().decode('utf-8')
 		self.set_page_size(1)
-		r = self.is_login_ok(self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d'%current_timestamp()).read())
+		url = 'http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0' % id
+		#url = 'http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d' % current_timestamp()
+		r = self.is_login_ok(self.urlread(url))
 		self.set_page_size(9999)
 		return r
 
@@ -153,8 +171,7 @@ class XunleiClient:
 		self.save_cookies()
 
 	def read_task_page_url(self, url):
-		req = self.urlopen(url)
-		page = req.read().decode('utf-8', 'ignore')
+		page = self.urlread(url).decode('utf-8', 'ignore')
 		if not self.has_gdriveid():
 			gdriveid = re.search(r'id="cok" value="([^"]+)"', page).group(1)
 			self.set_gdriveid(gdriveid)
@@ -193,7 +210,7 @@ class XunleiClient:
 
 	def list_bt(self, task):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/fill_bt_list?callback=fill_bt_list&tid=%s&infoid=%s&g_net=1&p=1&uid=%s&noCacheIE=%s' % (task['id'], task['bt_hash'], self.id, current_timestamp())
-		html = self.urlopen(url).read().decode('utf-8')
+		html = self.urlread(url).decode('utf-8')
 		sub_tasks = parse_bt_list(html)
 		for t in sub_tasks:
 			t['date'] = task['date']
@@ -554,5 +571,16 @@ def encypt_password(password):
 	if not re.match(r'^[0-9a-f]{32}$', password):
 		password = md5(md5(password))
 	return password
+
+def ungzip(s):
+	from StringIO import StringIO
+	import gzip
+	buffer = StringIO(s)
+	f = gzip.GzipFile(fileobj=buffer)
+	return f.read()
+
+def undeflate(s):
+	import zlib
+	return zlib.decompress(s, -zlib.MAX_WBITS)
 
 
