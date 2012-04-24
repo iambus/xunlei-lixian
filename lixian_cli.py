@@ -212,20 +212,23 @@ def download_single_task(client, download, task, options):
 				raise Exception('hash check failed')
 	download_url = str(task['xunlei_url'])
 	if output:
-		filename = output
+		output_path = output
+		output_dir = os.path.dirname(output)
+		output_name = os.path.basename(output)
 	else:
-		filename = escape_filename(task['name']).encode(default_encoding)
-		if output_dir:
-			filename = os.path.join(output_dir, filename)
+		output_name = escape_filename(task['name']).encode(default_encoding)
+		output_dir = output_dir or '.'
+		output_path = os.path.join(output_dir, output_name)
 	referer = str(client.get_referer())
 	gdriveid = str(client.get_gdriveid())
 
 	if task['type'] == 'bt':
 		files = client.list_bt(task)
 		if len(files) == 1 and files[0]['name'] == task['name']:
-			dirname = os.path.dirname(filename)
+			dirname = output_dir
 		else:
-			dirname = filename
+			dirname = output_path
+		assert dirname # dirname must be non-empty, otherwise dirname + os.path.sep + ... might be dangerous
 		if dirname and not os.path.exists(dirname):
 			os.makedirs(dirname)
 		if 'files' in task:
@@ -248,10 +251,14 @@ def download_single_task(client, download, task, options):
 			name = f['name']
 			print 'Downloading', name.encode(default_encoding), '...'
 			# XXX: if file name is escaped, hashing bt won't get correct file
-			path = os.path.join(dirname, *[p.encode(default_encoding) for p in map(escape_filename, name.split('\\'))])
-			subdir = os.path.dirname(path)
-			if subdir and not os.path.exists(subdir):
-				os.makedirs(subdir)
+			splitted_path = map(escape_filename, name.split('\\'))
+			name = os.path.join(*splitted_path).encode(default_encoding)
+			path = dirname + os.path.sep + name # fix issue #82
+			if splitted_path[:-1]:
+				subdir = os.path.join(*splitted_path[:-1]).encode(default_encoding)
+				subdir = dirname + os.path.sep + subdir # fix issue #82
+				if not os.path.exists(subdir):
+					os.makedirs(subdir)
 			download_url = str(f['xunlei_url'])
 			download2(client, download_url, path, f)
 		if not no_hash:
@@ -260,17 +267,16 @@ def download_single_task(client, download, task, options):
 			from lixian_progress import SimpleProgressBar
 			bar = SimpleProgressBar()
 			file_set = [f['name'].encode('utf-8').split('\\') for f in files] if 'files' in task else None
-			verified = lixian_hash_bt.verify_bt(filename, lixian_hash_bt.bdecode(torrent_file)['info'], file_set=file_set, progress_callback=bar.update)
+			verified = lixian_hash_bt.verify_bt(output_path, lixian_hash_bt.bdecode(torrent_file)['info'], file_set=file_set, progress_callback=bar.update)
 			bar.done()
 			if not verified:
 				# note that we don't delete bt download folder if hash failed
 				raise Exception('bt hash check failed')
 	else:
-		dirname = os.path.dirname(filename)
-		if dirname and not os.path.exists(dirname):
-			os.makedirs(dirname)
-		print 'Downloading', os.path.basename(filename), '...'
-		download2(client, download_url, filename, task)
+		if output_dir and not os.path.exists(output_dir):
+			os.makedirs(output_dir)
+		print 'Downloading', output_name, '...'
+		download2(client, download_url, output_path, task)
 
 	if delete and 'files' not in task:
 		client.delete_task(task)
