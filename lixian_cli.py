@@ -7,6 +7,7 @@ import lixian_help
 import lixian_hash
 import lixian_hash_bt
 import lixian_hash_ed2k
+import fileinput
 import subprocess
 import sys
 import os
@@ -336,8 +337,7 @@ def find_tasks_to_download(client, args):
 	links = []
 	links.extend(args)
 	if args.input:
-		with open(args.input) as x:
-			links.extend(line.strip() for line in x.readlines() if line.strip())
+		links.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
 	if args.torrent:
 		return find_torrents_task_to_download(client, links)
 	if args.search or any(re.match(r'^\d+(/[-\d\[\],\s]+)?$', x) for x in args):
