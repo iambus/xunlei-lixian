@@ -394,7 +394,7 @@ def download_task(args):
 	args = parse_login_command_line(args,
 	                                ['tool', 'output', 'output-dir', 'input'],
 	                                ['delete', 'continue', 'overwrite', 'torrent', 'all', 'search', 'mini-hash', 'hash'],
-									alias={'o': 'output', 'i': 'input', 'c':'continue'},
+									alias={'o': 'output', 'i': 'input', 'c':'continue', 'bt':'torrent'},
 									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'output-dir':get_config('output-dir'), 'mini-hash':get_config('mini-hash'), 'hash':get_config('hash', True)},
 	                                help=lixian_help.download)
 	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'aria2c':aria2_download, 'axel':axel_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
@@ -581,7 +581,7 @@ def list_task(args):
 		print
 
 def add_task(args):
-	args = parse_login_command_line(args, ['input'], ['torrent'], alias={'i':'input'}, help=lixian_help.add)
+	args = parse_login_command_line(args, ['input'], ['torrent'], alias={'i':'input','bt':'torrent'}, help=lixian_help.add)
 	assert len(args) or args.input
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = []
