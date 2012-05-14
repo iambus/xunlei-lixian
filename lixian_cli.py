@@ -235,8 +235,14 @@ def download_single_task(client, download, task, options):
 		if 'files' in task:
 			ordered_files = []
 			indexed_files = dict((f['index'], f) for f in files)
+			subs = []
 			for index in task['files']:
-				t = indexed_files[int(index)]
+				if index.startswith('.'):
+					subs.extend([x['index'] for x in files if x['name'].lower().endswith(index.lower())])
+				else:
+					subs.append(int(index))
+			for index in subs:
+				t = indexed_files[index]
 				if t not in ordered_files:
 					if t['status_text'] != 'completed':
 						print 'skip task %s/%s (%s) as the status is %s' % (t['id'], index, t['name'].encode(default_encoding), t['status_text'])
@@ -340,7 +346,7 @@ def find_tasks_to_download(client, args):
 		links.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
 	if args.torrent:
 		return find_torrents_task_to_download(client, links)
-	if args.search or any(re.match(r'^#?\d+(/[-\d\[\],\s]+|-\d+)?$', x) for x in args):
+	if args.search or any(re.match(r'^#?\d+(/[-.\w\[\],\s]+|-\d+)?$', x) for x in args):
 		return search_tasks(client, args, check='check_none')
 	all_tasks = client.read_all_tasks()
 	to_add = set(links)
@@ -460,7 +466,7 @@ def link_in(url, links):
 
 def filter_tasks(tasks, k, v):
 	if k == 'id':
-		task_id, sub_id = re.match(r'^(#?\d+)(?:/([-\d\[\],\s]+))?$', v).groups()
+		task_id, sub_id = re.match(r'^(#?\d+)(?:/([-.\w\[\],\s]+))?$', v).groups()
 		if task_id.startswith('#'):
 			task_id = int(task_id[1:])
 			matched = [tasks[task_id]] if task_id < len(tasks) else []
@@ -474,8 +480,12 @@ def filter_tasks(tasks, k, v):
 				matched = []
 				if re.match(r'\[.*\]', sub_id):
 					for sub_id in re.split(r'\s*,\s*', sub_id[1:-1]):
-						assert re.match(r'^\d+(-\d+)?$', sub_id), sub_id
-						if '-' in sub_id:
+						assert re.match(r'^\d+(-\d+)?|\.\w+$', sub_id), sub_id
+						if sub_id.startswith('.'):
+							t = dict(task)
+							t['index'] = sub_id
+							matched.append(t)
+						elif '-' in sub_id:
 							start, end = sub_id.split('-')
 							for i in range(int(start), int(end)+1):
 								t = dict(task)
@@ -486,6 +496,10 @@ def filter_tasks(tasks, k, v):
 							t = dict(task)
 							t['index'] = sub_id
 							matched.append(t)
+				elif re.match(r'^\.\w+$', sub_id):
+					t = dict(task)
+					t['index'] = sub_id
+					matched.append(t)
 				else:
 					assert re.match(r'^\d+$', sub_id), sub_id
 					t = dict(task)
@@ -513,7 +527,7 @@ def search_tasks(client, args, status='all', check=True):
 		if args.search:
 			matched = filter_tasks(tasks, 'name', x.decode(default_encoding))
 		else:
-			if re.match(r'^#?\d+(/[-\d\[\],\s]+)?$', x):
+			if re.match(r'^#?\d+(/[-.\w\[\],\s]+)?$', x):
 				matched = filter_tasks(tasks, 'id', x)
 				if not matched:
 					matched = filter_tasks(tasks, 'name', x.decode(default_encoding))

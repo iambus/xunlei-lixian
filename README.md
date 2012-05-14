@@ -222,6 +222,14 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 但是要注意，多任务下载的时候，不能混用id和url（以后可能会支持）。
 
+类似任务id，也可以指定任务的序列号。序列号从0开始。可以使用lx list -n查看序列号。如果希望lx list默认显示序列号，可以使用lx config n。若要下载任务列表中的第一个任务：
+
+    lx download #0
+
+要下载前三个任务：
+
+    lx download #0-2
+
 对于bt任务，如果只想下载部分文件，可以在task id后指定文件id：
 
     lx download bt-task-id/file-id bt-task-id/file-id2
@@ -232,11 +240,13 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 注：上面的命令下载对应bt任务里文件id为1，3，5，6，7的五个文件。
 
-类似任务id，也可以指定任务的序列号。序列号从0开始。可以使用lx list -n查看序列号。如果希望lx list默认显示序列号，可以使用lx config n。若要下载任务列表中的第一个任务：
-    lx download #0
+也可以指定bt子文件的扩展名：
 
-要下载前三个任务：
-    lx download #0-2
+    lx download bt-task-id/.mkv
+
+或者：
+
+    lx download bt-task-id/[.mkv,.mp4]
 
 可以使用--all参数下载所有的任务（如果已经在参数中指定了要下载的链接或者任务id，--all参数会被忽略）：
 
