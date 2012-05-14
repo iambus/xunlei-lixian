@@ -511,6 +511,8 @@ def search_tasks(client, args, status='all', check=True):
 		else:
 			if re.match(r'^\d+(/[-\d\[\],\s]+)?$', x):
 				matched = filter_tasks(tasks, 'id', x)
+				if not matched:
+					matched = filter_tasks(tasks, 'name', x.decode(default_encoding))
 			#elif re.match(r'^\d{4}\.\d{2}\.\d{2}$', x):
 			#	matched = filter_tasks(tasks, 'date', x)
 			elif re.match(r'\w+://', x) or x.startswith('magnet:'):
