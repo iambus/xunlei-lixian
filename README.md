@@ -321,9 +321,10 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 * output-dir
 * hash
 * mini-hash
-* wget-opts
-* aria2-opts（见支持的下载工具一节）
-* axel-opts
+* n
+* wget-opts（见稍后的说明）
+* aria2-opts（见稍后的说明）（见支持的下载工具一节）
+* axel-opts（见稍后的说明）
 
 （因为只有这几个参数我觉得是比较有用的。如果你觉得其他的参数有用可以发信给我或者直接open一个issue。）
 
@@ -348,6 +349,10 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 注：密码是hash过的，不是明文保存。
 注：如果不希望在命令行参数中明文保存密码，可以运行lx config password，或者lx config password -，会进入交互式不回显密码输入（只支持password配置）。
+
+关于wget-opts/aria2-opts/axel-opts，因为这些工具的命令行参数一般都包含-，所以需要用额外的--转义。另外多个命令行参数需要用引号合并到一起：
+
+    lx config -- aria2-opts "-s10 -x10 -c"
 
 ### lx info
 打印cookies文件里保存的迅雷内部id，包括登录的ID，一个内部使用的ID，以及gdriveid。
