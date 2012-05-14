@@ -34,9 +34,9 @@ Quick start
 	python lixian_cli.py download --input download-urls-file --delete
 	python lixian_cli.py download --input download-urls-file --ouput-dir root-dir-to-save-files
 	python lixian_cli.py download bt://torrent-info-hash
-	python lixian_cli.py download --torrent 1.torrent
-	python lixian_cli.py download --torrent torrent-info-hash
-	python lixian_cli.py download --torrent http://xxx/xxx.torrent
+	python lixian_cli.py download --bt 1.torrent
+	python lixian_cli.py download --bt torrent-info-hash
+	python lixian_cli.py download --bt http://xxx/xxx.torrent
 	python lixian_cli.py download bt-task-id/file-id
 	python lixian_cli.py download --all
 	python lixian_cli.py download --search mkv
@@ -45,9 +45,9 @@ Quick start
 	python lixian_cli.py download #0-2
 
 	python lixian_cli.py add url
-	python lixian_cli.py add --torrent 1.torrent
-	python lixian_cli.py add --torrent torrent-info-hash
-	python lixian_cli.py add --torrent http://xxx/xxx.torrent
+	python lixian_cli.py add --bt 1.torrent
+	python lixian_cli.py add --bt torrent-info-hash
+	python lixian_cli.py add --bt http://xxx/xxx.torrent
 
 	python lixian_cli.py delete task-id
 	python lixian_cli.py delete url
@@ -182,14 +182,14 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
     lx download --search keywords
     lx download --search date
 
-下载bt的时候需要加--torrent参数。可以指定本地.torrent文件路径，或者.torrent文件的http url，或者torrent文件的info hash。（很多网站使用info hash来标识一个bt种子文件，这种情况你就不需要下载种子了，lx download可以自动下载种子，不过前提是之前已经有人使用迅雷离线下载过同样的种子。[如后所述](#hash_tool)，你也可以使用lixian_hash.py --info-hash来手动生成bt种子的info hash。）
+下载bt的时候需要加--bt参数（或者--torrent参数）。可以指定本地.torrent文件路径，或者.torrent文件的http url，或者torrent文件的info hash。（很多网站使用info hash来标识一个bt种子文件，这种情况你就不需要下载种子了，lx download可以自动下载种子，不过前提是之前已经有人使用迅雷离线下载过同样的种子。[如后所述](#hash_tool)，你也可以使用lixian_hash.py --info-hash来手动生成bt种子的info hash。）
 
-    lx download --torrent Community.S03E01.720p.HDTV.X264-DIMENSION.torrent
-    lx download --torrent http://tvu.org.ru/torrent.php?tid=64757
-    lx download --torrent 61AAA3C6FBB8B71EBE2F5A2A3481296B51D882F6
-    lx download --torrent bt://61AAA3C6FBB8B71EBE2F5A2A3481296B51D882F6
+    lx download --bt Community.S03E01.720p.HDTV.X264-DIMENSION.torrent
+    lx download --bt http://tvu.org.ru/torrent.php?tid=64757
+    lx download --bt 61AAA3C6FBB8B71EBE2F5A2A3481296B51D882F6
+    lx download --bt bt://61AAA3C6FBB8B71EBE2F5A2A3481296B51D882F6
 
-注意，如果你使用最后一种方式，--torrent参数是可选的。因为lx download可以从bt://识别出来这是一个bt任务。
+注意，如果你使用最后一种方式，--bt参数是可选的。因为lx download可以从bt://识别出来这是一个bt任务。
 
 可以把多个连接保存到文件里，使用--input参数批量下载：
 
@@ -273,9 +273,9 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
     lx add url1 url2 url3
     lx add --input links.txt
-    lx add --torrent torrent-file
-    lx add --torrent torrent-url
-    lx add --torrent info-hash
+    lx add --bt torrent-file
+    lx add --bt torrent-url
+    lx add --bt info-hash
 
 ### lx delete
 从迅雷离线服务器上删除任务。

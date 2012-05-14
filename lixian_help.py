@@ -62,9 +62,9 @@ python lixian_cli.py download --input download-urls-file
 python lixian_cli.py download --input download-urls-file --delete
 python lixian_cli.py download --input download-urls-file --ouput-dir root-dir-to-save-files
 python lixian_cli.py download bt://torrent-info-hash
-python lixian_cli.py download --torrent 1.torrent
-python lixian_cli.py download --torrent torrent-info-hash
-python lixian_cli.py download --torrent http://xxx/xxx.torrent
+python lixian_cli.py download --bt 1.torrent
+python lixian_cli.py download --bt torrent-info-hash
+python lixian_cli.py download --bt http://xxx/xxx.torrent
 python lixian_cli.py download bt-task-id/file-id
 python lixian_cli.py download --all
 python lixian_cli.py download --search mkv
@@ -73,9 +73,9 @@ python lixian_cli.py download #0 #1 #2
 python lixian_cli.py download #0-2
 
 python lixian_cli.py add url
-python lixian_cli.py add --torrent 1.torrent
-python lixian_cli.py add --torrent torrent-info-hash
-python lixian_cli.py add --torrent http://xxx/xxx.torrent
+python lixian_cli.py add --bt 1.torrent
+python lixian_cli.py add --bt torrent-info-hash
+python lixian_cli.py add --bt http://xxx/xxx.torrent
 
 python lixian_cli.py delete task-id
 python lixian_cli.py delete url
@@ -126,7 +126,7 @@ Options:
                                  Default: false.
  --delete                        Delete task from Xunlei cloud after download is finished.
                                  Default: false.
- --torrent                       Treat all arguments as torrent files (e.g. local torrent file, torrent http url, torrent info hash)
+ --torrent         --bt          Treat all arguments as torrent files (e.g. local torrent file, torrent http url, torrent info hash)
                                  Default: false.
  --all                           Download all tasks. This option will be ignored if specific download URLs or task ids can be found. 
                                  Default: false.
@@ -149,9 +149,9 @@ Examples:
  python lixian_cli.py download --input download-urls-file --delete
  python lixian_cli.py download --input download-urls-file --ouput-dir root-dir-to-save-files
  python lixian_cli.py download bt://torrent-info-hash
- python lixian_cli.py download --torrent 1.torrent
- python lixian_cli.py download --torrent torrent-info-hash
- python lixian_cli.py download --torrent http://xxx/xxx.torrent
+ python lixian_cli.py download --bt 1.torrent
+ python lixian_cli.py download --bt torrent-info-hash
+ python lixian_cli.py download --bt http://xxx/xxx.torrent
  python lixian_cli.py download bt-task-id/file-id
  python lixian_cli.py download --all
  python lixian_cli.py download --search mkv
@@ -195,14 +195,14 @@ add tasks to Xunlei cloud
 
 Options:
  --input=[file]                  Download URLs found in file.
- --torrent                       Treat all arguments as torrent files (e.g. local torrent file, torrent http url, torrent info hash)
+ --torrent       --bt            Treat all arguments as torrent files (e.g. local torrent file, torrent http url, torrent info hash)
                                  Default: false.
 
 Examples:
  python lixian_cli.py add url
- python lixian_cli.py add --torrent 1.torrent
- python lixian_cli.py add --torrent torrent-info-hash
- python lixian_cli.py add --torrent http://xxx/xxx.torrent
+ python lixian_cli.py add --bt 1.torrent
+ python lixian_cli.py add --bt torrent-info-hash
+ python lixian_cli.py add --bt http://xxx/xxx.torrent
 '''
 
 delete   = '''python lixian_cli.py delete [options] [id|url|filename|keyword|date]...
