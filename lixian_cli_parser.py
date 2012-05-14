@@ -60,6 +60,11 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}, help=None)
 				return self._left[i]
 			else:
 				return self._args[i]
+		def __setitem__(self, i, v):
+			if type(i) == int:
+				self._left[i] = v
+			else:
+				self._args[i] = v
 		def __len__(self):
 			return len(self._left)
 		def __str__(self):
