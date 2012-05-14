@@ -340,7 +340,7 @@ def find_tasks_to_download(client, args):
 		links.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
 	if args.torrent:
 		return find_torrents_task_to_download(client, links)
-	if args.search or any(re.match(r'^\d+(/[-\d\[\],\s]+)?$', x) for x in args):
+	if args.search or any(re.match(r'^#?\d+(/[-\d\[\],\s]+|-\d+)?$', x) for x in args):
 		return search_tasks(client, args, check='check_none')
 	all_tasks = client.read_all_tasks()
 	to_add = set(links)
@@ -460,8 +460,12 @@ def link_in(url, links):
 
 def filter_tasks(tasks, k, v):
 	if k == 'id':
-		task_id, sub_id = re.match(r'^(\d+)(?:/([-\d\[\],\s]+))?$', v).groups()
-		matched = filter(lambda t: t['id'] == task_id, tasks)
+		task_id, sub_id = re.match(r'^(#?\d+)(?:/([-\d\[\],\s]+))?$', v).groups()
+		if task_id.startswith('#'):
+			task_id = int(task_id[1:])
+			matched = [tasks[task_id]] if task_id < len(tasks) else []
+		else:
+			matched = filter(lambda t: t['id'] == task_id, tasks)
 		if matched:
 			assert len(matched) == 1
 			task = matched[0]
@@ -509,10 +513,20 @@ def search_tasks(client, args, status='all', check=True):
 		if args.search:
 			matched = filter_tasks(tasks, 'name', x.decode(default_encoding))
 		else:
-			if re.match(r'^\d+(/[-\d\[\],\s]+)?$', x):
+			if re.match(r'^#?\d+(/[-\d\[\],\s]+)?$', x):
 				matched = filter_tasks(tasks, 'id', x)
 				if not matched:
 					matched = filter_tasks(tasks, 'name', x.decode(default_encoding))
+			elif re.match(r'^#\d+-\d+$', x):
+				begin, end = x[1:].split('-')
+				begin = int(begin)
+				end = int(end)
+				if begin > end or begin >= len(tasks):
+					matched = []
+				elif end >= len(tasks):
+					matched = tasks[begin:]
+				else:
+					matched = tasks[begin:end+1]
 			#elif re.match(r'^\d{4}\.\d{2}\.\d{2}$', x):
 			#	matched = filter_tasks(tasks, 'date', x)
 			elif re.match(r'\w+://', x) or x.startswith('magnet:'):
@@ -532,8 +546,9 @@ def list_task(args):
 	args = parse_login_command_line(args, [],
 	                                ['all', 'completed',
 	                                 'id', 'name', 'status', 'size', 'dcid', 'gcid', 'original-url', 'download-url', 'speed', 'progress', 'date',
+	                                 'n',
 	                                 'search'],
-									default={'id': True, 'name': True, 'status': True},
+									default={'id': True, 'name': True, 'status': True, 'n': get_config('n')},
 									help=lixian_help.list)
 
 	parent_ids = [a[:-1] for a in args if re.match(r'^\d+/$', a)]
@@ -552,11 +567,13 @@ def list_task(args):
 		tasks = client.read_all_completed()
 	else:
 		tasks = client.read_all_tasks()
-	columns = ['id', 'name', 'status', 'size', 'progress', 'speed', 'date', 'dcid', 'gcid', 'original-url', 'download-url']
+	columns = ['n', 'id', 'name', 'status', 'size', 'progress', 'speed', 'date', 'dcid', 'gcid', 'original-url', 'download-url']
 	columns = filter(lambda k: getattr(args, k), columns)
-	for t in tasks:
+	for i, t in enumerate(tasks):
 		for k in columns:
-			if k == 'id':
+			if k == 'n':
+				print '#%d' % i,
+			elif k == 'id':
 				print t.get('index', t['id']),
 			elif k == 'name':
 				print t['name'].encode(default_encoding),
@@ -579,7 +596,7 @@ def list_task(args):
 			elif k == 'download-url':
 				print t['xunlei_url'],
 			else:
-				raise NotImplementedError()
+				raise NotImplementedError(k)
 		print
 
 def add_task(args):

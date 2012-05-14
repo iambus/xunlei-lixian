@@ -69,6 +69,8 @@ python lixian_cli.py download bt-task-id/file-id
 python lixian_cli.py download --all
 python lixian_cli.py download --search mkv
 python lixian_cli.py download --search 2012.04.04
+python lixian_cli.py download #0 #1 #2
+python lixian_cli.py download #0-2
 
 python lixian_cli.py add url
 python lixian_cli.py add --torrent 1.torrent
@@ -154,6 +156,8 @@ Examples:
  python lixian_cli.py download --all
  python lixian_cli.py download --search mkv
  python lixian_cli.py download --search 2012.04.04
+ python lixian_cli.py download #0 #1 #2
+ python lixian_cli.py download #0-2
 '''
 
 list     = '''python lixian_cli.py list
@@ -162,6 +166,7 @@ list tasks on Xunlei cloud
 
 Options:
  --completed          Print only complete tasks. Default: no
+ --[no]-n             Print task sequence number. Default: no
  --[no]-id            Print task id. Default: yes
  --[no]-name          Print task name. Default: yes
  --[no]-status        Print task status. Default: yes

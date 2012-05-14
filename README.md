@@ -41,6 +41,8 @@ Quick start
 	python lixian_cli.py download --all
 	python lixian_cli.py download --search mkv
 	python lixian_cli.py download --search 2012.04.04
+	python lixian_cli.py download #0 #1 #2
+	python lixian_cli.py download #0-2
 
 	python lixian_cli.py add url
 	python lixian_cli.py add --torrent 1.torrent
@@ -170,6 +172,8 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 ### lx download
 下载。目前支持普通的http下载，ed2k下载，和bt下载。可以使用thunder/flashget/qq旋风的连接（bt任务除外）。在信息足够的情况下（见“一些提示”一节的第3条），下载的文件会自动验证hash，出错了会重新下载（我个人目前还没遇到过下载文件损坏的情况）。见“一些提示”一节的第3条。
 
+    lx download id
+    lx download #n
     lx download http://somewhere
     lx download ed2k://somefile
     lx download bt://info-hash
@@ -227,6 +231,12 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
     lx download bt-task-id/[1,3,5-7]
 
 注：上面的命令下载对应bt任务里文件id为1，3，5，6，7的五个文件。
+
+类似任务id，也可以指定任务的序列号。序列号从0开始。可以使用lx list -n查看序列号。如果希望lx list默认显示序列号，可以使用lx config n。若要下载任务列表中的第一个任务：
+    lx download #0
+
+要下载前三个任务：
+    lx download #0-2
 
 可以使用--all参数下载所有的任务（如果已经在参数中指定了要下载的链接或者任务id，--all参数会被忽略）：
 
