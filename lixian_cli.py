@@ -111,6 +111,7 @@ def curl_download(client, download_url, filename, resuming=False):
 	curl_opts = ['curl', '-L', download_url, '--cookie', 'gdriveid='+gdriveid, '--output', filename]
 	if resuming:
 		curl_opts += ['--continue-at', '-']
+	curl_opts.extend(get_config('curl-opts', '').split())
 	exit_code = subprocess.call(curl_opts)
 	if exit_code != 0:
 		raise Exception('curl exited abnormaly')
