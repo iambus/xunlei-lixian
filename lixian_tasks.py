@@ -1,4 +1,6 @@
 
+__all__ = ['search_tasks', 'find_task_by_url', 'find_tasks_to_download', 'find_torrents_task_to_download']
+
 import re
 import urllib2
 
@@ -25,6 +27,115 @@ def link_in(url, links):
 	for link in links:
 		if link_equals(url, link):
 			return True
+
+def is_url(url):
+	return re.match(r'\w+://|magnet:', url)
+
+def is_id(x):
+	return re.match(r'^#?\d+(/[-.\w\[\],\s]+)?$', x) or re.match(r'^#?\d+-\d+$', x)
+
+def find_task_by_url(tasks, url):
+	for t in tasks:
+		if link_equals(t[k], url):
+			return t
+
+def find_tasks_by_range(tasks, x):
+	m = re.match(r'^#?(\d+)-(\d+)$', x)
+	begin = int(m.group(1))
+	end = int(m.group(2))
+	return filter(lambda x: begin <= x['#'] <= end, tasks)
+
+def find_task_by_id(tasks, id):
+	for t in tasks:
+		if str(t['id']) == id or str(t['#']) == id or '#'+str(t['#']) == id:
+			return t
+
+def find_tasks_by_id(tasks, id):
+	if re.match(r'^#?\d+-\d+$', id):
+		return find_tasks_by_range(tasks, id)
+
+	task_id, sub_id = re.match(r'^(#?\d+)(?:/([-.\w\[\],\s]+))?$', id).groups()
+	task = find_task_by_id(tasks, task_id)
+
+	if not task:
+		return []
+
+	if not sub_id:
+		return [task]
+
+	assert task['type'] == 'bt', 'task %s is not a bt task' % task['name'].encode(default_encoding)
+	matched = []
+	if re.match(r'\[.*\]', sub_id):
+		for sub_id in re.split(r'\s*,\s*', sub_id[1:-1]):
+			assert re.match(r'^\d+(-\d+)?|\.\w+$', sub_id), sub_id
+			if sub_id.startswith('.'):
+				t = dict(task)
+				t['index'] = sub_id
+				matched.append(t)
+			elif '-' in sub_id:
+				start, end = sub_id.split('-')
+				for i in range(int(start), int(end)+1):
+					t = dict(task)
+					t['index'] = str(i)
+					matched.append(t)
+			else:
+				assert re.match(r'^\d+$', sub_id), sub_id
+				t = dict(task)
+				t['index'] = sub_id
+				matched.append(t)
+	elif re.match(r'^\.\w+$', sub_id):
+		t = dict(task)
+		t['index'] = sub_id
+		matched.append(t)
+	else:
+		assert re.match(r'^\d+$', sub_id), sub_id
+		t = dict(task)
+		t['index'] = sub_id
+		matched.append(t)
+	return matched
+
+def search_in_tasks(tasks, keywords):
+	found = []
+	for x in keywords:
+		# search url
+		if is_url(x):
+			task = find_task_by_url(tasks, url)
+			if task:
+				found.append(task)
+			else:
+				found.append(url) # keep the task order per arguments
+			continue
+		# search id
+		if is_id(x):
+			matched = find_tasks_by_id(tasks, x)
+			if matched:
+				found += matched
+				continue
+		# search date
+		if re.match(r'^\d{4}\.\d{2}\.\d{2}$', x):
+			raise NotImplementedError()
+			matched = filter(lambda t: t['date'] == v, tasks)
+			if matched:
+				found += matched
+				continue
+		# search name
+		matched = filter(lambda t: t['name'].lower().find(x.lower()) != -1, tasks)
+		if matched:
+			found += matched
+		else:
+			# keyword not matched
+			pass
+	found = merge_bt_sub_tasks(found)
+	return filter(lambda x: type(x) == dict, found), filter(lambda x: type(x) != dict, found), found
+
+def search_tasks(client, args, status='all'):
+	if status == 'all':
+		tasks = client.read_all_tasks()
+	elif status == 'completed':
+		tasks = client.read_all_tasks()
+	else:
+		raise NotImplementedError()
+	return search_in_tasks(tasks, list(args))[0]
 
 def find_torrents_task_to_download(client, links):
 	tasks = client.read_all_tasks()
@@ -75,20 +186,12 @@ def find_tasks_to_download(client, args):
 		links.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
 	if args.torrent:
 		return find_torrents_task_to_download(client, links)
-	if args.search or any(re.match(r'^#?\d+(/[-.\w\[\],\s]+|-\d+)?$', x) for x in args):
-		return search_tasks(client, args, check='check_none')
-	all_tasks = client.read_all_tasks()
-	to_add = set(links)
-	for t in all_tasks:
-		for x in to_add:
-			if link_equals(t['original_url'], x):
-				to_add.remove(x)
-				break
+	found, missing, all = search_in_tasks(client.read_all_tasks(), list(args))
+	to_add = set(missing)
 	if to_add:
 		print 'Adding below tasks:'
-		for link in links:
-			if link in to_add:
-				print link
+		for link in missing:
+			print link
 		client.add_batch_tasks(map(to_utf_8, to_add))
 		for link in to_add:
 			# add_batch_tasks doesn't work for bt task, add bt task one by one...
@@ -96,123 +199,40 @@ def find_tasks_to_download(client, args):
 				client.add_task(link)
 		all_tasks = client.read_all_tasks()
 	tasks = []
-	for link in links:
-		for task in all_tasks:
-			if link_equals(link, task['original_url']):
-				tasks.append(task)
-				break
+	for x in all:
+		if type(x) == dict:
+			tasks.append(x)
 		else:
-			raise NotImplementedError('task not found, wired: '+link)
+			task = find_task_by_url(x)
+			if not task:
+				raise NotImplementedError('task not found, wired: '+x)
+			tasks.append(task)
 	return tasks
 
 def merge_bt_sub_tasks(tasks):
 	result_tasks = []
 	task_mapping = {}
 	for task in tasks:
-		id = task['id']
-		if id in task_mapping:
-			if 'index' in task and 'files' in task_mapping[id]:
-				task_mapping[id]['files'].append(task['index'])
+		if type(task) == dict:
+			id = task['id']
+			if id in task_mapping:
+				if 'index' in task and 'files' in task_mapping[id]:
+					task_mapping[id]['files'].append(task['index'])
+			else:
+				if 'index' in task:
+					t = dict(task)
+					t['files'] = [t['index']]
+					del t['index']
+					result_tasks.append(t)
+					task_mapping[id] = t
+				else:
+					result_tasks.append(task)
+					task_mapping[id] = task
 		else:
-			if 'index' in task:
-				t = dict(task)
-				t['files'] = [t['index']]
-				del t['index']
-				result_tasks.append(t)
-				task_mapping[id] = t
+			if task in task_mapping:
+				pass
 			else:
 				result_tasks.append(task)
-				task_mapping[id] = task
+				task_mapping[task] = task
 	return result_tasks
-
-def filter_tasks(tasks, k, v):
-	if k == 'id':
-		task_id, sub_id = re.match(r'^(#?\d+)(?:/([-.\w\[\],\s]+))?$', v).groups()
-		if task_id.startswith('#'):
-			task_id = int(task_id[1:])
-			matched = [tasks[task_id]] if task_id < len(tasks) else []
-		else:
-			matched = filter(lambda t: t['id'] == task_id, tasks)
-		if matched:
-			assert len(matched) == 1
-			task = matched[0]
-			if sub_id:
-				assert task['type'] == 'bt', 'task %s is not a bt task' % task['name'].encode(default_encoding)
-				matched = []
-				if re.match(r'\[.*\]', sub_id):
-					for sub_id in re.split(r'\s*,\s*', sub_id[1:-1]):
-						assert re.match(r'^\d+(-\d+)?|\.\w+$', sub_id), sub_id
-						if sub_id.startswith('.'):
-							t = dict(task)
-							t['index'] = sub_id
-							matched.append(t)
-						elif '-' in sub_id:
-							start, end = sub_id.split('-')
-							for i in range(int(start), int(end)+1):
-								t = dict(task)
-								t['index'] = str(i)
-								matched.append(t)
-						else:
-							assert re.match(r'^\d+$', sub_id), sub_id
-							t = dict(task)
-							t['index'] = sub_id
-							matched.append(t)
-				elif re.match(r'^\.\w+$', sub_id):
-					t = dict(task)
-					t['index'] = sub_id
-					matched.append(t)
-				else:
-					assert re.match(r'^\d+$', sub_id), sub_id
-					t = dict(task)
-					t['index'] = sub_id
-					matched.append(t)
-			else:
-				matched = [task]
-	elif k == 'name':
-		matched = filter(lambda t: t[k].lower().find(v.lower()) != -1 or t['date'] == v, tasks) # XXX: a dirty trick: support search by date
-	elif k == 'original_url':
-		matched = filter(lambda t: link_equals(t[k], v), tasks)
-	else:
-		matched = filter(lambda t: t[k] == v, tasks)
-	return matched
-
-def search_tasks(client, args, status='all', check=True):
-	if status == 'all':
-		tasks = client.read_all_tasks()
-	elif status == 'completed':
-		tasks = client.read_all_tasks()
-	else:
-		raise NotImplementedError()
-	found = []
-	for x in args:
-		if args.search:
-			matched = filter_tasks(tasks, 'name', x.decode(default_encoding))
-		else:
-			if re.match(r'^#?\d+(/[-.\w\[\],\s]+)?$', x):
-				matched = filter_tasks(tasks, 'id', x)
-				if not matched:
-					matched = filter_tasks(tasks, 'name', x.decode(default_encoding))
-			elif re.match(r'^#\d+-\d+$', x):
-				begin, end = x[1:].split('-')
-				begin = int(begin)
-				end = int(end)
-				if begin > end or begin >= len(tasks):
-					matched = []
-				elif end >= len(tasks):
-					matched = tasks[begin:]
-				else:
-					matched = tasks[begin:end+1]
-			#elif re.match(r'^\d{4}\.\d{2}\.\d{2}$', x):
-			#	matched = filter_tasks(tasks, 'date', x)
-			elif re.match(r'\w+://', x) or x.startswith('magnet:'):
-				matched = filter_tasks(tasks, 'original_url', to_utf_8(x))
-			else:
-				matched = filter_tasks(tasks, 'name', x.decode(default_encoding))
-		if check:
-			if not matched:
-				raise RuntimeError('Not task found for '+x)
-			if check != 'check_none' and (not args.all) and len(matched) > 1:
-				raise RuntimeError('Too many tasks found for '+x)
-		found.extend(matched)
-	return found
 

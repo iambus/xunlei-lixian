@@ -48,7 +48,6 @@ python lixian_cli.py list --completed
 python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-id
 python lixian_cli.py list id1 id2
 python lixian_cli.py list zip rar
-python lixian_cli.py list --search zip rar
 python lixian_cli.py list 2012.04.04 2012.04.05
 
 python lixian_cli.py download task-id
@@ -67,8 +66,8 @@ python lixian_cli.py download --bt torrent-info-hash
 python lixian_cli.py download --bt http://xxx/xxx.torrent
 python lixian_cli.py download bt-task-id/file-id
 python lixian_cli.py download --all
-python lixian_cli.py download --search mkv
-python lixian_cli.py download --search 2012.04.04
+python lixian_cli.py download mkv
+python lixian_cli.py download 2012.04.04
 python lixian_cli.py download #0 #1 #2
 python lixian_cli.py download #0-2
 
@@ -130,8 +129,6 @@ Options:
                                  Default: false.
  --all                           Download all tasks. This option will be ignored if specific download URLs or task ids can be found. 
                                  Default: false.
- --search                        Treat all arguments as keywords of cloud tasks
-                                 Default: false.
  --hash                          When this option is false (--no-hash), never do full hash, but a minimal hash will be performed (supposed to be very fast).
                                  Default: true.
  --mini-hash                     If the target file already exists, and the file size is complete, do a minimal hash (instead of full hash, which would be much more expensive). This is useful when you are resuming a batch download, in this case the previously downloaded and verified files won't be re-verified.
@@ -154,8 +151,8 @@ Examples:
  python lixian_cli.py download --bt http://xxx/xxx.torrent
  python lixian_cli.py download bt-task-id/file-id
  python lixian_cli.py download --all
- python lixian_cli.py download --search mkv
- python lixian_cli.py download --search 2012.04.04
+ python lixian_cli.py download mkv
+ python lixian_cli.py download 2012.04.04
  python lixian_cli.py download #0 #1 #2
  python lixian_cli.py download #0-2
 '''
@@ -185,7 +182,6 @@ Examples:
  python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-id
  python lixian_cli.py list id1 id2
  python lixian_cli.py list zip rar
- python lixian_cli.py list --search zip rar
  python lixian_cli.py list 2012.04.04 2012.04.05
 '''
 

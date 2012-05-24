@@ -302,7 +302,7 @@ def download_multiple_tasks(client, download, tasks, options):
 def download_task(args):
 	args = parse_login_command_line(args,
 	                                ['tool', 'output', 'output-dir', 'input'],
-	                                ['delete', 'continue', 'overwrite', 'torrent', 'all', 'search', 'mini-hash', 'hash'],
+	                                ['delete', 'continue', 'overwrite', 'torrent', 'all', 'mini-hash', 'hash'],
 									alias={'o': 'output', 'i': 'input', 'c':'continue', 'bt':'torrent'},
 									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'output-dir':get_config('output-dir'), 'mini-hash':get_config('mini-hash'), 'hash':get_config('hash', True)},
 	                                help=lixian_help.download)
@@ -313,25 +313,23 @@ def download_task(args):
 	if len(args) > 1 or args.input:
 		assert not args.output
 		tasks = find_tasks_to_download(client, args)
-		tasks = merge_bt_sub_tasks(tasks)
 		download_multiple_tasks(client, download, tasks, download_args)
 	elif args.torrent:
-		assert not args.search
 		assert len(args) == 1
 		tasks = find_torrents_task_to_download(client, [args[0]])
 		assert len(tasks) == 1
 		download_single_task(client, download, tasks[0], download_args)
 	elif len(args):
 		assert len(args) == 1
-		tasks = search_tasks(client, args, status='all', check=False)
+		tasks = search_tasks(client, args, status='all')
 		if not tasks:
 			url = args[0]
 			print 'Adding new task %s ...' % url
 			client.add_task(to_utf_8(url))
 			tasks = client.read_all_completed()
-			tasks = filter_tasks(tasks, 'original_url', to_utf_8(url))
-			assert tasks, 'task not found, wired'
-		tasks = merge_bt_sub_tasks(tasks)
+			task = find_task_by_url(tasks, to_utf_8(url))
+			assert task, 'task not found, wired'
+			tasks = [task]
 		if args.output:
 			assert len(tasks) == 1
 			download_single_task(client, download, tasks[0], download_args)
@@ -349,8 +347,7 @@ def list_task(args):
 	args = parse_login_command_line(args, [],
 	                                ['all', 'completed',
 	                                 'id', 'name', 'status', 'size', 'dcid', 'gcid', 'original-url', 'download-url', 'speed', 'progress', 'date',
-	                                 'n',
-	                                 'search'],
+	                                 'n'],
 									default={'id': True, 'name': True, 'status': True, 'n': get_config('n')},
 									help=lixian_help.list)
 
@@ -363,13 +360,13 @@ def list_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 	if parent_ids:
 		args[0] = args[0][:-1]
-		tasks = search_tasks(client, args, status=(args.completed and 'completed' or 'all'), check=True)
+		tasks = search_tasks(client, args, status=(args.completed and 'completed' or 'all'))
 		assert len(tasks) == 1
 		tasks = client.list_bt(tasks[0])
 		#tasks = client.list_bt(client.get_task_by_id(parent_ids[0]))
 		tasks.sort(key=lambda x: int(x['index']))
 	elif len(ids):
-		tasks = search_tasks(client, args, status=(args.completed and 'completed' or 'all'), check=False)
+		tasks = search_tasks(client, args, status=(args.completed and 'completed' or 'all'))
 	elif args.completed:
 		tasks = client.read_all_completed()
 	else:
@@ -380,7 +377,7 @@ def list_task(args):
 		for k in columns:
 			if k == 'n':
 				if not parent_ids:
-					print '#%d' % i,
+					print '#%d' % t['#'],
 			elif k == 'id':
 				print t.get('index', t['id']),
 			elif k == 'name':
@@ -428,9 +425,9 @@ def add_task(args):
 		print 'All tasks added. Checking status...'
 		tasks = client.read_all_tasks()
 		for link in links:
-			found = filter_tasks(tasks, 'original_url', to_utf_8(link))
+			found = find_task_by_url(tasks, to_utf_8(link))
 			if found:
-				print found[0]['id'], found[0]['status_text'], link
+				print found['id'], found['status_text'], link
 			else:
 				print 'unknown', link
 	else:
@@ -441,7 +438,7 @@ def add_task(args):
 			print task['id'], task['status_text'], link
 
 def delete_task(args):
-	args = parse_login_command_line(args, [], ['search', 'i', 'all'], help=lixian_help.delete)
+	args = parse_login_command_line(args, [], ['i', 'all'], help=lixian_help.delete)
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_delete = search_tasks(client, args)
 	print "Below files are going to be deleted:"
@@ -458,7 +455,7 @@ def delete_task(args):
 	client.delete_tasks(to_delete)
 
 def pause_task(args):
-	args = parse_login_command_line(args, [], ['search', 'i', 'all'], help=lixian_help.pause)
+	args = parse_login_command_line(args, [], ['i', 'all'], help=lixian_help.pause)
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_pause = search_tasks(client, args)
 	print "Below files are going to be paused:"
@@ -467,7 +464,7 @@ def pause_task(args):
 	client.pause_tasks(to_pause)
 
 def restart_task(args):
-	args = parse_login_command_line(args, [], ['search', 'i', 'all'], help=lixian_help.restart)
+	args = parse_login_command_line(args, [], ['i', 'all'], help=lixian_help.restart)
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_restart = search_tasks(client, args)
 	print "Below files are going to be restarted:"

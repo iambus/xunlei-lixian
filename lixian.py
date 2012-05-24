@@ -191,16 +191,21 @@ class XunleiClient:
 		return self.read_task_page_url(url)
 
 	def read_tasks(self, st=0):
-		return self.read_task_page(st)[0]
+		tasks = self.read_task_page(st)[0]
+		for i, task in enumerate(tasks):
+			tasks['#'] = i
+		return tasks
 
 	def read_all_tasks(self, st=0):
-		all_links = []
-		links, next_link = self.read_task_page(st)
-		all_links.extend(links)
+		all_tasks = []
+		tasks, next_link = self.read_task_page(st)
+		all_tasks.extend(tasks)
 		while next_link:
-			links, next_link = self.read_task_page_url(next_link)
-			all_links.extend(links)
-		return all_links
+			tasks, next_link = self.read_task_page_url(next_link)
+			all_tasks.extend(tasks)
+		for i, task in enumerate(all_tasks):
+			task['#'] = i
+		return all_tasks
 
 	def read_completed(self):
 		return self.read_tasks(2)

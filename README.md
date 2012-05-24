@@ -20,7 +20,6 @@ Quick start
 	python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-id
 	python lixian_cli.py list id1 id2
 	python lixian_cli.py list zip rar
-	python lixian_cli.py list --search zip rar
 	python lixian_cli.py list 2012.04.04 2012.04.05
 
 	python lixian_cli.py download task-id
@@ -39,8 +38,8 @@ Quick start
 	python lixian_cli.py download --bt http://xxx/xxx.torrent
 	python lixian_cli.py download bt-task-id/file-id
 	python lixian_cli.py download --all
-	python lixian_cli.py download --search mkv
-	python lixian_cli.py download --search 2012.04.04
+	python lixian_cli.py download mkv
+	python lixian_cli.py download 2012.04.04
 	python lixian_cli.py download #0 #1 #2
 	python lixian_cli.py download #0-2
 
@@ -179,8 +178,8 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
     lx download bt://info-hash
     lx download link1 link2 link3 ...
     lx download --all
-    lx download --search keywords
-    lx download --search date
+    lx download keywords
+    lx download date
 
 下载bt的时候需要加--bt参数（或者--torrent参数）。可以指定本地.torrent文件路径，或者.torrent文件的http url，或者torrent文件的info hash。（很多网站使用info hash来标识一个bt种子文件，这种情况你就不需要下载种子了，lx download可以自动下载种子，不过前提是之前已经有人使用迅雷离线下载过同样的种子。[如后所述](#hash_tool)，你也可以使用lixian_hash.py --info-hash来手动生成bt种子的info hash。）
 
@@ -256,14 +255,14 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
     lx download mkv
 
-如果要搜索多个关键字（满足其中一个就算匹配），需要加上--search（以后可能会去掉）：
+也可以搜索多个关键字（满足其中一个就算匹配）：
 
-    lx download --search mkv mp4
+    lx download mkv mp4
 
 任务的添加日期也可以作为关键字：
 
     lx download 2012.04.04
-    lx download --search 2012.04.04 2012.04.05
+    lx download 2012.04.04 2012.04.05
 
 ### lx list
 列出已存在的离线任务。默认只会列出任务id，任务名，以及状态。可以使用--original-url和--download-url参数来列出原始链接和下载链接。--completed参数用于忽略未完成任务。
@@ -294,7 +293,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
     lx delete ed2k://...
     lx delete mkv
     lx delete --all mkv
-    lx delete --all --search mkv mp4
+    lx delete --all mkv mp4
 
 ### lx pause
 暂停任务。
