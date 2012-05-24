@@ -2,6 +2,7 @@
 __all__ = ['search_tasks', 'find_task_by_url', 'find_tasks_to_download', 'find_torrents_task_to_download']
 
 import re
+import os
 import urllib2
 import fileinput
 
