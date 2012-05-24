@@ -309,26 +309,9 @@ def download_task(args):
 	download_args = {'output':args.output, 'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
-	if len(args) > 1 or args.input:
+	if len(args) or args.input:
 		assert not args.output
 		tasks = find_tasks_to_download(client, args)
-		download_multiple_tasks(client, download, tasks, download_args)
-	elif args.torrent:
-		assert len(args) == 1
-		tasks = find_torrents_task_to_download(client, [args[0]])
-		assert len(tasks) == 1
-		download_single_task(client, download, tasks[0], download_args)
-	elif len(args):
-		assert len(args) == 1
-		tasks = search_tasks(client, args, status='all')
-		if not tasks:
-			url = args[0]
-			print 'Adding new task %s ...' % url
-			client.add_task(to_utf_8(url))
-			tasks = client.read_all_completed()
-			task = find_task_by_url(tasks, to_utf_8(url))
-			assert task, 'task not found, wired'
-			tasks = [task]
 		if args.output:
 			assert len(tasks) == 1
 			download_single_task(client, download, tasks[0], download_args)
