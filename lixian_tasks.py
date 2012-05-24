@@ -6,6 +6,8 @@ import urllib2
 import fileinput
 
 from lixian_encoding import default_encoding
+import lixian_hash_bt
+import lixian_hash_ed2k
 
 def link_normalize(url):
 	from lixian_url import url_unmask, normalize_unicode_link
