@@ -212,7 +212,7 @@ def find_tasks_to_download(client, args):
 		if type(x) == dict:
 			tasks.append(x)
 		else:
-			task = find_task_by_url(x)
+			task = find_task_by_url(all_tasks, x)
 			if not task:
 				raise NotImplementedError('task not found, wired: '+x)
 			tasks.append(task)
