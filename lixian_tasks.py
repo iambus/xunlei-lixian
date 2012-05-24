@@ -100,7 +100,7 @@ def search_in_tasks(tasks, keywords):
 	for x in keywords:
 		# search url
 		if is_url(x):
-			task = find_task_by_url(tasks, url)
+			task = find_task_by_url(tasks, x)
 			if task:
 				found.append(task)
 			else:
