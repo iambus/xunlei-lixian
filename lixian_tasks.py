@@ -37,7 +37,7 @@ def is_id(x):
 
 def find_task_by_url(tasks, url):
 	for t in tasks:
-		if link_equals(t[k], url):
+		if link_equals(t['original_url'], url):
 			return t
 
 def find_tasks_by_range(tasks, x):
