@@ -106,7 +106,7 @@ def search_in_tasks(tasks, keywords):
 			if task:
 				found.append(task)
 			else:
-				found.append(url) # keep the task order per arguments
+				found.append(x) # keep the task order per arguments
 			continue
 		# search id
 		if is_id(x):
