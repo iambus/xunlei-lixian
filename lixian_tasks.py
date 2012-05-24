@@ -187,7 +187,7 @@ def find_tasks_to_download(client, args):
 		links.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
 	if args.torrent:
 		return find_torrents_task_to_download(client, links)
-	found, missing, all = search_in_tasks(client.read_all_tasks(), list(args))
+	found, missing, all = search_in_tasks(client.read_all_tasks(), links)
 	to_add = set(missing)
 	if to_add:
 		print 'Adding below tasks:'
