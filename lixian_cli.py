@@ -8,7 +8,6 @@ import lixian_help
 import lixian_hash
 import lixian_hash_bt
 import lixian_hash_ed2k
-import fileinput
 import subprocess
 import sys
 import os

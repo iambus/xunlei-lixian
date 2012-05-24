@@ -3,6 +3,7 @@ __all__ = ['search_tasks', 'find_task_by_url', 'find_tasks_to_download', 'find_t
 
 import re
 import urllib2
+import fileinput
 
 from lixian_encoding import default_encoding
 
