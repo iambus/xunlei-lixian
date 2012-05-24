@@ -229,6 +229,8 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
     lx download #0-2
 
+注：#也可以省略。因为Shell里#会被当成注释。所以可以lx download 0或者lx download "#0"。
+
 对于bt任务，如果只想下载部分文件，可以在task id后指定文件id：
 
     lx download bt-task-id/file-id bt-task-id/file-id2
