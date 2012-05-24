@@ -9,6 +9,12 @@ from lixian_encoding import default_encoding
 import lixian_hash_bt
 import lixian_hash_ed2k
 
+def to_utf_8(url):
+	try:
+		return url.decode(default_encoding).encode('utf-8')
+	except:
+		return url
+
 def link_normalize(url):
 	from lixian_url import url_unmask, normalize_unicode_link
 	from lixian_url import url_unmask, normalize_unicode_link
