@@ -257,6 +257,9 @@ def download_single_task(client, download, task, options):
 			return
 		for f in files:
 			name = f['name']
+			if f['status_text'] != 'completed':
+				print 'Skipped %s file % ...' % (f['status_text'], name.encode(default_encoding))
+				continue
 			print 'Downloading', name.encode(default_encoding), '...'
 			# XXX: if file name is escaped, hashing bt won't get correct file
 			splitted_path = map(escape_filename, name.split('\\'))
