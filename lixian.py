@@ -193,7 +193,7 @@ class XunleiClient:
 	def read_tasks(self, st=0):
 		tasks = self.read_task_page(st)[0]
 		for i, task in enumerate(tasks):
-			tasks['#'] = i
+			task['#'] = i
 		return tasks
 
 	def read_all_tasks(self, st=0):
