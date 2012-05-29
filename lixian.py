@@ -302,7 +302,7 @@ class XunleiClient:
 		data = {}
 		for i in range(len(urls)):
 			data['cid[%d]' % i] = ''
-			data['url[%d]' % i] = urls[i]
+			data['url[%d]' % i] = urllib.quote(urls[i]) # fix per request #98
 		data['batch_old_taskid'] = batch_old_taskid
 		response = self.urlopen(url, data=data).read()
 		assert_default_page(response, self.id)
