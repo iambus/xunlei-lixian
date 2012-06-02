@@ -93,7 +93,11 @@ def bencode(v):
 	encoder(stream).encode(v)
 	return stream.getvalue()
 
+def assert_content(content):
+	assert content.startswith('d8:announce') or content.startswith('d13:announce-list'), 'Probably not a valid content file [%s...]' % repr(content[:17])
+
 def info_hash_from_content(content):
+	assert_content(content)
 	return hashlib.sha1(bencode(bdecode(content)['info'])).hexdigest()
 
 def info_hash(path):
@@ -231,5 +235,4 @@ def verify_bt(path, info, file_set=None, progress_callback=None):
 def verify_bt_file(path, torrent_path, file_set=None, progress_callback=None):
 	with open(torrent_path, 'rb') as x:
 		return verify_bt(path, bdecode(x.read())['info'], file_set, progress_callback)
-
 

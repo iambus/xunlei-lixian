@@ -1,5 +1,5 @@
 
-__all__ = ['search_tasks', 'find_task_by_url', 'find_tasks_to_download', 'find_torrents_task_to_download']
+__all__ = ['search_tasks', 'find_task_by_url', 'find_task_by_url_or_path', 'find_tasks_to_download', 'find_torrent_tasks_to_download', 'find_normal_tasks_to_download', 'is_url', 'is_local_bt']
 
 import re
 import os
@@ -41,6 +41,9 @@ def link_in(url, links):
 def is_url(url):
 	return re.match(r'\w+://|magnet:', url)
 
+def is_local_bt(url):
+	return (not is_url(url)) and url.lower().endswith('.torrent') and os.path.exists(url)
+
 def is_id(x):
 	return re.match(r'^#?\d+(/[-.\w\[\],\s]+)?$', x) or re.match(r'^#?\d+-\d+$', x)
 
@@ -48,6 +51,14 @@ def find_task_by_url(tasks, url):
 	for t in tasks:
 		if link_equals(t['original_url'], url):
 			return t
+
+def find_task_by_url_or_path(tasks, url):
+	if is_url(url):
+		return find_task_by_url(tasks, url)
+	elif is_local_bt(url):
+		return find_task_by_url(tasks, 'bt://' + lixian_hash_bt.info_hash(url))
+	else:
+		raise NotImplementedError()
 
 def find_tasks_by_range(tasks, x):
 	m = re.match(r'^#?(\d+)-(\d+)$', x)
@@ -107,9 +118,9 @@ def find_tasks_by_id(tasks, id):
 def search_in_tasks(tasks, keywords):
 	found = []
 	for x in keywords:
-		# search url
-		if is_url(x):
-			task = find_task_by_url(tasks, x)
+		# search url and local bt
+		if is_url(x) or is_local_bt(x):
+			task = find_task_by_url_or_path(tasks, x)
 			if task:
 				found.append(task)
 			else:
@@ -147,7 +158,7 @@ def search_tasks(client, args, status='all'):
 		raise NotImplementedError()
 	return search_in_tasks(tasks, list(args))[0]
 
-def find_torrents_task_to_download(client, links):
+def find_torrent_tasks_to_download(client, links):
 	tasks = client.read_all_tasks()
 	hashes = set(t['bt_hash'].lower() for t in tasks if t['type'] == 'bt')
 	link_hashes = []
@@ -161,7 +172,6 @@ def find_torrents_task_to_download(client, links):
 		elif re.match(r'http://', link):
 			print 'Downloading torrent file from', link
 			torrent = urllib2.urlopen(link, timeout=60).read()
-			assert torrent.startswith('d8:announce') or torrent.startswith('d13:announce-list'), 'Probably not a valid torrent file [%s...]' % repr(torrent[:17])
 			info_hash = lixian_hash_bt.info_hash_from_content(torrent)
 			if info_hash not in hashes:
 				print 'Adding bt task', link
@@ -170,7 +180,6 @@ def find_torrents_task_to_download(client, links):
 		elif os.path.exists(link):
 			with open(link, 'rb') as stream:
 				torrent = stream.read()
-			assert torrent.startswith('d8:announce') or torrent.startswith('d13:announce-list'), 'Probably not a valid torrent file [%s...]' % repr(torrent[:17])
 			info_hash = lixian_hash_bt.info_hash_from_content(torrent)
 			if info_hash not in hashes:
 				print 'Adding bt task', link
@@ -189,35 +198,57 @@ def find_torrents_task_to_download(client, links):
 			raise NotImplementedError('not task found')
 	return tasks
 
+def return_my_tasks(all_tasks, links):
+	tasks = []
+	for x in links:
+		if type(x) == dict:
+			tasks.append(x)
+		else:
+			task = find_task_by_url_or_path(all_tasks, x)
+			if not task:
+				raise NotImplementedError('task not found, wired: '+x)
+			tasks.append(task)
+	return tasks
+
+def find_normal_tasks_to_download(client, links):
+	all_tasks = client.read_all_tasks()
+	found, missing, all = search_in_tasks(all_tasks, links)
+	to_add = set(missing)
+	if to_add:
+		print 'Adding below tasks:'
+		for link in missing:
+			print link
+		links_to_add = filter(is_url, to_add)
+		if links_to_add:
+			client.add_batch_tasks(map(to_utf_8, links_to_add))
+		for link in to_add:
+			if is_url(link):
+				# add_batch_tasks doesn't work for bt task, add bt task one by one...
+				if link.startswith('bt://') or link.startswith('magnet:'):
+					client.add_task(link)
+			elif is_local_bt(link):
+				with open(link, 'rb') as stream:
+					torrent = stream.read()
+				client.add_torrent_task_by_content(torrent, os.path.basename(link))
+			else:
+				raise NotImplementedError('Unsupported: '+link)
+		all_tasks = client.read_all_tasks()
+	try:
+		return return_my_tasks(all_tasks, all)
+	except NotImplementedError:
+		import time
+		time.sleep(5)
+		return return_my_tasks(client.read_all_tasks(), all)
+
 def find_tasks_to_download(client, args):
 	links = []
 	links.extend(args)
 	if args.input:
 		links.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
 	if args.torrent:
-		return find_torrents_task_to_download(client, links)
-	found, missing, all = search_in_tasks(client.read_all_tasks(), links)
-	to_add = set(missing)
-	if to_add:
-		print 'Adding below tasks:'
-		for link in missing:
-			print link
-		client.add_batch_tasks(map(to_utf_8, to_add))
-		for link in to_add:
-			# add_batch_tasks doesn't work for bt task, add bt task one by one...
-			if link.startswith('bt://') or link.startswith('magnet:'):
-				client.add_task(link)
-		all_tasks = client.read_all_tasks()
-	tasks = []
-	for x in all:
-		if type(x) == dict:
-			tasks.append(x)
-		else:
-			task = find_task_by_url(all_tasks, x)
-			if not task:
-				raise NotImplementedError('task not found, wired: '+x)
-			tasks.append(task)
-	return tasks
+		return find_torrent_tasks_to_download(client, links)
+	else:
+		return find_normal_tasks_to_download(client, links)
 
 def merge_bt_sub_tasks(tasks):
 	result_tasks = []

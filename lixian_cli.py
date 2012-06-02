@@ -399,28 +399,16 @@ def add_task(args):
 		with open(args.input) as x:
 			links.extend(line.strip() for line in x.readlines() if line.strip())
 	if not args.torrent:
-		print 'Adding below tasks:'
-		for link in links:
-			print link
-		client.add_batch_tasks(map(to_utf_8, links))
-		for link in links:
-			# add_batch_tasks doesn't work for bt task, add bt task one by one...
-			if link.startswith('bt://') or link.startswith('magnet:'):
-				client.add_task(link)
-		print 'All tasks added. Checking status...'
-		tasks = client.read_all_tasks()
-		for link in links:
-			found = find_task_by_url(tasks, to_utf_8(link))
-			if found:
-				print found['id'], found['status_text'], link
-			else:
-				print 'unknown', link
+		tasks = find_normal_tasks_to_download(client, links)
 	else:
-		tasks = find_torrents_task_to_download(client, links)
-		assert len(tasks) == len(links)
-		print 'All tasks added:'
-		for link, task in zip(links, tasks):
-			print task['id'], task['status_text'], link
+		tasks = find_torrent_tasks_to_download(client, links)
+	print 'All tasks added. Checking status...'
+	for link in links:
+		found = find_task_by_url_or_path(tasks, link)
+		if found:
+			print found['id'], found['status_text'], link
+		else:
+			print 'unknown', link
 
 def delete_task(args):
 	args = parse_login_command_line(args, [], ['i', 'all'], help=lixian_help.delete)
