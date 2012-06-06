@@ -1,5 +1,21 @@
 
+def expand_windows_command_line(args):
+	from glob import glob
+	expanded = []
+	for x in args:
+		xx = glob(x)
+		if xx:
+			expanded += xx
+		else:
+			expanded.append(x)
+	return expanded
+
+def expand_command_line(args):
+	import platform
+	return expand_windows_command_line(args) if platform.system() == 'Windows' else args
+
 def parse_command_line(args, keys=[], bools=[], alias={}, default={}, help=None):
+	args = expand_windows_command_line(args)
 	options = {}
 	for k in keys:
 		options[k] = None
