@@ -403,12 +403,8 @@ def add_task(args):
 	else:
 		tasks = find_torrent_tasks_to_download(client, links)
 	print 'All tasks added. Checking status...'
-	for link in links:
-		found = find_task_by_url_or_path(tasks, link)
-		if found:
-			print found['id'], found['status_text'], link
-		else:
-			print 'unknown', link
+	for t in tasks:
+		print t['id'], t['status_text'], t['name']
 
 def delete_task(args):
 	args = parse_login_command_line(args, [], ['i', 'all'], help=lixian_help.delete)
