@@ -15,7 +15,7 @@ def expand_command_line(args):
 	return expand_windows_command_line(args) if platform.system() == 'Windows' else args
 
 def parse_command_line(args, keys=[], bools=[], alias={}, default={}, help=None):
-	args = expand_windows_command_line(args)
+	args = expand_command_line(args)
 	options = {}
 	for k in keys:
 		options[k] = None
