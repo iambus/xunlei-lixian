@@ -7,7 +7,8 @@ def print_hash(args):
 	#import lixian_hash_ed2k
 	#print 'ed2k:', lixian_hash_ed2k.hash_file(args[0])
 	#print 'dcid:', lixian_hash.dcid_hash_file(args[0])
-	lixian_hash.main(args)
+	from lixian_cli_parser import expand_command_line
+	lixian_hash.main(expand_command_line(args))
 
 hash_help = '''
 lx hash --sha1 file...
