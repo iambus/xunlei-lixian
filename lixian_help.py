@@ -1,39 +1,57 @@
 
+basic_commands = [
+ ('help',       "try this help..."),
+ ('login',      "login Xunlei cloud"),
+ ('download',   "download tasks from Xunlei cloud"),
+ ('list',       "list tasks on Xunlei cloud"),
+ ('add',        "add tasks to Xunlei cloud"),
+ ('delete',     "delete tasks from Xunlei cloud"),
+ ('pause',      "pause tasks on Xunlei cloud"),
+ ('restart',    "restart tasks on Xunlei cloud"),
+ ('rename',     "rename task"),
+ ('config',     "save configuration so you don't have to repeat it"),
+ ('info',       "print user id, internal user id, and gdriveid"),
+ ('logout',     "logout from Xunlei cloud"),
+]
+
+def join_commands(commands):
+	n = max(len(x[0]) for x in commands)
+	n = max(n, 10)
+	return ''.join(' %%-%ds %%s\n' % n % (k, h) for (k, h) in commands)
+
 basic_usage = '''python lixian_cli.py <command> [<args>]
 
-Basic commands
- help       try this help...
- login      login Xunlei cloud
- download   download tasks from Xunlei cloud
- list       list tasks on Xunlei cloud
- add        add tasks to Xunlei cloud
- delete     delete tasks from Xunlei cloud
- pause      pause tasks on Xunlei cloud
- restart    restart tasks on Xunlei cloud
- rename     rename task
- config     save configuration so you don't have to repeat it
- info       print user id, internal user id, and gdriveid
- logout     logout from Xunlei cloud
-'''
+Basic commands:
+''' + join_commands(basic_commands)
 
+extended_usage = ''
+
+# lx
 def usage():
 	return basic_usage + '''
 Use 'python lixian_cli.py help' for details.
 Use 'python lixian_cli.py help <command>' for more information on a specific command.
 Check https://github.com/iambus/xunlei-lixian for detailed (and Chinese) doc.'''
 
+# lx xxx
+# lx help help
 help_help = '''Get helps:
-  python lixian_cli.py help help
-  python lixian_cli.py help examples
-  python lixian_cli.py help readme
-  python lixian_cli.py help <command>'''
+ python lixian_cli.py help help
+ python lixian_cli.py help examples
+ python lixian_cli.py help readme
+ python lixian_cli.py help <command>'''
 
+# lx xxx
+# lx help help
 help = help_help
 
-welcome = '''Python script for Xunlei cloud.
+# lx help
+# lx -h
+def welcome_help():
+	return '''Python script for Xunlei cloud.
 
 Basic usage:
-''' + basic_usage + '\n' + help_help
+''' + basic_usage + extended_usage + '\n' + help_help
 
 def examples():
 	return '''python lixian_cli.py login "Your Xunlei account" "Your password"

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from lixian import XunleiClient, encypt_password
+import lixian_cli_extended
 from lixian_cli_parser import parse_command_line
 from lixian_tasks import *
 from lixian_config import *
@@ -484,15 +485,6 @@ def lx_config(args):
 			print 'Saving configuration to', global_config.path
 			put_config(*args)
 
-def lx_diagnostics(args):
-	import lixian_diagnostics
-	lixian_diagnostics.diagnostics()
-
-def print_hash(args):
-	assert len(args) == 1
-	print 'ed2k:', lixian_hash_ed2k.hash_file(args[0])
-	print 'dcid:', lixian_hash.dcid_hash_file(args[0])
-
 def usage(doc=lixian_help.usage, message=None):
 	if hasattr(doc, '__call__'):
 		doc = doc()
@@ -505,9 +497,9 @@ def lx_help(args):
 		helper = getattr(lixian_help, args[0].lower(), lixian_help.help)
 		usage(helper)
 	elif len(args) == 0:
-		print lixian_help.welcome
+		usage(lixian_help.welcome_help)
 	else:
-		print lixian_help.help
+		usage(lixian_help.help)
 
 def execute_command(args=sys.argv[1:]):
 	if not args:
@@ -516,14 +508,15 @@ def execute_command(args=sys.argv[1:]):
 	command = args[0]
 	if command.startswith('-'):
 		if command in ('-h', '--help'):
-			usage()
+			usage(lixian_help.welcome_help)
 		elif command in ('-v', '--version'):
 			print '0.0.x'
 		else:
 			usage()
 			sys.exit(1)
 		sys.exit(0)
-	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'rename': rename_task, 'info': lixian_info, 'config': lx_config, 'diagnostics': lx_diagnostics, 'hash': print_hash, 'help': lx_help}
+	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'rename': rename_task, 'info': lixian_info, 'config': lx_config, 'help': lx_help}
+	commands.update(lixian_cli_extended.commands)
 	if command not in commands:
 		usage()
 		sys.exit(1)
