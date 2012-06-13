@@ -2,11 +2,25 @@
 ##################################################
 
 def print_hash(args):
-	assert len(args) == 1
+	#assert len(args) == 1
 	import lixian_hash
-	import lixian_hash_ed2k
-	print 'ed2k:', lixian_hash_ed2k.hash_file(args[0])
-	print 'dcid:', lixian_hash.dcid_hash_file(args[0])
+	#import lixian_hash_ed2k
+	#print 'ed2k:', lixian_hash_ed2k.hash_file(args[0])
+	#print 'dcid:', lixian_hash.dcid_hash_file(args[0])
+	lixian_hash.main(args)
+
+hash_help = '''
+lx hash --sha1 file...
+lx hash --md5 file...
+lx hash --md4 file...
+lx hash --ed2k file...
+lx hash --info-hash xxx.torrent...
+lx hash --verify-sha1 file hash
+lx hash --verify-md5 file hash
+lx hash --verify-md4 file hash
+lx hash --verify-ed2k file ed2k://...
+lx hash --verify-info-hash file xxx.torrent
+'''
 
 ##################################################
 
@@ -44,7 +58,7 @@ or:
 ##################################################
 
 extended_commands = [
-		['hash', print_hash, 'compute hashes', 'usage: lx hash file'],
+		['hash', print_hash, 'compute hashes', hash_help.strip()],
 		['diagnostics', lx_diagnostics, 'print helpful information for diagnostics', diagnostics_help],
 		['decode-url', decode_url, 'convert thunder:// (and more) to normal url', decode_url_help],
 		['kuai', kuai, 'parse links from kuai.xunlei.com', kuai_help],

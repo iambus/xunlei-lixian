@@ -49,9 +49,7 @@ def dcid_hash_file(path):
 def verify_dcid(path, dcid):
 	return dcid_hash_file(path).lower() == dcid.lower()
 
-if __name__ == '__main__':
-	import sys
-	args = sys.argv[1:]
+def main(args):
 	option = args.pop(0)
 	if option.startswith('--verify'):
 		hash_fun = {'--verify-sha1':verify_sha1,
@@ -78,4 +76,9 @@ if __name__ == '__main__':
 		for f in args:
 			h = hash_fun(f)
 			print '%s *%s' % (h, f)
+
+if __name__ == '__main__':
+	import sys
+	args = sys.argv[1:]
+	main(args)
 
