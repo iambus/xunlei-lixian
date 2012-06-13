@@ -26,6 +26,22 @@ def decode_url(args):
 decode_url_help = 'usage: lx decode-url thunder://...'
 
 ##################################################
+
+def kuai(args):
+	from lixian_kuai import kuai_links
+	for x in args:
+		for v in kuai_links(x): 
+			print v['url']
+
+kuai_help = '''usage: lx kuai http://kuai.xunlei.com/d/xxx...
+
+Note that you can simply use:
+ lx add http://kuai.xunlei.com/d/xxx...
+or:
+ lx download http://kuai.xunlei.com/d/xxx...
+'''
+
+##################################################
 # update helps
 ##################################################
 
@@ -33,6 +49,7 @@ extended_commands = [
 		['hash', print_hash, 'compute hashes', 'usage: lx hash file'],
 		['diagnostics', lx_diagnostics, 'print helpful information for diagnostics', diagnostics_help],
 		['decode-url', decode_url, 'convert thunder:// (and more) to normal url', decode_url_help],
+		['kuai', kuai, 'parse links from kuai.xunlei.com', kuai_help],
 		]
 
 commands = dict(x[:2] for x in extended_commands)
