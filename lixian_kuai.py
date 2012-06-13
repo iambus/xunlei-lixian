@@ -29,13 +29,18 @@ def kuai_links(url):
 	return map(parse_link, re.findall(r'<span class="c_1">.*?</span>', html, flags=re.S))
 
 
-def main():
-	import sys
-	for x in sys.argv[1:]:
+def main(args):
+	from lixian_cli_parser import parse_command_line
+	args = parse_command_line(args, [], ['name'])
+	for x in args:
 		for v in kuai_links(x):
-			print v['url']
+			if args.name:
+				print v['name']
+			else:
+				print v['url']
 
 
 if __name__ == '__main__':
-	main()
+	import sys
+	main(sys.argv[1:])
 

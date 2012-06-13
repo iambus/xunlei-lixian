@@ -28,10 +28,8 @@ decode_url_help = 'usage: lx decode-url thunder://...'
 ##################################################
 
 def kuai(args):
-	from lixian_kuai import kuai_links
-	for x in args:
-		for v in kuai_links(x): 
-			print v['url']
+	import lixian_kuai
+	lixian_kuai.main(args)
 
 kuai_help = '''usage: lx kuai http://kuai.xunlei.com/d/xxx...
 
