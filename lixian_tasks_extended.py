@@ -1,11 +1,14 @@
 
+sites = {
+'http://kuai.xunlei.com/d/':'lixian_kuai',
+'http://www.verycd.com/topics/':'lixian_verycd',
+}
 
 def extend_link(link):
-	if link.startswith('http://kuai.xunlei.com/d/'):
-		import lixian_kuai
-		return [x['url'] for x  in lixian_kuai.kuai_links(link)]
-	else:
-		return [link]
+	for p in sites:
+		if link.startswith(p):
+			return __import__(sites[p]).extend_link(link)
+	return [link]
 
 def extend_links(links):
 	return sum(map(extend_link, links), [])

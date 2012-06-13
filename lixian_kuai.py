@@ -28,6 +28,8 @@ def kuai_links(url):
 	#return map(parse_link, re.findall(r'<span class="f_w".*?</li>', html, flags=re.S))
 	return map(parse_link, re.findall(r'<span class="c_1">.*?</span>', html, flags=re.S))
 
+def extend_link(url):
+	return [x['url'] for x  in kuai_links(url)]
 
 def main(args):
 	from lixian_cli_parser import parse_command_line
