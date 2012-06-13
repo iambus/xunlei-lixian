@@ -366,9 +366,10 @@ class XunleiClient:
 				'findex':''.join(x+'_' for x in toList(findexes)),
 				'size':''.join(x+'_' for x in toList(sizes)),
 				'from':'0'}
-		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit'
+		jsonp = 'jsonp%s' % current_timestamp()
+		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit?callback=%s' % jsonp
 		response = self.urlopen(commit_url, data=data).read()
-		assert_default_page(response, self.id)
+		assert response == '%s(1)' % jsonp, response
 		return cid
 
 	def delete_tasks_by_id(self, ids):
