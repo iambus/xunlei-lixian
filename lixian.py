@@ -298,7 +298,7 @@ class XunleiClient:
 			return
 		#self.urlopen('http://dynamic.cloud.vip.xunlei.com/interface/batch_task_check', data={'url':'\r\n'.join(urls), 'random':current_random()})
 		jsonp = 'jsonp%s' % current_timestamp()
-		url = 'http://dynamic.cloud.vip.xunlei.com/interface/batch_task_commit&callback=%s' % jsonp
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/batch_task_commit?callback=%s' % jsonp
 		batch_old_taskid = '0' + ',' * (len(urls) - 1) # XXX: what is it?
 		data = {}
 		for i in range(len(urls)):
@@ -312,7 +312,7 @@ class XunleiClient:
 		assert content.startswith('d8:announce') or content.startswith('d13:announce-list'), 'Probably not a valid torrent file [%s...]' % repr(content[:17])
 		upload_url = 'http://dynamic.cloud.vip.xunlei.com/interface/torrent_upload'
 		jsonp = 'jsonp%s' % current_timestamp()
-		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit&callback=%s' % jsonp
+		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit?callback=%s' % jsonp
 
 		content_type, body = encode_multipart_formdata([], [('filepath', path, content)])
 
@@ -402,7 +402,7 @@ class XunleiClient:
 
 	def restart_tasks(self, tasks):
 		jsonp = 'jsonp%s' % current_timestamp()
-		url = 'http://dynamic.cloud.vip.xunlei.com/interface/redownload&callback=%s' % jsonp
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/redownload?callback=%s' % jsonp
 		form = []
 		for task in tasks:
 			assert task['type'] in ('ed2k', 'http', 'ftp', 'https', 'bt'), "'%s' is not tested" % task['type']
