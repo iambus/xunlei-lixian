@@ -1,0 +1,41 @@
+
+import urllib
+import re
+
+def generate_lixian_url(info):
+	print info['url']
+	info = dict(info)
+	info['namehex'] = '0102'
+	info['fid'] = re.search(r'fid=([^&]+)', info['url']).group(1)
+	info['tid'] = re.search(r'tid=([^&]+)', info['url']).group(1)
+	info['internalid'] = '111'
+	info['taskid'] = 'xxx'
+	return 'http://gdl.lixian.vip.xunlei.com/download?fid=%(fid)s&mid=666&threshold=150&tid=%(tid)s&srcid=4&verno=1&g=%(gcid)s&scn=t16&i=%(gcid)s&t=1&ui=%(internalid)s&ti=%(taskid)s&s=%(size)s&m=0&n=%(namehex)s' % info
+
+def parse_link(html):
+	attrs = dict(re.findall(r'(\w+)="([^"]+)"', html))
+	keys = {'url': 'file_url', 'name':'file_name', 'size':'file_size', 'gcid':'gcid', 'cid':'cid', 'gcid_resid':'gcid_resid'}
+	info = {}
+	for k in keys:
+		info[k] = attrs[keys[k]]
+	#info['name'] = urllib.unquote(info['name'])
+	return info
+
+def kuai_links(url):
+	assert url.startswith('http://kuai.xunlei.com/d/')
+	html = urllib.urlopen(url).read()
+	#return re.findall(r'file_url="([^"]+)"', html)
+	#return map(parse_link, re.findall(r'<span class="f_w".*?</li>', html, flags=re.S))
+	return map(parse_link, re.findall(r'<span class="c_1">.*?</span>', html, flags=re.S))
+
+
+def main():
+	import sys
+	for x in sys.argv[1:]:
+		for v in kuai_links(x):
+			print v['url']
+
+
+if __name__ == '__main__':
+	main()
+
