@@ -38,15 +38,21 @@ def hash_file(path):
 
 def parse_ed2k_link(link):
 	import re, urllib
-	ed2k_re = r'ed2k://\|file\|[^|]*\|(\d+)\|([a-fA-F0-9]{32})\|'
+	ed2k_re = r'ed2k://\|file\|([^|]*)\|(\d+)\|([a-fA-F0-9]{32})\|'
 	m = re.match(ed2k_re, link) or re.match(ed2k_re, urllib.unquote(link))
 	if not m:
 		raise Exception('not an acceptable ed2k link: '+link)
-	file_size, hash_hex = m.groups()
-	return hash_hex.lower(), int(file_size)
+	name, file_size, hash_hex = m.groups()
+	return urllib.unquote(name).decode('utf-8'), hash_hex.lower(), int(file_size)
+
+def parse_ed2k_id(link):
+	return parse_ed2k_link(link)[1:]
+
+def parse_ed2k_file(link):
+	return parse_ed2k_link(link)[0]
 
 def verify_ed2k_link(path, link):
-	hash_hex, file_size = parse_ed2k_link(link)
+	hash_hex, file_size = parse_ed2k_id(link)
 	import os.path
 	if os.path.getsize(path) != file_size:
 		return False

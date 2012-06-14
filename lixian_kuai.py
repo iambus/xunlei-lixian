@@ -22,14 +22,13 @@ def parse_link(html):
 	return info
 
 def kuai_links(url):
-	assert url.startswith('http://kuai.xunlei.com/d/')
+	assert url.startswith('http://kuai.xunlei.com/d/'), url
 	html = urllib.urlopen(url).read()
 	#return re.findall(r'file_url="([^"]+)"', html)
 	#return map(parse_link, re.findall(r'<span class="f_w".*?</li>', html, flags=re.S))
 	return map(parse_link, re.findall(r'<span class="c_1">.*?</span>', html, flags=re.S))
 
-def extend_link(url):
-	return [x['url'] for x  in kuai_links(url)]
+extend_link = kuai_links
 
 def main(args):
 	from lixian_cli_parser import parse_command_line

@@ -55,6 +55,23 @@ or:
 '''
 
 ##################################################
+
+def extend_links(args):
+	from lixian_cli_parser import parse_command_line
+	args = parse_command_line(args, [], ['name'])
+	import lixian_tasks_extended
+	for x in (lixian_tasks_extended.extend_links if not args.name else lixian_tasks_extended.extend_links_name)(args):
+		print x
+
+extend_links_help = '''usage: lx extend-links http://kuai.xunlei.com/d/... http://www.verycd.com/topics/...
+
+parse and print links from pages
+
+lx extend-links urls...
+lx extend-links --name urls...
+'''
+
+##################################################
 # update helps
 ##################################################
 
@@ -63,6 +80,7 @@ extended_commands = [
 		['diagnostics', lx_diagnostics, 'print helpful information for diagnostics', diagnostics_help],
 		['decode-url', decode_url, 'convert thunder:// (and more) to normal url', decode_url_help],
 		['kuai', kuai, 'parse links from kuai.xunlei.com', kuai_help],
+		['extend-links', extend_links, 'parse links', extend_links_help],
 		]
 
 commands = dict(x[:2] for x in extended_commands)

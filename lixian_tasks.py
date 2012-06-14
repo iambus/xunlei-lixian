@@ -25,7 +25,7 @@ def link_normalize(url):
 	if url.startswith('magnet:'):
 		return 'bt://'+lixian_hash_bt.magnet_to_infohash(url).encode('hex')
 	elif url.startswith('ed2k://'):
-		return lixian_hash_ed2k.parse_ed2k_link(url)
+		return lixian_hash_ed2k.parse_ed2k_id(url)
 	elif url.startswith('bt://'):
 		return url.lower()
 	elif url.startswith('http://') or url.startswith('ftp://'):
