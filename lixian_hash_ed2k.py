@@ -43,7 +43,8 @@ def parse_ed2k_link(link):
 	if not m:
 		raise Exception('not an acceptable ed2k link: '+link)
 	name, file_size, hash_hex = m.groups()
-	return urllib.unquote(name).decode('utf-8'), hash_hex.lower(), int(file_size)
+	from lixian_url import unquote_url
+	return unquote_url(name), hash_hex.lower(), int(file_size)
 
 def parse_ed2k_id(link):
 	return parse_ed2k_link(link)[1:]

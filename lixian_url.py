@@ -1,5 +1,6 @@
 
 import base64
+import urllib
 
 def xunlei_url_encode(url):
 	return 'thunder://'+base64.encodestring('AA'+url+'ZZ')
@@ -47,14 +48,12 @@ def url_unmask(url):
 def normalize_unicode_link(url):
 	import re
 	def escape_unicode(m):
-		import urllib
 		c = m.group()
 		if ord(c) < 0x80:
 			return c
 		else:
 			return urllib.quote(c.encode('utf-8'))
 	def escape_str(m):
-		import urllib
 		c = m.group()
 		if ord(c) < 0x80:
 			return c
@@ -66,4 +65,7 @@ def normalize_unicode_link(url):
 		return re.sub(r'.', escape_str, url)
 	return url
 
+def unquote_url(x):
+	x = urllib.unquote(x)
+	return x.decode('utf-8') if type(x) == str else x
 
