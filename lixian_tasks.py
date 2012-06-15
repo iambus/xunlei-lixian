@@ -20,7 +20,6 @@ def to_utf_8(url):
 
 def link_normalize(url):
 	from lixian_url import url_unmask, normalize_unicode_link
-	from lixian_url import url_unmask, normalize_unicode_link
 	url = url_unmask(url)
 	if url.startswith('magnet:'):
 		return 'bt://'+lixian_hash_bt.magnet_to_infohash(url).encode('hex')
