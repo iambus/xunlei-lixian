@@ -72,6 +72,16 @@ lx extend-links --name urls...
 '''
 
 ##################################################
+def list_torrent(args):
+	from lixian_cli_parser import expand_command_line
+	for f in expand_command_line(args):
+		with open(f, 'rb') as stream:
+			from lixian_hash_bt import bdecode
+			info = bdecode(stream.read())['info']
+			print '*', info['name'].decode('utf-8')
+			print '/'.join(info['files'][0]['path']).decode('utf-8')
+
+##################################################
 # update helps
 ##################################################
 
@@ -81,6 +91,7 @@ extended_commands = [
 		['decode-url', decode_url, 'convert thunder:// (and more) to normal url', decode_url_help],
 		['kuai', kuai, 'parse links from kuai.xunlei.com', kuai_help],
 		['extend-links', extend_links, 'parse links', extend_links_help],
+		['list-torrent', list_torrent, 'list files in .torrent', 'usage: lx list-torrent xxx.torrent'],
 		]
 
 commands = dict(x[:2] for x in extended_commands)
