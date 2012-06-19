@@ -397,8 +397,8 @@ def add_task(args):
 	links = []
 	links.extend(args)
 	if args.input:
-		with open(args.input) as x:
-			links.extend(line.strip() for line in x.readlines() if line.strip())
+		import fileinput
+		links.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
 	if not args.torrent:
 		tasks = find_normal_tasks_to_download(client, links)
 	else:
