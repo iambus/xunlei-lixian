@@ -314,7 +314,6 @@ def download_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
 	if len(args) or args.input:
-		assert not args.output
 		tasks = find_tasks_to_download(client, args)
 		if args.output:
 			assert len(tasks) == 1
