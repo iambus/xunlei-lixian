@@ -79,7 +79,8 @@ def list_torrent(args):
 			from lixian_hash_bt import bdecode
 			info = bdecode(stream.read())['info']
 			print '*', info['name'].decode('utf-8')
-			print '/'.join(info['files'][0]['path']).decode('utf-8')
+			for f in info['files']:
+				print '/'.join(f['path']).decode('utf-8')
 
 ##################################################
 # update helps
