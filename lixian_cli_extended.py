@@ -1,4 +1,7 @@
 
+from lixian_cli_parser import parse_command_line
+from lixian_cli_parser import expand_command_line
+
 ##################################################
 
 def print_hash(args):
@@ -7,7 +10,6 @@ def print_hash(args):
 	#import lixian_hash_ed2k
 	#print 'ed2k:', lixian_hash_ed2k.hash_file(args[0])
 	#print 'dcid:', lixian_hash.dcid_hash_file(args[0])
-	from lixian_cli_parser import expand_command_line
 	lixian_hash.main(expand_command_line(args))
 
 hash_help = '''
@@ -57,7 +59,6 @@ or:
 ##################################################
 
 def extend_links(args):
-	from lixian_cli_parser import parse_command_line
 	args = parse_command_line(args, [], ['name'])
 	import lixian_tasks_extended
 	for x in (lixian_tasks_extended.extend_links if not args.name else lixian_tasks_extended.extend_links_name)(args):
@@ -73,14 +74,19 @@ lx extend-links --name urls...
 
 ##################################################
 def list_torrent(args):
-	from lixian_cli_parser import expand_command_line
-	for f in expand_command_line(args):
-		with open(f, 'rb') as stream:
+	args = parse_command_line(args, [], ['size'])
+	for p in args:
+		with open(p, 'rb') as stream:
 			from lixian_hash_bt import bdecode
 			info = bdecode(stream.read())['info']
 			print '*', info['name'].decode('utf-8')
 			for f in info['files']:
-				print '/'.join(f['path']).decode('utf-8')
+				path = '/'.join(f['path']).decode('utf-8')
+				if args.size:
+					from lixian_util import format_size
+					print u'%s (%s)' % (path, format_size(f['length']))
+				else:
+					print path
 
 ##################################################
 # update helps
@@ -92,7 +98,7 @@ extended_commands = [
 		['decode-url', decode_url, 'convert thunder:// (and more) to normal url', decode_url_help],
 		['kuai', kuai, 'parse links from kuai.xunlei.com', kuai_help],
 		['extend-links', extend_links, 'parse links', extend_links_help],
-		['list-torrent', list_torrent, 'list files in .torrent', 'usage: lx list-torrent xxx.torrent'],
+		['list-torrent', list_torrent, 'list files in .torrent', 'usage: lx list-torrent [--size] xxx.torrent...'],
 		]
 
 commands = dict(x[:2] for x in extended_commands)
