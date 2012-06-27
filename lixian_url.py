@@ -67,5 +67,10 @@ def normalize_unicode_link(url):
 
 def unquote_url(x):
 	x = urllib.unquote(x)
-	return x.decode('utf-8') if type(x) == str else x
+	if type(x) != str:
+		return x
+	try:
+		return x.decode('utf-8')
+	except UnicodeDecodeError:
+		return x.decode('gbk') # can't decode in utf-8 and gbk
 
