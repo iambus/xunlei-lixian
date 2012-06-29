@@ -46,7 +46,7 @@ def is_local_bt(url):
 	return (not is_url(url)) and url.lower().endswith('.torrent') and os.path.exists(url)
 
 def is_id(x):
-	return re.match(r'^#?\d+(/[-.\w\[\],\s]+)?$', x) or re.match(r'^#?\d+-\d+$', x)
+	return re.match(r'^#?\d+(/[-.\w\[\],\s*]+)?$', x) or re.match(r'^#?\d+-\d+$', x)
 
 def find_task_by_url(tasks, url):
 	for t in tasks:
@@ -76,7 +76,7 @@ def find_tasks_by_id(tasks, id):
 	if re.match(r'^#?\d+-\d+$', id):
 		return find_tasks_by_range(tasks, id)
 
-	task_id, sub_id = re.match(r'^(#?\d+)(?:/([-.\w\[\],\s]+))?$', id).groups()
+	task_id, sub_id = re.match(r'^(#?\d+)(?:/([-.\w\[\],\s*]+))?$', id).groups()
 	task = find_task_by_id(tasks, task_id)
 
 	if not task:
@@ -106,6 +106,10 @@ def find_tasks_by_id(tasks, id):
 				t['index'] = sub_id
 				matched.append(t)
 	elif re.match(r'^\.\w+$', sub_id):
+		t = dict(task)
+		t['index'] = sub_id
+		matched.append(t)
+	elif sub_id == '*':
 		t = dict(task)
 		t['index'] = sub_id
 		matched.append(t)

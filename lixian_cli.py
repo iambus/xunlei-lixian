@@ -239,7 +239,9 @@ def download_single_task(client, download, task, options):
 			indexed_files = dict((f['index'], f) for f in files)
 			subs = []
 			for index in task['files']:
-				if index.startswith('.'):
+				if index == '*':
+					subs.extend([x['index'] for x in files])
+				elif index.startswith('.'):
 					subs.extend([x['index'] for x in files if x['name'].lower().endswith(index.lower())])
 				else:
 					subs.append(int(index))
