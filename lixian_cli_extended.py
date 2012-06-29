@@ -22,7 +22,7 @@ lx hash --verify-sha1 file hash
 lx hash --verify-md5 file hash
 lx hash --verify-md4 file hash
 lx hash --verify-ed2k file ed2k://...
-lx hash --verify-info-hash file xxx.torrent
+lx hash --verify-bt file xxx.torrent
 '''
 
 ##################################################
