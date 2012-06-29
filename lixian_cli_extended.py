@@ -73,6 +73,7 @@ lx extend-links --name urls...
 '''
 
 ##################################################
+
 def list_torrent(args):
 	args = parse_command_line(args, [], ['size'])
 	for p in args:
@@ -89,6 +90,33 @@ def list_torrent(args):
 					print path
 
 ##################################################
+
+def get_torrent(args):
+	from lixian_cli import parse_login_command_line
+	args = parse_login_command_line(args)
+	from lixian import XunleiClient
+	client = XunleiClient(args.username, args.password, args.cookies)
+	for id in args:
+		id = id.lower()
+		import re
+		if re.match(r'[a-fA-F0-9]{40}$', id):
+			torrent = client.get_torrent_file_by_info_hash(id)
+		elif re.match(r'#?\d+$', id):
+			tasks = client.read_all_tasks()
+			from lixian_tasks import find_task_by_id
+			task = find_task_by_id(tasks, id)
+			assert task, id + ' not found'
+			id = task['bt_hash']
+			id = id.lower()
+			torrent = client.get_torrent_file_by_info_hash(id)
+		else:
+			raise NotImplementedError()
+		path = id + '.torrent'
+		print path
+		with open(path, 'wb') as output:
+			output.write(torrent)
+
+##################################################
 # update helps
 ##################################################
 
@@ -99,6 +127,7 @@ extended_commands = [
 		['kuai', kuai, 'parse links from kuai.xunlei.com', kuai_help],
 		['extend-links', extend_links, 'parse links', extend_links_help],
 		['list-torrent', list_torrent, 'list files in .torrent', 'usage: lx list-torrent [--size] xxx.torrent...'],
+		['get-torrent', get_torrent, 'get .torrent by task id or info hash', 'usage: lx get-torrent [info-hash|task-id]...'],
 		]
 
 commands = dict(x[:2] for x in extended_commands)
