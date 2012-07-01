@@ -334,8 +334,10 @@ def list_task(args):
 	args = parse_login_command_line(args, [],
 	                                ['all', 'completed',
 	                                 'id', 'name', 'status', 'size', 'dcid', 'gcid', 'original-url', 'download-url', 'speed', 'progress', 'date',
-	                                 'n'],
-									default={'id': True, 'name': True, 'status': True, 'n': get_config('n')},
+	                                 'n',
+	                                 'format-size'
+	                                 ],
+									default={'id': True, 'name': True, 'status': True, 'n': get_config('n'), 'format-size': get_config('format-size')},
 									help=lixian_help.list)
 
 	parent_ids = [a[:-1] for a in args if re.match(r'^#?\d+/$', a)]
@@ -372,7 +374,11 @@ def list_task(args):
 			elif k == 'status':
 				print t['status_text'],
 			elif k == 'size':
-				print t['size'],
+				if args.format_size:
+					from lixian_util import format_size
+					print format_size(t['size']),
+				else:
+					print t['size'],
 			elif k == 'progress':
 				print t['progress'],
 			elif k == 'speed':
