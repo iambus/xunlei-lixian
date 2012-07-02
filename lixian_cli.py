@@ -412,7 +412,7 @@ def add_task(args):
 		tasks = find_torrent_tasks_to_download(client, links)
 	print 'All tasks added. Checking status...'
 	for t in tasks:
-		print t['id'], t['status_text'], t['name']
+		print t['id'], t['status_text'], t['name'].encode(default_encoding)
 
 def delete_task(args):
 	args = parse_login_command_line(args, [], ['i', 'all'], help=lixian_help.delete)
