@@ -14,6 +14,6 @@ def format_size(n):
 	elif n < 1000**3:
 		return '%sM' % format_1d(n/1000.**2)
 	elif n < 1000**4:
-		return '%sM' % format_1d(n/1000.**2)
+		return '%sG' % format_1d(n/1000.**3)
 
 
