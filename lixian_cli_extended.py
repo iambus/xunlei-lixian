@@ -117,6 +117,38 @@ def get_torrent(args):
 			output.write(torrent)
 
 ##################################################
+
+def export_aria2(args):
+	import lixian_cli
+	args = lixian_cli.parse_login_command_line(args)
+	from lixian import XunleiClient
+	client = XunleiClient(args.username, args.password, args.cookies)
+	import lixian_tasks
+	tasks = lixian_tasks.search_tasks(client, args, status=(args.completed and 'completed' or 'all'))
+	files = []
+	for task in tasks:
+		if task['type'] == 'bt':
+			subs, skipped, single_file = lixian_tasks.expand_bt_sub_tasks(client, task)
+			if not subs:
+				continue
+			if single_file:
+				files.append((subs[0]['xunlei_url'], subs[0]['name'], None))
+			else:
+				for f in subs:
+					import os.path
+					files.append((f['xunlei_url'], f['name'], task['name']))
+		else:
+			files.append((task['xunlei_url'], task['name'], None))
+	for url, name, dir in files:
+		print url
+		from lixian_encoding import default_encoding
+		print '  out=' + name.encode(default_encoding)
+		if dir:
+			print '  dir=' + dir.encode(default_encoding)
+		print '  header=Cookie: gdriveid=' + client.get_gdriveid()
+
+
+##################################################
 # update helps
 ##################################################
 
@@ -126,8 +158,9 @@ extended_commands = [
 		['decode-url', decode_url, 'convert thunder:// (and more) to normal url', decode_url_help],
 		['kuai', kuai, 'parse links from kuai.xunlei.com', kuai_help],
 		['extend-links', extend_links, 'parse links', extend_links_help],
-		['list-torrent', list_torrent, 'list files in .torrent', 'usage: lx list-torrent [--size] xxx.torrent...'],
+		['list-torrent', list_torrent, 'list files in local .torrent', 'usage: lx list-torrent [--size] xxx.torrent...'],
 		['get-torrent', get_torrent, 'get .torrent by task id or info hash', 'usage: lx get-torrent [info-hash|task-id]...'],
+		['export-aria2', export_aria2, 'export task download urls as aria2 format', 'usage: lx export-aria2 [id|name]...'],
 		]
 
 commands = dict(x[:2] for x in extended_commands)

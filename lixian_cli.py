@@ -226,33 +226,16 @@ def download_single_task(client, download, task, options):
 	gdriveid = str(client.get_gdriveid())
 
 	if task['type'] == 'bt':
-		files = client.list_bt(task)
-		if len(files) == 1 and files[0]['name'] == task['name']:
+		files, skipped, single_file = expand_bt_sub_tasks(client, task)
+		if single_file:
 			dirname = output_dir
 		else:
 			dirname = output_path
 		assert dirname # dirname must be non-empty, otherwise dirname + os.path.sep + ... might be dangerous
 		if dirname and not os.path.exists(dirname):
 			os.makedirs(dirname)
-		if 'files' in task:
-			ordered_files = []
-			indexed_files = dict((f['index'], f) for f in files)
-			subs = []
-			for index in task['files']:
-				if index == '*':
-					subs.extend([x['index'] for x in files])
-				elif index.startswith('.'):
-					subs.extend([x['index'] for x in files if x['name'].lower().endswith(index.lower())])
-				else:
-					subs.append(int(index))
-			for index in subs:
-				t = indexed_files[index]
-				if t not in ordered_files:
-					if t['status_text'] != 'completed':
-						print 'skip task %s/%s (%s) as the status is %s' % (t['id'], index, t['name'].encode(default_encoding), t['status_text'])
-					else:
-						ordered_files.append(t)
-			files = ordered_files
+			for t in skipped:
+				print 'skip task %s/%s (%s) as the status is %s' % (t['id'], index, t['name'].encode(default_encoding), t['status_text'])
 		if mini_hash and resuming and verify_mini_bt_hash(dirname, files):
 			print task['name'].encode(default_encoding), 'is already done'
 			if delete and 'files' not in task:

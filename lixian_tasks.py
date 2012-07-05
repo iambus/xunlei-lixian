@@ -1,5 +1,5 @@
 
-__all__ = ['search_tasks', 'find_task_by_url', 'find_task_by_url_or_path', 'find_tasks_to_download', 'find_torrent_tasks_to_download', 'find_normal_tasks_to_download', 'is_url', 'is_local_bt']
+__all__ = ['search_tasks', 'find_task_by_url', 'find_task_by_url_or_path', 'find_tasks_to_download', 'find_torrent_tasks_to_download', 'find_normal_tasks_to_download', 'expand_bt_sub_tasks', 'is_url', 'is_local_bt']
 
 import re
 import os
@@ -282,4 +282,31 @@ def merge_bt_sub_tasks(tasks):
 				result_tasks.append(task)
 				task_mapping[task] = task
 	return result_tasks
+
+def expand_bt_sub_tasks(client, task):
+	files = client.list_bt(task)
+	not_ready = []
+	single_file = False
+	if len(files) == 1 and files[0]['name'] == task['name']:
+		single_file = True
+	if 'files' in task:
+		ordered_files = []
+		indexed_files = dict((f['index'], f) for f in files)
+		subs = []
+		for index in task['files']:
+			if index == '*':
+				subs.extend([x['index'] for x in files])
+			elif index.startswith('.'):
+				subs.extend([x['index'] for x in files if x['name'].lower().endswith(index.lower())])
+			else:
+				subs.append(int(index))
+		for index in subs:
+			t = indexed_files[index]
+			if t not in ordered_files:
+				if t['status_text'] != 'completed':
+					not_ready.append(t)
+				else:
+					ordered_files.append(t)
+		files = ordered_files
+	return files, not_ready, single_file
 
