@@ -123,6 +123,8 @@ def find_tasks_by_id(tasks, id):
 def search_in_tasks(tasks, keywords):
 	found = []
 	for x in keywords:
+		if type(x) == str:
+			x = x.decode(default_encoding)
 		# search url and local bt
 		if is_url(x) or is_local_bt(x):
 			task = find_task_by_url_or_path(tasks, x)
