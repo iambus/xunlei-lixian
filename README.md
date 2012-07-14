@@ -144,7 +144,7 @@ https://github.com/iambus/xunlei-lixian/downloads
 * lx help
 
 ### lx login
-登录，获得一个有效session，默认保存路径是~/.xunlei.lixian.cookies。一般来说，除非服务器故障或者执行了lx logout（或者你手动删除了cookies文件），否则session的有效期是一天左右。session过期之后需要手动重新执行login。但如果使用lx config password把密码保存到配置文件里，则会自动重新登录。后文会介绍[lx config](#config)。
+登录，获得一个有效session，默认保存路径是~/.xunlei.lixian.cookies。一般来说，除非服务器故障或者执行了lx logout（或者你手动删除了cookies文件），否则session的有效期是一天左右。session过期之后需要手动重新执行login。但如果使用lx config password把密码保存到配置文件里，则会自动重新登录。后文会介绍[lx config](#lx-config)。
 
 lx login接受两个参数，用户名和密码。第二次登录可以只填密码。
 
@@ -181,7 +181,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
     lx download keywords
     lx download date
 
-下载bt的时候需要加--bt参数（或者--torrent参数）。可以指定本地.torrent文件路径，或者.torrent文件的http url，或者torrent文件的info hash。（很多网站使用info hash来标识一个bt种子文件，这种情况你就不需要下载种子了，lx download可以自动下载种子，不过前提是之前已经有人使用迅雷离线下载过同样的种子。[如后所述](#hash_tool)，你也可以使用lixian_hash.py --info-hash来手动生成bt种子的info hash。）
+下载bt的时候需要加--bt参数（或者--torrent参数）。可以指定本地.torrent文件路径，或者.torrent文件的http url，或者torrent文件的info hash。（很多网站使用info hash来标识一个bt种子文件，这种情况你就不需要下载种子了，lx download可以自动下载种子，不过前提是之前已经有人使用迅雷离线下载过同样的种子。[如后所述](#其他工具)，你也可以使用lixian_hash.py --info-hash来手动生成bt种子的info hash。）
 
     lx download --bt Community.S03E01.720p.HDTV.X264-DIMENSION.torrent
     lx download --bt http://tvu.org.ru/torrent.php?tid=64757
@@ -320,7 +320,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
      lx logout
      lx logout --cookies your-cookies-file
 
-### lx config <a id="config"/>
+### lx config
 
 保存配置。配置文件的保存路径是~/.xunlei.lixian.config。虽然你可以差不多可以保存任何参数，但是目前只有以下几个参数会真正起作用：
 
@@ -422,6 +422,11 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 --------
 
 我自己也一直在用这个脚本。基本上不管白天还是黑夜，都在路由器（RT-N16）上挂着NTFS的移动硬盘下载。所以脚本的可用性和稳定性还是不错的。速度基本上是满速，有时候由于服务器原因不稳定，可以断掉重下，兴许就能分配到一个状态比较好的服务器上了。具体的性能表现请参考issue #18.
+
+许可协议
+--------
+
+xunlei-lixian使用MIT许可协议。
 
 此文档未完成。
 --------------
