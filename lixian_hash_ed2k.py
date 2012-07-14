@@ -26,7 +26,7 @@ def hash_stream(stream):
 		if total_md4 is None:
 			total_md4 = md4()
 		total_md4.update(chunk_md4.digest())
-	return total_md4.hexdigest()
+	raise NotImplementedError()
 
 def hash_string(s):
 	from cStringIO import StringIO
