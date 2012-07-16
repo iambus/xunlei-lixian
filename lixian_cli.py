@@ -9,12 +9,10 @@ import lixian_help
 import lixian_hash
 import lixian_hash_bt
 import lixian_hash_ed2k
-import subprocess
 import sys
 import os
 import os.path
 import re
-import urllib2
 from getpass import getpass
 
 from lixian_encoding import default_encoding
@@ -82,64 +80,6 @@ def logout(args):
 	assert args.cookies
 	client = XunleiClient(cookie_path=args.cookies, login=False)
 	client.logout()
-
-def urllib2_download(client, download_url, filename, resuming=False):
-	'''In the case you don't even have wget...'''
-	assert not resuming
-	print 'Downloading', download_url, 'to', filename, '...'
-	request = urllib2.Request(download_url, headers={'Cookie': 'gdriveid='+client.get_gdriveid()})
-	response = urllib2.urlopen(request)
-	import shutil
-	with open(filename, 'wb') as output:
-		shutil.copyfileobj(response, output)
-
-def asyn_download(client, download_url, filename, resuming=False):
-	import lixian_download
-	lixian_download.download(download_url, filename, headers={'Cookie': 'gdriveid='+str(client.get_gdriveid())}, resuming=resuming)
-
-def wget_download(client, download_url, filename, resuming=False):
-	gdriveid = str(client.get_gdriveid())
-	wget_opts = ['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename]
-	if resuming:
-		wget_opts.append('-c')
-	wget_opts.extend(get_config('wget-opts', '').split())
-	exit_code = subprocess.call(wget_opts)
-	if exit_code != 0:
-		raise Exception('wget exited abnormaly')
-
-def curl_download(client, download_url, filename, resuming=False):
-	gdriveid = str(client.get_gdriveid())
-	curl_opts = ['curl', '-L', download_url, '--cookie', 'gdriveid='+gdriveid, '--output', filename]
-	if resuming:
-		curl_opts += ['--continue-at', '-']
-	curl_opts.extend(get_config('curl-opts', '').split())
-	exit_code = subprocess.call(curl_opts)
-	if exit_code != 0:
-		raise Exception('curl exited abnormaly')
-
-def aria2_download(client, download_url, path, resuming=False):
-	gdriveid = str(client.get_gdriveid())
-	dir = os.path.dirname(path)
-	filename = os.path.basename(path)
-	aria2_opts = ['aria2c', '--header=Cookie: gdriveid='+gdriveid, download_url, '--out', filename, '--file-allocation=none']
-	if dir:
-		aria2_opts.extend(('--dir', dir))
-	if resuming:
-		aria2_opts.append('-c')
-	aria2_opts.extend(get_config('aria2-opts', '').split())
-	exit_code = subprocess.call(aria2_opts)
-	if exit_code != 0:
-		raise Exception('aria2c exited abnormaly')
-
-def axel_download(client, download_url, path, resuming=False):
-	gdriveid = str(client.get_gdriveid())
-	axel_opts = ['axel', '--header=Cookie: gdriveid='+gdriveid, download_url, '--output', path]
-	axel_opts.extend(get_config('axel-opts', '').split())
-	exit_code = subprocess.call(axel_opts)
-	if exit_code != 0:
-		raise Exception('axel exited abnormaly')
-
-# TODO: support axel, ProZilla
 
 def escape_filename(name):
 	amp = re.compile(r'&(amp;)+', flags=re.I)
@@ -294,7 +234,8 @@ def download_task(args):
 									alias={'o': 'output', 'i': 'input', 'c':'continue', 'bt':'torrent'},
 									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'output-dir':get_config('output-dir'), 'mini-hash':get_config('mini-hash'), 'hash':get_config('hash', True)},
 	                                help=lixian_help.download)
-	download = {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'aria2c':aria2_download, 'axel':axel_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[args.tool]
+	import lixian_download_tools
+	download = lixian_download_tools.get_tool(args.tool)
 	download_args = {'output':args.output, 'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
