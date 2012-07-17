@@ -158,21 +158,43 @@ def export_aria2(args):
 	args = parse_login_command_line(args)
 	print export_aria2_conf(args)
 
-def download_aria2(args):
-	from lixian_cli import parse_login_command_line
-	args = parse_login_command_line(args, keys=['j'], alias={'max-concurrent-downloads':'j'})
-	j = get_config('aria2-j', args.j) or '5'
-	aria2_conf = export_aria2_conf(args)
-	aria2_opts = ['aria2c', '-i', '-', '-j', j] # FIXME: this doesn't work on windows.
+def download_aria2_stdin(aria2_conf, j):
+	aria2_opts = ['aria2c', '-i', '-', '-j', j]
 	aria2_opts.extend(get_config('aria2-opts', '').split())
 	from subprocess import Popen, PIPE
 	sub = Popen(aria2_opts, stdin=PIPE, bufsize=1, shell=True)
 	sub.communicate(aria2_conf)
 	sub.stdin.close()
 	exit_code = sub.wait()
-	#exit_code = subprocess.call(aria2_opts)
 	if exit_code != 0:
 		raise Exception('aria2c exited abnormaly')
+
+def download_aria2_temp(aria2_conf, j):
+	import tempfile
+	temp = tempfile.NamedTemporaryFile('w', delete=False)
+	temp.file.write(aria2_conf)
+	temp.file.close()
+	try:
+		aria2_opts = ['aria2c', '-i', temp.name, '-j', j]
+		aria2_opts.extend(get_config('aria2-opts', '').split())
+		import subprocess
+		exit_code = subprocess.call(aria2_opts)
+	finally:
+		import os
+		os.unlink(temp.name)
+	if exit_code != 0:
+		raise Exception('aria2c exited abnormaly')
+
+def download_aria2(args):
+	from lixian_cli import parse_login_command_line
+	args = parse_login_command_line(args, keys=['j'], alias={'max-concurrent-downloads':'j'})
+	j = get_config('aria2-j', args.j) or '5'
+	aria2_conf = export_aria2_conf(args)
+	import platform
+	if platform.system() == 'Windows':
+		download_aria2_temp(aria2_conf, j)
+	else:
+		download_aria2_stdin(aria2_conf, j)
 
 ##################################################
 # update helps
