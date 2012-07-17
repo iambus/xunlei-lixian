@@ -1,4 +1,6 @@
 
+__all__ = []
+
 from lixian import XunleiClient
 from lixian_config import *
 from lixian_encoding import default_encoding
@@ -6,8 +8,37 @@ from lixian_cli_parser import parse_command_line
 from lixian_cli_parser import expand_command_line
 
 ##################################################
+# command decorator
+##################################################
 
+def command(name='', usage='', help=''):
+	def as_command(f):
+		assert usage, 'missing command usage: ' + f.func_name
+		f.command_name = name or f.func_name.replace('_', '-')
+		f.command_usage = usage
+		f.command_help = help or f.func_doc
+		import textwrap
+		if f.command_help:
+			f.command_help = textwrap.dedent(f.command_help)
+		return f
+	return as_command
+
+##################################################
+
+@command(name='hash', usage='compute hashes')
 def print_hash(args):
+	'''
+	lx hash --sha1 file...
+	lx hash --md5 file...
+	lx hash --md4 file...
+	lx hash --ed2k file...
+	lx hash --info-hash xxx.torrent...
+	lx hash --verify-sha1 file hash
+	lx hash --verify-md5 file hash
+	lx hash --verify-md4 file hash
+	lx hash --verify-ed2k file ed2k://...
+	lx hash --verify-bt file xxx.torrent
+	'''
 	#assert len(args) == 1
 	import lixian_hash
 	#import lixian_hash_ed2k
@@ -15,22 +46,14 @@ def print_hash(args):
 	#print 'dcid:', lixian_hash.dcid_hash_file(args[0])
 	lixian_hash.main(expand_command_line(args))
 
-hash_help = '''
-lx hash --sha1 file...
-lx hash --md5 file...
-lx hash --md4 file...
-lx hash --ed2k file...
-lx hash --info-hash xxx.torrent...
-lx hash --verify-sha1 file hash
-lx hash --verify-md5 file hash
-lx hash --verify-md4 file hash
-lx hash --verify-ed2k file ed2k://...
-lx hash --verify-bt file xxx.torrent
-'''
 
 ##################################################
 
+@command(name='diagnostics', usage='print helpful information for diagnostics')
 def lx_diagnostics(args):
+	'''
+	usage: lx diagnostics
+	'''
 	print 'default_encoding ->', default_encoding
 	import sys
 	print 'sys.getdefaultencoding() ->', sys.getdefaultencoding()
@@ -38,50 +61,56 @@ def lx_diagnostics(args):
 	print r"print u'\u4e2d\u6587'.encode('utf-8') ->", u'\u4e2d\u6587'.encode('utf-8')
 	print r"print u'\u4e2d\u6587'.encode('gbk') ->", u'\u4e2d\u6587'.encode('gbk')
 
-diagnostics_help = 'usage: lx diagnostics'
-
 ##################################################
 
+@command(usage='convert thunder:// (and more) to normal url')
 def decode_url(args):
+	'''
+	usage: lx decode-url thunder://...
+	'''
 	from lixian_url import url_unmask
 	for x in args:
 		print url_unmask(x)
 
-decode_url_help = 'usage: lx decode-url thunder://...'
-
 ##################################################
 
+@command(usage='parse links from kuai.xunlei.com')
 def kuai(args):
+	'''
+	usage: lx kuai http://kuai.xunlei.com/d/xxx...
+	
+	Note that you can simply use:
+	 lx add http://kuai.xunlei.com/d/xxx...
+	or:
+	 lx download http://kuai.xunlei.com/d/xxx...
+	'''
 	import lixian_kuai
 	lixian_kuai.main(args)
 
-kuai_help = '''usage: lx kuai http://kuai.xunlei.com/d/xxx...
-
-Note that you can simply use:
- lx add http://kuai.xunlei.com/d/xxx...
-or:
- lx download http://kuai.xunlei.com/d/xxx...
-'''
-
 ##################################################
 
+@command(usage='parse links')
 def extend_links(args):
+	'''
+	usage: lx extend-links http://kuai.xunlei.com/d/... http://www.verycd.com/topics/...
+	
+	parse and print links from pages
+	
+	lx extend-links urls...
+	lx extend-links --name urls...
+	'''
 	args = parse_command_line(args, [], ['name'])
 	import lixian_tasks_extended
 	for x in (lixian_tasks_extended.extend_links if not args.name else lixian_tasks_extended.extend_links_name)(args):
 		print x
 
-extend_links_help = '''usage: lx extend-links http://kuai.xunlei.com/d/... http://www.verycd.com/topics/...
-
-parse and print links from pages
-
-lx extend-links urls...
-lx extend-links --name urls...
-'''
-
 ##################################################
 
+@command(usage='list files in local .torrent')
 def list_torrent(args):
+	'''
+	usage: lx list-torrent [--size] xxx.torrent...
+	'''
 	args = parse_command_line(args, [], ['size'])
 	for p in args:
 		with open(p, 'rb') as stream:
@@ -98,7 +127,11 @@ def list_torrent(args):
 
 ##################################################
 
+@command(usage='get .torrent by task id or info hash')
 def get_torrent(args):
+	'''
+	usage: lx get-torrent [info-hash|task-id]...
+	'''
 	from lixian_cli import parse_login_command_line
 	args = parse_login_command_line(args)
 	client = XunleiClient(args.username, args.password, args.cookies)
@@ -153,7 +186,11 @@ def export_aria2_conf(args):
 		output += '  header=Cookie: gdriveid=' + client.get_gdriveid() + '\n'
 	return output
 
+@command(usage='export task download urls as aria2 format')
 def export_aria2(args):
+	'''
+	usage: lx export-aria2 [id|name]...
+	'''
 	from lixian_cli import parse_login_command_line
 	args = parse_login_command_line(args)
 	print export_aria2_conf(args)
@@ -185,7 +222,11 @@ def download_aria2_temp(aria2_conf, j):
 	if exit_code != 0:
 		raise Exception('aria2c exited abnormaly')
 
+@command(usage='concurrently download tasks in aria2')
 def download_aria2(args):
+	'''
+	usage: lx download-aria2 -j 5 [id|name]...
+	'''
 	from lixian_cli import parse_login_command_line
 	args = parse_login_command_line(args, keys=['j'], alias={'max-concurrent-downloads':'j'})
 	j = get_config('aria2-j', args.j) or '5'
@@ -201,18 +242,18 @@ def download_aria2(args):
 ##################################################
 
 extended_commands = [
-		['hash', print_hash, 'compute hashes', hash_help.strip()],
-		['diagnostics', lx_diagnostics, 'print helpful information for diagnostics', diagnostics_help],
-		['decode-url', decode_url, 'convert thunder:// (and more) to normal url', decode_url_help],
-		['kuai', kuai, 'parse links from kuai.xunlei.com', kuai_help],
-		['extend-links', extend_links, 'parse links', extend_links_help],
-		['list-torrent', list_torrent, 'list files in local .torrent', 'usage: lx list-torrent [--size] xxx.torrent...'],
-		['get-torrent', get_torrent, 'get .torrent by task id or info hash', 'usage: lx get-torrent [info-hash|task-id]...'],
-		['export-aria2', export_aria2, 'export task download urls as aria2 format', 'usage: lx export-aria2 [id|name]...'],
-		['download-aria2', download_aria2, 'currently download tasks in aria2', 'usage: lx download-aria2 -j 5 [id|name]...'],
+		print_hash,
+		lx_diagnostics,
+		decode_url,
+		kuai,
+		extend_links,
+		list_torrent,
+		get_torrent,
+		export_aria2,
+		download_aria2,
 		]
 
-commands = dict(x[:2] for x in extended_commands)
+commands = dict((x.command_name, x) for x in extended_commands)
 
 def update_helps(commands):
 	helps = dict((name, doc) for (name, usage, doc) in commands)
@@ -226,5 +267,5 @@ def update_helps(commands):
 		assert not hasattr(lixian_help, name)
 		setattr(lixian_help, name, doc)
 
-update_helps([(x[0], x[2], x[3]) for x in extended_commands])
+update_helps([(x.command_name, x.command_usage, x.command_help) for x in extended_commands])
 
