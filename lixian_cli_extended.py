@@ -1,4 +1,7 @@
 
+from lixian import XunleiClient
+from lixian_config import *
+from lixian_encoding import default_encoding
 from lixian_cli_parser import parse_command_line
 from lixian_cli_parser import expand_command_line
 
@@ -28,7 +31,6 @@ lx hash --verify-bt file xxx.torrent
 ##################################################
 
 def lx_diagnostics(args):
-	from lixian_encoding import default_encoding
 	print 'default_encoding ->', default_encoding
 	import sys
 	print 'sys.getdefaultencoding() ->', sys.getdefaultencoding()
@@ -99,7 +101,6 @@ def list_torrent(args):
 def get_torrent(args):
 	from lixian_cli import parse_login_command_line
 	args = parse_login_command_line(args)
-	from lixian import XunleiClient
 	client = XunleiClient(args.username, args.password, args.cookies)
 	for id in args:
 		id = id.lower()
@@ -123,10 +124,7 @@ def get_torrent(args):
 
 ##################################################
 
-def export_aria2(args):
-	import lixian_cli
-	args = lixian_cli.parse_login_command_line(args)
-	from lixian import XunleiClient
+def export_aria2_conf(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 	import lixian_tasks
 	tasks = lixian_tasks.search_tasks(client, args, status=(args.completed and 'completed' or 'all'))
@@ -144,14 +142,37 @@ def export_aria2(args):
 					files.append((f['xunlei_url'], f['name'], task['name']))
 		else:
 			files.append((task['xunlei_url'], task['name'], None))
+	output = ''
 	for url, name, dir in files:
-		print url
-		from lixian_encoding import default_encoding
-		print '  out=' + name.encode(default_encoding)
+		if type(url) == unicode:
+			url = url.encode(default_encoding)
+		output += url + '\n'
+		output += '  out=' + name.encode(default_encoding) + '\n'
 		if dir:
-			print '  dir=' + dir.encode(default_encoding)
-		print '  header=Cookie: gdriveid=' + client.get_gdriveid()
+			output += '  dir=' + dir.encode(default_encoding) + '\n'
+		output += '  header=Cookie: gdriveid=' + client.get_gdriveid() + '\n'
+	return output
 
+def export_aria2(args):
+	from lixian_cli import parse_login_command_line
+	args = parse_login_command_line(args)
+	print export_aria2_conf(args)
+
+def download_aria2(args):
+	from lixian_cli import parse_login_command_line
+	args = parse_login_command_line(args, keys=['j'], alias={'max-concurrent-downloads':'j'})
+	j = get_config('aria2-j', args.j) or '5'
+	aria2_conf = export_aria2_conf(args)
+	aria2_opts = ['aria2c', '-i', '-', '-j', j] # FIXME: this doesn't work on windows.
+	aria2_opts.extend(get_config('aria2-opts', '').split())
+	from subprocess import Popen, PIPE
+	sub = Popen(aria2_opts, stdin=PIPE, bufsize=1, shell=True)
+	sub.communicate(aria2_conf)
+	sub.stdin.close()
+	exit_code = sub.wait()
+	#exit_code = subprocess.call(aria2_opts)
+	if exit_code != 0:
+		raise Exception('aria2c exited abnormaly')
 
 ##################################################
 # update helps
@@ -166,6 +187,7 @@ extended_commands = [
 		['list-torrent', list_torrent, 'list files in local .torrent', 'usage: lx list-torrent [--size] xxx.torrent...'],
 		['get-torrent', get_torrent, 'get .torrent by task id or info hash', 'usage: lx get-torrent [info-hash|task-id]...'],
 		['export-aria2', export_aria2, 'export task download urls as aria2 format', 'usage: lx export-aria2 [id|name]...'],
+		['download-aria2', download_aria2, 'currently download tasks in aria2', 'usage: lx download-aria2 -j 5 [id|name]...'],
 		]
 
 commands = dict(x[:2] for x in extended_commands)
