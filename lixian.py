@@ -57,7 +57,7 @@ class XunleiClient:
 		#print url
 		if 'data' in args and type(args['data']) == dict:
 			args['data'] = urlencode(args['data'])
-		return self.opener.open(urllib2.Request(url, **args))
+		return self.opener.open(urllib2.Request(url, **args), timeout=60)
 
 	def urlread(self, url, **args):
 		args.setdefault('headers', {})
