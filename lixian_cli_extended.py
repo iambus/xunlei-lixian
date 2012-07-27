@@ -120,6 +120,8 @@ def list_torrent(args):
 			info = bdecode(stream.read())['info']
 			print '*', info['name'].decode('utf-8')
 			for f in info['files']:
+				if f['path'][0].startswith('_____padding_file_'):
+					continue
 				path = '/'.join(f['path']).decode('utf-8')
 				if args.size:
 					from lixian_util import format_size
