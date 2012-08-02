@@ -169,7 +169,7 @@ class http_client(asynchat.async_chat):
 	def handle_http_relocate(self, location):
 		self.close()
 		relocate_times = getattr(self, 'relocate_times', 0)
-		max_relocate_times = getattr(self, 'max_relocate_times', 1)
+		max_relocate_times = getattr(self, 'max_relocate_times', 2)
 		if relocate_times >= max_relocate_times:
 			raise Exception('too many relocate times')
 		new_client = self.__class__(location, **self.args)
