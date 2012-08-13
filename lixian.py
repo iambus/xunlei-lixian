@@ -215,7 +215,7 @@ class XunleiClient:
 
 	def list_bt(self, task):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/fill_bt_list?callback=fill_bt_list&tid=%s&infoid=%s&g_net=1&p=1&uid=%s&noCacheIE=%s' % (task['id'], task['bt_hash'], self.id, current_timestamp())
-		html = self.urlread(url).decode('utf-8')
+		html = remove_bom(self.urlread(url)).decode('utf-8')
 		sub_tasks = parse_bt_list(html)
 		for t in sub_tasks:
 			t['date'] = task['date']
