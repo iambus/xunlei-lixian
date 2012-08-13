@@ -306,7 +306,7 @@ class XunleiClient:
 			data['url[%d]' % i] = urllib.quote(urls[i]) # fix per request #98
 		data['batch_old_taskid'] = batch_old_taskid
 		response = self.urlopen(url, data=data).read()
-		assert response == '%s(1)' % jsonp, response
+		assert_response(response, jsonp)
 
 	def add_torrent_task_by_content(self, content, path='attachment.torrent'):
 		assert content.startswith('d8:announce') or content.startswith('d13:announce-list'), 'Probably not a valid torrent file [%s...]' % repr(content[:17])
@@ -329,7 +329,7 @@ class XunleiClient:
 					'size':''.join(f['subsize']+'_' for f in bt['filelist']),
 					'from':'0'}
 			response = self.urlopen(commit_url, data=data).read()
-			assert response == '%s(1)' % jsonp, response
+			assert_response(response, jsonp)
 			return bt_hash
 		already_exists = re.search(r"parent\.edit_bt_list\((\{.*\}),''\)", response, flags=re.S)
 		if already_exists:
@@ -369,12 +369,14 @@ class XunleiClient:
 		jsonp = 'jsonp%s' % current_timestamp()
 		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit?callback=%s' % jsonp
 		response = self.urlopen(commit_url, data=data).read()
-		assert response == '%s(1)' % jsonp, response
+		assert_response(response, jsonp)
 		return cid
 
 	def delete_tasks_by_id(self, ids):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_delete?type=%s&taskids=%s&databases=0,&noCacheIE=%s' % (2, ','.join(ids)+',', current_timestamp()) # XXX: what is 'type'?
-		response = json.loads(re.match(r'^delete_task_resp\((.+)\)$', self.urlopen(url).read()).group(1))
+		response = self.urlopen(url).read()
+		response = remove_bom(response)
+		response = json.loads(re.match(r'^delete_task_resp\((.+)\)$', response).group(1))
 		assert response['result'] == 1
 		assert response['type'] == 2
 
@@ -416,7 +418,7 @@ class XunleiClient:
 		form.append(urlencode({'type':1}))
 		data = '&'.join(form)
 		response = self.urlopen(url, data=data).read()
-		assert response == '%s(1)' % jsonp, response
+		assert_response(response, jsonp)
 
 	def rename_task(self, task, new_name):
 		assert type(new_name) == unicode
@@ -558,6 +560,15 @@ def get_content_type(filename):
 def assert_default_page(response, id):
 	#assert response == "<script>top.location='http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0'</script>" % id
 	assert re.match(r"^<script>top\.location='http://dynamic\.cloud\.vip\.xunlei\.com/user_task\?userid=%s&st=0(&cache=\d+)?'</script>$" % id, response), response
+
+def remove_bom(response):
+	if response.startswith('\xef\xbb\xbf'):
+		response = response[3:]
+	return response
+
+def assert_response(response, jsonp):
+	response = remove_bom(response)
+	assert response == '%s(1)' % jsonp, repr(response)
 
 def parse_url_protocol(url):
 	m = re.match(r'([^:]+)://', url)
