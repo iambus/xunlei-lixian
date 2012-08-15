@@ -25,6 +25,15 @@ def command(name='', usage='', help=''):
 
 ##################################################
 
+@command(usage='echo arguments')
+def echo(args):
+	'''
+	lx echo ...
+	'''
+	print ' '.join(expand_command_line(args))
+
+##################################################
+
 @command(name='hash', usage='compute hashes')
 def print_hash(args):
 	'''
@@ -254,6 +263,7 @@ def download_aria2(args):
 ##################################################
 
 extended_commands = [
+		echo,
 		print_hash,
 		lx_diagnostics,
 		decode_url,
