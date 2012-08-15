@@ -130,7 +130,7 @@ def list_torrent(args):
 					else:
 						print path
 			else:
-				path = info['name']
+				path = info['name'].decode('utf-8')
 				if args.size:
 					from lixian_util import format_size
 					print u'%s (%s)' % (path, format_size(info['length']))
