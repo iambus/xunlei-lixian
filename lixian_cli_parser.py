@@ -3,7 +3,10 @@ def expand_windows_command_line(args):
 	from glob import glob
 	expanded = []
 	for x in args:
-		xx = glob(x)
+		try:
+			xx = glob(x)
+		except:
+			xx = None
 		if xx:
 			expanded += xx
 		else:
