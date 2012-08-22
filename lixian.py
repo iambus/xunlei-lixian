@@ -27,6 +27,7 @@ def retry(f):
 	return withretry
 
 class XunleiClient:
+	page_size = 100
 	def __init__(self, username=None, password=None, cookie_path=None, login=True):
 		self.cookie_path = cookie_path
 		if cookie_path:
@@ -35,7 +36,7 @@ class XunleiClient:
 				self.load_cookies()
 		else:
 			self.cookiejar = cookielib.CookieJar()
-		self.set_page_size(9999)
+		self.set_page_size(self.page_size)
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
 		if login:
 			if not self.has_logged_in():
@@ -138,7 +139,7 @@ class XunleiClient:
 		url = 'http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0' % id
 		#url = 'http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d' % current_timestamp()
 		r = self.is_login_ok(self.urlread(url))
-		self.set_page_size(9999)
+		self.set_page_size(self.page_size)
 		return r
 
 	def login(self, username, password):
@@ -152,7 +153,7 @@ class XunleiClient:
 		self.id = self.get_userid()
 		self.set_page_size(1)
 		login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp()).read()
-		self.set_page_size(9999)
+		self.set_page_size(self.page_size)
 		assert self.is_login_ok(login_page), 'login failed'
 		self.save_cookies()
 
