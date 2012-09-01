@@ -4,6 +4,7 @@ import re
 sites = {
 'http://kuai.xunlei.com/d/':'lixian_kuai',
 'http://www.verycd.com/topics/':'lixian_verycd',
+'http://*.qjwm.com/*':'lixian_qjwm',
 }
 
 def to_name(x):
@@ -57,9 +58,17 @@ def parse_pattern(link):
 			p = p[:-1]
 		return u, p.split('/')
 
+def in_site(url, site):
+	if url.startswith(site):
+		return true
+	if '*' in site:
+		import fnmatch
+		p = fnmatch.translate(site)
+		return re.match(p, url)
+
 def extend_link(link):
 	for p in sites:
-		if link.startswith(p):
+		if in_site(link, p):
 			x = parse_pattern(link)
 			if x:
 				links = __import__(sites[p]).extend_link(x[0])

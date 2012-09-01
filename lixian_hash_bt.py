@@ -94,7 +94,7 @@ def bencode(v):
 	return stream.getvalue()
 
 def assert_content(content):
-	assert content.startswith('d8:announce') or content.startswith('d13:announce-list'), 'Probably not a valid content file [%s...]' % repr(content[:17])
+	assert re.match(r'd\d+:', content), 'Probably not a valid content file [%s...]' % repr(content[:17])
 
 def info_hash_from_content(content):
 	assert_content(content)

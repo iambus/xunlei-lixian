@@ -307,13 +307,13 @@ class XunleiClient:
 		data = {}
 		for i in range(len(urls)):
 			data['cid[%d]' % i] = ''
-			data['url[%d]' % i] = urllib.quote(urls[i]) # fix per request #98
+			data['url[%d]' % i] = urllib.quote(to_utf_8(urls[i])) # fix per request #98
 		data['batch_old_taskid'] = batch_old_taskid
 		response = self.urlopen(url, data=data).read()
 		assert_response(response, jsonp)
 
 	def add_torrent_task_by_content(self, content, path='attachment.torrent'):
-		assert content.startswith('d8:announce') or content.startswith('d13:announce-list'), 'Probably not a valid torrent file [%s...]' % repr(content[:17])
+		assert re.match(r'd\d+:', content), 'Probably not a valid content file [%s...]' % repr(content[:17])
 		upload_url = 'http://dynamic.cloud.vip.xunlei.com/interface/torrent_upload'
 		jsonp = 'jsonp%s' % current_timestamp()
 		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit?callback=%s' % jsonp
@@ -586,6 +586,12 @@ def parse_url_protocol(url):
 def unescape_html(html):
 	import xml.sax.saxutils
 	return xml.sax.saxutils.unescape(html)
+
+def to_utf_8(s):
+	if type(s) == unicode:
+		return s.encode('utf-8')
+	else:
+		return s
 
 def md5(s):
 	import hashlib
