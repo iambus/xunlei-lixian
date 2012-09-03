@@ -126,20 +126,22 @@ def list_torrent(args):
 	for p in args:
 		with open(p, 'rb') as stream:
 			from lixian_hash_bt import bdecode
-			info = bdecode(stream.read())['info']
-			print '*', info['name'].decode('utf-8').encode(default_encoding)
+			b = bdecode(stream.read())
+			encoding = b.get('encoding', 'utf-8')
+			info = b['info']
+			print '*', info['name'].decode(encoding).encode(default_encoding)
 			if 'files' in info:
 				for f in info['files']:
 					if f['path'][0].startswith('_____padding_file_'):
 						continue
-					path = '/'.join(f['path']).decode('utf-8').encode(default_encoding)
+					path = '/'.join(f['path']).decode(encoding).encode(default_encoding)
 					if args.size:
 						from lixian_util import format_size
 						print '%s (%s)' % (path, format_size(f['length']))
 					else:
 						print path
 			else:
-				path = info['name'].decode('utf-8').encode(default_encoding)
+				path = info['name'].decode(encoding).encode(default_encoding)
 				if args.size:
 					from lixian_util import format_size
 					print '%s (%s)' % (path, format_size(info['length']))
