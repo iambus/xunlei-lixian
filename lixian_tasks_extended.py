@@ -60,7 +60,7 @@ def parse_pattern(link):
 
 def in_site(url, site):
 	if url.startswith(site):
-		return true
+		return True
 	if '*' in site:
 		import fnmatch
 		p = fnmatch.translate(site)
