@@ -112,8 +112,12 @@ def extend_links(args):
 	'''
 	args = parse_command_line(args, [], ['name'])
 	import lixian_tasks_extended
-	for x in (lixian_tasks_extended.extend_links if not args.name else lixian_tasks_extended.extend_links_name)(args):
-		print x
+	if args.name:
+		for x in lixian_tasks_extended.extend_links_name(args):
+			print x.encode(default_encoding)
+	else:
+		for x in lixian_tasks_extended.extend_links(args):
+			print x
 
 ##################################################
 

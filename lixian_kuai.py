@@ -25,7 +25,7 @@ def parse_link(html):
 
 def kuai_links(url):
 	assert url.startswith('http://kuai.xunlei.com/d/'), url
-	html = urllib.urlopen(url).read()
+	html = urllib.urlopen(url).read().decode('utf-8')
 	#return re.findall(r'file_url="([^"]+)"', html)
 	#return map(parse_link, re.findall(r'<span class="f_w".*?</li>', html, flags=re.S))
 	return filter(bool, map(parse_link, re.findall(r'<span class="c_1">.*?</span>', html, flags=re.S)))
