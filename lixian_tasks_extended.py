@@ -5,6 +5,7 @@ sites = {
 'http://kuai.xunlei.com/d/':'lixian_kuai',
 'http://www.verycd.com/topics/':'lixian_verycd',
 'http://*.qjwm.com/*':'lixian_qjwm',
+'http://www.simplecd.me/':'lixian_simplecd',
 }
 
 def to_name(x):
