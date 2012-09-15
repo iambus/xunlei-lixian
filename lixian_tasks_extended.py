@@ -6,6 +6,7 @@ sites = {
 'http://www.verycd.com/topics/':'lixian_verycd',
 'http://*.qjwm.com/*':'lixian_qjwm',
 'http://www.simplecd.me/':'lixian_simplecd',
+'http://www.icili.com/emule/download/':'lixian_icili',
 }
 
 def to_name(x):
