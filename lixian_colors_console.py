@@ -21,12 +21,18 @@ styles = [
 
 
 class Console:
-	def __init__(self, output=sys.stdout, styles=[]):
-		self.output = output
-		self.styles = styles
+	def __init__(self, output=None, styles=[]):
+		output = output or sys.stdout
+		if isinstance(output, Console):
+			self.output = output.output
+			self.styles = output.styles + styles
+		else:
+			self.output = output
+			self.styles = styles
+		assert not isinstance(self.output, Console)
 	def __getattr__(self, name):
 		if name in styles:
-			return self.__class__(self.output, self.styles + [name])
+			return self.ansi(name)
 		else:
 			raise AttributeError(name)
 	def ansi(self, code):

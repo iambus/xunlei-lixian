@@ -3,7 +3,6 @@ import os
 import sys
 
 def get_console_type():
-	import sys
 	if sys.stdout.isatty() and sys.stderr.isatty():
 		import platform
 		if platform.system() == 'Windows':
@@ -23,7 +22,6 @@ class ScopedColors(Console):
 		Console.__init__(self, *args)
 	def __call__(self):
 		console = self
-		import sys
 		class Scoped:
 			def __enter__(self):
 				self.stdout = sys.stdout
@@ -32,5 +30,9 @@ class ScopedColors(Console):
 				sys.stdout = self.stdout
 		return Scoped()
 
-colors = ScopedColors()
+class RootColors:
+	def __getattr__(self, name):
+		return getattr(ScopedColors(), name)
+
+colors = RootColors()
 

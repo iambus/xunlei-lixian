@@ -45,11 +45,8 @@ def mix_styles(styles):
 	return [''.join('\033[%dm' % n for n in left), ''.join('\033[%dm' % n for n in right)]
 
 class AnsiConsole(Console):
-	def __init__(self, output=sys.stdout, styles=[]):
-		if isinstance(output, Console):
-			Console.__init__(self, output.output, output.styles + styles)
-		else:
-			Console.__init__(self, output, styles)
+	def __init__(self, output=None, styles=[]):
+		Console.__init__(self, output, styles)
 
 	def write(self, s):
 		if self.styles:

@@ -169,11 +169,8 @@ class Render:
 		SetConsoleTextAttribute(self.handle, self.default)
 
 class WinConsole(Console):
-	def __init__(self, output=sys.stdout, styles=[], handle=STD_OUTPUT_HANDLE):
-		if isinstance(output, Console):
-			Console.__init__(self, output.output, output.styles + styles)
-		else:
-			Console.__init__(self, output, styles)
+	def __init__(self, output=None, styles=[], handle=STD_OUTPUT_HANDLE):
+		Console.__init__(self, output, styles)
 		self.handle = GetStdHandle(handle)
 		self.default = GetConsoleScreenBufferInfo(self.handle).wAttributes
 
