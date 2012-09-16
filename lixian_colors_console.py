@@ -22,7 +22,7 @@ styles = [
 
 class Console:
 	def __init__(self, output=sys.stdout, styles=[]):
-		self.output = sys.stdout
+		self.output = output
 		self.styles = styles
 	def __getattr__(self, name):
 		if name in styles:

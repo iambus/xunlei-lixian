@@ -46,7 +46,10 @@ def mix_styles(styles):
 
 class AnsiConsole(Console):
 	def __init__(self, output=sys.stdout, styles=[]):
-		Console.__init__(self, output, styles)
+		if isinstance(output, Console):
+			Console.__init__(self, output.output, output.styles + styles)
+		else:
+			Console.__init__(self, output, styles)
 
 	def write(self, s):
 		if self.styles:
