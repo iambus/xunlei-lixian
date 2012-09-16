@@ -30,7 +30,11 @@ class Console:
 		else:
 			raise AttributeError(name)
 	def ansi(self, code):
-		raise NotImplementedError()
+		return self.__class__(self.output, self.styles + [code]) if code not in (None, '') else self
 	def __call__(self, s):
+		self.write(s)
+	def write(self, s):
 		self.output.write(s)
+	def flush(self, *args):
+		self.output.flush(*args)
 

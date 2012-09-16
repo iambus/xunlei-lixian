@@ -173,7 +173,7 @@ class WinConsole(Console):
 		self.handle = GetStdHandle(handle)
 		self.default = GetConsoleScreenBufferInfo(self.handle).wAttributes
 
-	def __call__(self, s):
+	def write(self, s):
 		if self.styles:
 			with self.render(mix_styles(self.styles, self.default)):
 				self.output.write(s)
