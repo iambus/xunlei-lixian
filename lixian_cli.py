@@ -262,7 +262,7 @@ def list_task(args):
 	                                 'format-size',
 	                                 'colors'
 	                                 ],
-									default={'id': True, 'name': True, 'status': True, 'n': get_config('n'), 'format-size': get_config('format-size'), 'colors': get_config('colors', True)},
+									default={'id': get_config('id', True), 'name': True, 'status': True, 'n': get_config('n'), 'format-size': get_config('format-size'), 'colors': get_config('colors', True)},
 									help=lixian_help.list)
 
 	parent_ids = [a[:-1] for a in args if re.match(r'^#?\d+/$', a)]

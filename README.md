@@ -332,6 +332,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 * output-dir
 * hash
 * mini-hash
+* id
 * n
 * format-size
 * colors
