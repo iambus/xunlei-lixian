@@ -17,6 +17,14 @@ def get_console_type():
 
 Console = get_console_type()
 
+def get_softspace(output):
+	if hasattr(output, 'softspace'):
+		return output.softspace
+	import lixian_colors_console
+	if isinstance(output, lixian_colors_console.Console):
+		return get_softspace(output.output)
+	return 0
+
 class ScopedColors(Console):
 	def __init__(self, *args):
 		Console.__init__(self, *args)
@@ -25,9 +33,13 @@ class ScopedColors(Console):
 		class Scoped:
 			def __enter__(self):
 				self.stdout = sys.stdout
+				softspace = get_softspace(sys.stdout)
 				sys.stdout = console
+				sys.stdout.softspace = softspace
 			def __exit__(self, type, value, traceback):
+				softspace = get_softspace(sys.stdout)
 				sys.stdout = self.stdout
+				sys.stdout.softspace = softspace
 		return Scoped()
 
 class RootColors:
