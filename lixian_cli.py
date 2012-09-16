@@ -259,9 +259,10 @@ def list_task(args):
 	                                ['all', 'completed',
 	                                 'id', 'name', 'status', 'size', 'dcid', 'gcid', 'original-url', 'download-url', 'speed', 'progress', 'date',
 	                                 'n',
-	                                 'format-size'
+	                                 'format-size',
+	                                 'colors'
 	                                 ],
-									default={'id': True, 'name': True, 'status': True, 'n': get_config('n'), 'format-size': get_config('format-size')},
+									default={'id': True, 'name': True, 'status': True, 'n': get_config('n'), 'format-size': get_config('format-size'), 'colors': get_config('colors', True)},
 									help=lixian_help.list)
 
 	parent_ids = [a[:-1] for a in args if re.match(r'^#?\d+/$', a)]
@@ -286,40 +287,51 @@ def list_task(args):
 		tasks = client.read_all_tasks()
 	columns = ['n', 'id', 'name', 'status', 'size', 'progress', 'speed', 'date', 'dcid', 'gcid', 'original-url', 'download-url']
 	columns = filter(lambda k: getattr(args, k), columns)
+	from lixian_colors import colors
 	for i, t in enumerate(tasks):
-		for k in columns:
-			if k == 'n':
-				if not parent_ids:
-					print '#%d' % t['#'],
-			elif k == 'id':
-				print t.get('index', t['id']),
-			elif k == 'name':
-				print t['name'].encode(default_encoding),
-			elif k == 'status':
-				print t['status_text'],
-			elif k == 'size':
-				if args.format_size:
-					from lixian_util import format_size
-					print format_size(t['size']),
+		status_colors = {
+				'waiting': 'yellow',
+				'downloading': 'magenta',
+				'completed':'green',
+				'pending':'cyan',
+				'failed':'red',
+		}
+		c = status_colors[t['status_text']]
+		with colors(args.colors).ansi(c)():
+			for k in columns:
+				if k == 'n':
+					if not parent_ids:
+						print '#%d' % t['#'],
+				elif k == 'id':
+					print t.get('index', t['id']),
+				elif k == 'name':
+					print t['name'].encode(default_encoding),
+				elif k == 'status':
+					with colors(args.colors).bold():
+						print t['status_text'],
+				elif k == 'size':
+					if args.format_size:
+						from lixian_util import format_size
+						print format_size(t['size']),
+					else:
+						print t['size'],
+				elif k == 'progress':
+					print t['progress'],
+				elif k == 'speed':
+					print t['speed'],
+				elif k == 'date':
+					print t['date'],
+				elif k == 'dcid':
+					print t['dcid'],
+				elif k == 'gcid':
+					print t['gcid'],
+				elif k == 'original-url':
+					print t['original_url'],
+				elif k == 'download-url':
+					print t['xunlei_url'],
 				else:
-					print t['size'],
-			elif k == 'progress':
-				print t['progress'],
-			elif k == 'speed':
-				print t['speed'],
-			elif k == 'date':
-				print t['date'],
-			elif k == 'dcid':
-				print t['dcid'],
-			elif k == 'gcid':
-				print t['gcid'],
-			elif k == 'original-url':
-				print t['original_url'],
-			elif k == 'download-url':
-				print t['xunlei_url'],
-			else:
-				raise NotImplementedError(k)
-		print
+					raise NotImplementedError(k)
+			print
 
 def add_task(args):
 	args = parse_login_command_line(args, ['input'], ['torrent'], alias={'i':'input','bt':'torrent'}, help=lixian_help.add)

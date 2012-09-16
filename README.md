@@ -334,6 +334,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 * mini-hash
 * n
 * format-size
+* colors
 * wget-opts（见稍后的说明）
 * aria2-opts（见稍后的说明）（见支持的下载工具一节）
 * axel-opts（见稍后的说明）

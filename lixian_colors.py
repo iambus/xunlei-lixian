@@ -2,8 +2,8 @@
 import os
 import sys
 
-def get_console_type():
-	if sys.stdout.isatty() and sys.stderr.isatty():
+def get_console_type(use_colors=True):
+	if use_colors and sys.stdout.isatty() and sys.stderr.isatty():
 		import platform
 		if platform.system() == 'Windows':
 			import lixian_colors_win32
@@ -15,7 +15,11 @@ def get_console_type():
 		import lixian_colors_console
 		return lixian_colors_console.Console
 
-Console = get_console_type()
+console_type = get_console_type()
+raw_console_type = get_console_type(False)
+
+def Console(use_colors=True):
+	return get_console_type(use_colors)()
 
 def get_softspace(output):
 	if hasattr(output, 'softspace'):
@@ -25,9 +29,9 @@ def get_softspace(output):
 		return get_softspace(output.output)
 	return 0
 
-class ScopedColors(Console):
+class ScopedColors(console_type):
 	def __init__(self, *args):
-		Console.__init__(self, *args)
+		console_type.__init__(self, *args)
 	def __call__(self):
 		console = self
 		class Scoped:
@@ -42,9 +46,25 @@ class ScopedColors(Console):
 				sys.stdout.softspace = softspace
 		return Scoped()
 
+class RawScopedColors(raw_console_type):
+	def __init__(self, *args):
+		raw_console_type.__init__(self, *args)
+	def __call__(self):
+		class Scoped:
+			def __enter__(self):
+				pass
+			def __exit__(self, type, value, traceback):
+				pass
+		return Scoped()
+
 class RootColors:
+	def __init__(self, use_colors=True):
+		self.use_colors = use_colors
 	def __getattr__(self, name):
-		return getattr(ScopedColors(), name)
+		return getattr(ScopedColors() if self.use_colors else RawScopedColors(), name)
+	def __call__(self, use_colors):
+		assert use_colors in (True, False, None), use_colors
+		return RootColors(use_colors)
 
 colors = RootColors()
 

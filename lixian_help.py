@@ -191,6 +191,7 @@ Options:
  --[no]-date          Print the date task added. Default: no
  --[no]-original-url  Print the original URL. Default: no
  --[no]-download-url  Print the download URL used to download from Xunlei cloud. Default: no
+ --[no]-colors        Colorful output. Default: yes
 
 Examples:
  python lixian_cli.py list
