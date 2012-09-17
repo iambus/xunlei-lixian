@@ -334,6 +334,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 * mini-hash
 * id
 * n
+* size
 * format-size
 * colors
 * wget-opts（见稍后的说明）
