@@ -5,7 +5,8 @@ sites = {
 'http://kuai.xunlei.com/d/':'lixian_kuai',
 'http://www.verycd.com/topics/':'lixian_verycd',
 'http://*.qjwm.com/*':'lixian_qjwm',
-'http://www.simplecd.me/':'lixian_simplecd',
+'http://simplecd.*/':'lixian_simplecd',
+'http://www.simplecd.*/':'lixian_simplecd',
 'http://www.icili.com/emule/download/':'lixian_icili',
 }
 

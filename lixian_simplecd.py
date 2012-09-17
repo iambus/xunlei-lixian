@@ -4,7 +4,7 @@ import re
 
 
 def simplecd_links(url):
-	m = re.match(r'(http://www\.simplecd\.\w+/)(id|entry)/', url)
+	m = re.match(r'(http://(?:www\.)?simplecd\.\w+/)(id|entry)/', url)
 	assert m, url
 	site = m.group(1)
 	html = urllib2.urlopen(url).read()
