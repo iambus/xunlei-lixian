@@ -216,6 +216,7 @@ class XunleiClient:
 		return self.read_all_tasks(2)
 
 	def list_bt(self, task):
+		assert task['type'] == 'bt'
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/fill_bt_list?callback=fill_bt_list&tid=%s&infoid=%s&g_net=1&p=1&uid=%s&noCacheIE=%s' % (task['id'], task['bt_hash'], self.id, current_timestamp())
 		self.set_page_size(self.bt_page_size)
 		html = remove_bom(self.urlread(url)).decode('utf-8')
