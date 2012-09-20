@@ -270,7 +270,11 @@ Examples:
 
 info     = '''python lixian_cli.py info
 
-print user id, internal user id, and gdriveid'''
+print user id, internal user id, and gdriveid
+
+Options:
+ --id    -i  print user id only
+'''
 
 logout   = '''python lixian_cli.py logout
 

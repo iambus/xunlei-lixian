@@ -396,11 +396,14 @@ def rename_task(args):
 	client.rename_task(task, from_native(new_name))
 
 def lixian_info(args):
-	args = parse_login_command_line(args, help=lixian_help.info)
+	args = parse_login_command_line(args, [], ['id'], alias={'i':'id'}, help=lixian_help.info)
 	client = XunleiClient(args.username, args.password, args.cookies, login=False)
-	print 'id:', client.get_username()
-	print 'internalid:', client.get_userid()
-	print 'gdriveid:', client.get_gdriveid() or ''
+	if args.id:
+		print client.get_username()
+	else:
+		print 'id:', client.get_username()
+		print 'internalid:', client.get_userid()
+		print 'gdriveid:', client.get_gdriveid() or ''
 
 def lx_config(args):
 	args = parse_command_line(args, [], ['print', 'delete'], help=lixian_help.config)
