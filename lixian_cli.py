@@ -256,7 +256,7 @@ def download_task(args):
 
 def list_task(args):
 	args = parse_login_command_line(args, [],
-	                                ['all', 'completed',
+	                                ['all', 'completed', 'deleted', 'expired',
 	                                 'id', 'name', 'status', 'size', 'dcid', 'gcid', 'original-url', 'download-url', 'speed', 'progress', 'date',
 	                                 'n',
 	                                 'format-size',
@@ -264,6 +264,14 @@ def list_task(args):
 	                                 ],
 									default={'id': get_config('id', True), 'name': True, 'status': True, 'n': get_config('n'), 'size': get_config('size'), 'format-size': get_config('format-size'), 'colors': get_config('colors', True)},
 									help=lixian_help.list)
+
+	status = 'all'
+	if args.completed:
+		status = 'completed'
+	elif args.deleted:
+		status = 'deleted'
+	elif args.expired:
+		status = 'expired'
 
 	parent_ids = [a[:-1] for a in args if re.match(r'^#?\d+/$', a)]
 	if parent_ids and not all(re.match(r'^#?\d+/$', a) for a in args):
@@ -274,17 +282,23 @@ def list_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 	if parent_ids:
 		args[0] = args[0][:-1]
-		tasks = search_tasks(client, args, status=(args.completed and 'completed' or 'all'))
+		tasks = search_tasks(client, args, status=status)
 		assert len(tasks) == 1
 		tasks = client.list_bt(tasks[0])
 		#tasks = client.list_bt(client.get_task_by_id(parent_ids[0]))
 		tasks.sort(key=lambda x: int(x['index']))
 	elif len(ids):
-		tasks = search_tasks(client, args, status=(args.completed and 'completed' or 'all'))
-	elif args.completed:
-		tasks = client.read_all_completed()
-	else:
+		tasks = search_tasks(client, args, status=status)
+	elif status == 'all':
 		tasks = client.read_all_tasks()
+	elif status == 'completed':
+		tasks = client.read_all_completed()
+	elif status == 'deleted':
+		tasks = client.read_all_deleted()
+	elif status == 'expired':
+		tasks = client.read_all_expired()
+	else:
+		raise NotImplementedError(status)
 	columns = ['n', 'id', 'name', 'status', 'size', 'progress', 'speed', 'date', 'dcid', 'gcid', 'original-url', 'download-url']
 	columns = filter(lambda k: getattr(args, k), columns)
 	from lixian_colors import colors

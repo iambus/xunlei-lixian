@@ -193,12 +193,14 @@ class XunleiClient:
 		return self.read_task_page_url(url)
 
 	def read_tasks(self, st=0):
+		'''read one page'''
 		tasks = self.read_task_page(st)[0]
 		for i, task in enumerate(tasks):
 			task['#'] = i
 		return tasks
 
 	def read_all_tasks(self, st=0):
+		'''read all pages'''
 		all_tasks = []
 		tasks, next_link = self.read_task_page(st)
 		all_tasks.extend(tasks)
@@ -210,10 +212,64 @@ class XunleiClient:
 		return all_tasks
 
 	def read_completed(self):
+		'''read first page of completed tasks'''
 		return self.read_tasks(2)
 
 	def read_all_completed(self):
+		'''read all pages of completed tasks'''
 		return self.read_all_tasks(2)
+
+	def read_history_page_url(self, url):
+		self.set_cookie('.vip.xunlei.com', 'lx_nf_all', urllib.quote('page_check_all=history&fltask_all_guoqi=1&class_check=0&page_check=task&fl_page_id=0&class_check_new=0&set_tab_status=11'))
+		page = self.urlread(url).decode('utf-8', 'ignore')
+		if not self.has_gdriveid():
+			gdriveid = re.search(r'id="cok" value="([^"]+)"', page).group(1)
+			self.set_gdriveid(gdriveid)
+			self.save_cookies()
+		tasks = parse_history(page)
+		for t in tasks:
+			t['client'] = self
+		pginfo = re.search(r'<div class="pginfo">.*?</div>', page)
+		match_next_page = re.search(r'<li class="next"><a href="([^"]+)">[^<>]*</a></li>', page)
+		return tasks, match_next_page and 'http://dynamic.cloud.vip.xunlei.com'+match_next_page.group(1)
+
+	def read_history_page(self, type=0, pg=None):
+		if pg is None:
+			url = 'http://dynamic.cloud.vip.xunlei.com/user_history?userid=%s&type=%d' % (self.id, type)
+		else:
+			url = 'http://dynamic.cloud.vip.xunlei.com/user_history?userid=%s&p=%d&type=%d' % (self.id, pg, type)
+		return self.read_history_page_url(url)
+
+	def read_history(self, type=0):
+		'''read one page'''
+		tasks = self.read_history_page(type)[0]
+		for i, task in enumerate(tasks):
+			task['#'] = i
+		return tasks
+
+	def read_all_history(self, type=0):
+		'''read all pages of deleted/expired tasks'''
+		all_tasks = []
+		tasks, next_link = self.read_history_page(type)
+		all_tasks.extend(tasks)
+		while next_link:
+			tasks, next_link = self.read_history_page_url(next_link)
+			all_tasks.extend(tasks)
+		for i, task in enumerate(all_tasks):
+			task['#'] = i
+		return all_tasks
+
+	def read_deleted(self):
+		return self.read_history()
+
+	def read_all_deleted(self):
+		return self.read_all_history()
+
+	def read_expired(self):
+		return self.read_history(1)
+
+	def read_all_expired(self):
+		return self.read_all_history(1)
 
 	def list_bt(self, task):
 		assert task['type'] == 'bt'
@@ -464,20 +520,20 @@ def parse_task(html):
 		mini_key = re.sub(r'\d+$', '', k)
 		mini_info[mini_key] = info[k]
 		mini_map[mini_key] = k
-	taskid = mini_map['durl'][4:]
+	taskid = mini_map['taskname'][8:]
 	url = mini_info['f_url']
 	task_type = re.match(r'[^:]+', url).group()
 	task = {'id': taskid,
 			'type': task_type,
-			'name': mini_info['durl'],
+			'name': mini_info['taskname'],
 			'status': int(mini_info['d_status']),
 			'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed', '5':'pending'}[mini_info['d_status']],
-			'size': int(mini_info['ysfilesize']),
+			'size': int(mini_info.get('ysfilesize', 0)),
 			'original_url': mini_info['f_url'],
-			'xunlei_url': mini_info['dl_url'],
+			'xunlei_url': mini_info.get('dl_url', None),
 			'bt_hash': mini_info['dcid'],
 			'dcid': mini_info['dcid'],
-			'gcid': parse_gcid(mini_info['dl_url']),
+			'gcid': parse_gcid(mini_info.get('dl_url', None)),
 			}
 
 	m = re.search(r'<em class="loadnum"[^<>]*>([^<>]*)</em>', html)
@@ -492,6 +548,11 @@ def parse_task(html):
 def parse_tasks(html):
 	rwbox = re.search(r'<div class="rwbox".*<!--rwbox-->', html, re.S).group()
 	rw_lists = re.findall(r'<div class="rw_list".*?<!-- rw_list -->', rwbox, re.S)
+	return map(parse_task, rw_lists)
+
+def parse_history(html):
+	rwbox = re.search(r'<div class="rwbox" id="rowbox_list".*?<!--rwbox-->', html, re.S).group()
+	rw_lists = re.findall(r'<div class="rw_list".*?<input id="d_tasktype\d+"[^<>]*/>', rwbox, re.S)
 	return map(parse_task, rw_lists)
 
 def parse_bt_list(js):

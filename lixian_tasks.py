@@ -161,6 +161,10 @@ def search_tasks(client, args, status='all'):
 		tasks = client.read_all_tasks()
 	elif status == 'completed':
 		tasks = client.read_all_tasks()
+	elif status == 'deleted':
+		tasks = client.read_all_deleted()
+	elif status == 'expired':
+		tasks = client.read_all_expired()
 	else:
 		raise NotImplementedError()
 	return search_in_tasks(tasks, list(args))[0]
