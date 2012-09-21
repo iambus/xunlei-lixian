@@ -294,6 +294,10 @@ def list_task(args):
 		raise NotImplementedError(status)
 	columns = ['n', 'id', 'name', 'status', 'size', 'progress', 'speed', 'date', 'dcid', 'gcid', 'original-url', 'download-url']
 	columns = filter(lambda k: getattr(args, k), columns)
+
+	output_tasks(tasks, columns, args, not parent_ids)
+
+def output_tasks(tasks, columns, args, top=True):
 	from lixian_colors import colors
 	for i, t in enumerate(tasks):
 		status_colors = {
@@ -307,7 +311,7 @@ def list_task(args):
 		with colors(args.colors).ansi(c)():
 			for k in columns:
 				if k == 'n':
-					if not parent_ids:
+					if top:
 						print '#%d' % t['#'],
 				elif k == 'id':
 					print t.get('index', t['id']),
@@ -341,7 +345,12 @@ def list_task(args):
 			print
 
 def add_task(args):
-	args = parse_login_command_line(args, ['input'], ['torrent'], alias={'i':'input','bt':'torrent'}, help=lixian_help.add)
+	args = parse_login_command_line(args,
+			['input'],
+			['torrent', 'size', 'format-size', 'colors'],
+			alias={'i':'input','bt':'torrent'},
+			default={'size': get_config('size'), 'format-size': get_config('format-size'), 'colors': get_config('colors', True)},
+			help=lixian_help.add)
 	assert len(args) or args.input
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = []
@@ -354,8 +363,11 @@ def add_task(args):
 	else:
 		tasks = find_torrent_tasks_to_download(client, links)
 	print 'All tasks added. Checking status...'
+	columns = ['id', 'status', 'name']
+	if args.size:
+		columns.append('size')
 	for t in tasks:
-		print t['id'], t['status_text'], t['name'].encode(default_encoding)
+		output_tasks(tasks, columns, args)
 
 def delete_task(args):
 	args = parse_login_command_line(args, [], ['i', 'all'], help=lixian_help.delete)
