@@ -1,4 +1,6 @@
 
+__all__ = ['parse_command_line', 'Parser', 'command_line_parse', 'command_line_option', 'command_line_value', 'command_line_parser', 'with_parser']
+
 def expand_windows_command_line(args):
 	from glob import glob
 	expanded = []
@@ -89,4 +91,80 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}, help=None)
 		def __str__(self):
 			return '<Args%s%s>' % (self._args, self._left)
 	return Args(options, left)
+
+class Stack:
+	def __init__(self, **args):
+		self.__dict__.update(args)
+
+class Parser:
+	def __init__(self):
+		self.stack = []
+	def with_parser(self, parser):
+		self.stack.append(parser)
+		return self
+	def __call__(self, args, keys=[], bools=[], alias={}, default={}, help=None):
+		stack = Stack(keys=list(keys), bools=list(bools), alias=dict(alias), default=dict(default))
+		keys = []
+		bools = []
+		alias = {}
+		default = {}
+		for stack in [x.args_stack for x in self.stack] + [stack]:
+			keys += stack.keys
+			bools += stack.bools
+			alias.update(stack.alias)
+			default.update(stack.default)
+		args = parse_command_line(args, keys=keys, bools=bools, alias=alias, default=default, help=help)
+		for fn in self.stack:
+			new_args = fn(args)
+			if new_args:
+				args = new_args
+		return args
+
+def command_line_parse(keys=[], bools=[], alias={}, default={}):
+	def wrapper(fn):
+		if hasattr(fn, 'args_stack'):
+			stack = fn.args_stack
+			stack.keys += keys
+			stack.bools += bools
+			stack.alias.update(alias)
+			stack.default.update(default)
+		else:
+			fn.args_stack = Stack(keys=list(keys), bools=list(bools), alias=dict(alias), default=dict(default))
+		return fn
+	return wrapper
+
+def command_line_option(name, alias=None, default=None):
+	alias = {alias:name} if alias else {}
+	default = {name:default} if default is not None else {}
+	return command_line_parse(bools=[name], alias=alias, default=default)
+
+def command_line_value(name, alias=None, default=None):
+	alias = {alias:name} if alias else {}
+	default = {name:default} if default else {}
+	return command_line_parse(keys=[name], alias=alias, default=default)
+
+def command_line_parser(*args, **kwargs):
+	def wrapper(f):
+		parser = Parser()
+		for x in reversed(getattr(f, 'args_parsers', [])):
+			parser = parser.with_parser(x)
+		if hasattr(f, 'args_stack'):
+			def parse_no_body(args):
+				pass
+			parse_no_body.args_stack = f.args_stack
+			parser = parser.with_parser(parse_no_body)
+		def parse(args_list):
+			return f(parser(args_list, *args, **kwargs))
+		return parse
+	return wrapper
+
+def with_parser(parser):
+	def wrapper(f):
+		if hasattr(f, 'args_parsers'):
+			f.args_parsers.append(parser)
+		else:
+			f.args_parsers = [parser]
+		return f
+	return wrapper
+
 

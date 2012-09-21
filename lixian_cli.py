@@ -2,7 +2,7 @@
 
 from lixian import XunleiClient, encypt_password
 import lixian_cli_extended
-from lixian_cli_parser import parse_command_line
+from lixian_cli_parser import *
 from lixian_tasks import *
 from lixian_config import *
 import lixian_help
@@ -24,20 +24,28 @@ def to_str(s):
 	assert type(s) in (str, unicode)
 	return s.encode(default_encoding) if type(s) == unicode else s
 
-def parse_login_command_line(args, keys=[], bools=[], alias={}, default={}, help=None):
-	common_keys = ['username', 'password', 'cookies']
-	common_default = {'cookies': LIXIAN_DEFAULT_COOKIES, 'username': get_config('username'), 'password': get_config('password')}
-	common_keys.extend(keys)
-	common_default.update(default)
-	args = parse_command_line(args, common_keys, bools, alias, common_default, help=help)
+@command_line_value('username', default=get_config('username'))
+@command_line_value('password', default=get_config('password'))
+@command_line_value('cookies', default=LIXIAN_DEFAULT_COOKIES)
+def parse_login(args):
 	if args.password == '-':
 		args.password = getpass('Password: ')
 	if args.cookies == '-':
 		args._args['cookies'] = None
 	return args
 
+@command_line_option('colors', default=get_config('colors', True))
+def parse_colors(args):
+	pass
+
+@command_line_option('size', default=get_config('size'))
+@command_line_option('format-size', default=get_config('format-size'))
+def parse_size(args):
+	pass
+
+@command_line_parser(help=lixian_help.login)
+@with_parser(parse_login)
 def login(args):
-	args = parse_login_command_line(args, help=lixian_help.login)
 	if args.cookies == '-':
 		args._args['cookies'] = None
 	if len(args) < 1:
@@ -221,13 +229,20 @@ def download_multiple_tasks(client, download, tasks, options):
 		for task in skipped:
 			print task['id'], task['status_text'], task['name'].encode(default_encoding)
 
+@command_line_parser(help=lixian_help.download)
+@with_parser(parse_login)
+@command_line_value('tool', default=get_config('tool', 'wget'))
+@command_line_value('input', alias='i')
+@command_line_value('output', alias='o')
+@command_line_value('output-dir', default=get_config('output-dir'))
+@command_line_option('torrent', alias='bt')
+@command_line_option('all')
+@command_line_option('delete', default=get_config('delete'))
+@command_line_option('continue', alias='c', default=get_config('continue'))
+@command_line_option('overwrite')
+@command_line_option('mini-hash', default=get_config('mini-hash'))
+@command_line_option('hash', default=get_config('hash', True))
 def download_task(args):
-	args = parse_login_command_line(args,
-	                                ['tool', 'output', 'output-dir', 'input'],
-	                                ['delete', 'continue', 'overwrite', 'torrent', 'all', 'mini-hash', 'hash'],
-									alias={'o': 'output', 'i': 'input', 'c':'continue', 'bt':'torrent'},
-									default={'tool':get_config('tool', 'wget'),'delete':get_config('delete'),'continue':get_config('continue'),'output-dir':get_config('output-dir'), 'mini-hash':get_config('mini-hash'), 'hash':get_config('hash', True)},
-	                                help=lixian_help.download)
 	import lixian_download_tools
 	download = lixian_download_tools.get_tool(args.tool)
 	download_args = {'output':args.output, 'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash}
@@ -247,17 +262,26 @@ def download_task(args):
 		usage(doc=lixian_help.download, message='Not enough arguments')
 
 
+@command_line_parser(help=lixian_help.list)
+@with_parser(parse_login)
+@with_parser(parse_colors)
+@with_parser(parse_size)
+@command_line_option('all')
+@command_line_option('completed')
+@command_line_option('deleted')
+@command_line_option('expired')
+@command_line_option('id', default=get_config('id', True))
+@command_line_option('name', default=True)
+@command_line_option('status', default=True)
+@command_line_option('dcid')
+@command_line_option('gcid')
+@command_line_option('original-url')
+@command_line_option('download-url')
+@command_line_option('speed')
+@command_line_option('progress')
+@command_line_option('date')
+@command_line_option('n', default=get_config('n'))
 def list_task(args):
-	args = parse_login_command_line(args, [],
-	                                ['all', 'completed', 'deleted', 'expired',
-	                                 'id', 'name', 'status', 'size', 'dcid', 'gcid', 'original-url', 'download-url', 'speed', 'progress', 'date',
-	                                 'n',
-	                                 'format-size',
-	                                 'colors'
-	                                 ],
-									default={'id': get_config('id', True), 'name': True, 'status': True, 'n': get_config('n'), 'size': get_config('size'), 'format-size': get_config('format-size'), 'colors': get_config('colors', True)},
-									help=lixian_help.list)
-
 	status = 'all'
 	if args.completed:
 		status = 'completed'
@@ -344,13 +368,13 @@ def output_tasks(tasks, columns, args, top=True):
 					raise NotImplementedError(k)
 			print
 
+@command_line_parser(help=lixian_help.add)
+@with_parser(parse_login)
+@with_parser(parse_colors)
+@with_parser(parse_size)
+@command_line_value('input', alias='i')
+@command_line_option('torrent', alias='bt')
 def add_task(args):
-	args = parse_login_command_line(args,
-			['input'],
-			['torrent', 'size', 'format-size', 'colors'],
-			alias={'i':'input','bt':'torrent'},
-			default={'size': get_config('size'), 'format-size': get_config('format-size'), 'colors': get_config('colors', True)},
-			help=lixian_help.add)
 	assert len(args) or args.input
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = []
@@ -369,8 +393,12 @@ def add_task(args):
 	for t in tasks:
 		output_tasks(tasks, columns, args)
 
+@command_line_parser(help=lixian_help.delete)
+@with_parser(parse_login)
+@with_parser(parse_colors)
+@command_line_option('i')
+@command_line_option('all')
 def delete_task(args):
-	args = parse_login_command_line(args, [], ['i', 'all'], help=lixian_help.delete)
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_delete = search_tasks(client, args)
 	print "Below files are going to be deleted:"
@@ -386,8 +414,12 @@ def delete_task(args):
 			raise RuntimeError('Deletion abort per user request.')
 	client.delete_tasks(to_delete)
 
+@command_line_parser(help=lixian_help.pause)
+@with_parser(parse_login)
+@with_parser(parse_colors)
+@command_line_option('i')
+@command_line_option('all')
 def pause_task(args):
-	args = parse_login_command_line(args, [], ['i', 'all'], help=lixian_help.pause)
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_pause = search_tasks(client, args)
 	print "Below files are going to be paused:"
@@ -395,8 +427,12 @@ def pause_task(args):
 		print x['name'].encode(default_encoding)
 	client.pause_tasks(to_pause)
 
+@command_line_parser(help=lixian_help.restart)
+@with_parser(parse_login)
+@with_parser(parse_colors)
+@command_line_option('i')
+@command_line_option('all')
 def restart_task(args):
-	args = parse_login_command_line(args, [], ['i', 'all'], help=lixian_help.restart)
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_restart = search_tasks(client, args)
 	print "Below files are going to be restarted:"
@@ -404,8 +440,9 @@ def restart_task(args):
 		print x['name'].encode(default_encoding)
 	client.restart_tasks(to_restart)
 
+@command_line_parser(help=lixian_help.rename)
+@with_parser(parse_login)
 def rename_task(args):
-	args = parse_login_command_line(args, [], [], help=lixian_help.rename)
 	if len(args) != 2 or not re.match(r'\d+$', args[0]):
 		usage(lixian_help.rename, 'Incorrect arguments')
 		sys.exit(1)
@@ -414,8 +451,11 @@ def rename_task(args):
 	task = client.get_task_by_id(taskid)
 	client.rename_task(task, from_native(new_name))
 
+@command_line_parser(help=lixian_help.readd)
+@with_parser(parse_login)
+@command_line_option('deleted')
+@command_line_option('expired')
 def readd_task(args):
-	args = parse_login_command_line(args, [], ['deleted', 'expired'], help=lixian_help.readd)
 	client = XunleiClient(args.username, args.password, args.cookies)
 	if args.deleted:
 		status = 'deleted'
@@ -441,8 +481,10 @@ def readd_task(args):
 	for hash, id in bt:
 		client.add_torrent_task_by_info_hash2(hash, id)
 
+@command_line_parser(help=lixian_help.info)
+@with_parser(parse_login)
+@command_line_option('id', alias='i')
 def lixian_info(args):
-	args = parse_login_command_line(args, [], ['id'], alias={'i':'id'}, help=lixian_help.info)
 	client = XunleiClient(args.username, args.password, args.cookies, login=False)
 	if args.id:
 		print client.get_username()
@@ -451,8 +493,10 @@ def lixian_info(args):
 		print 'internalid:', client.get_userid()
 		print 'gdriveid:', client.get_gdriveid() or ''
 
+@command_line_parser(help=lixian_help.config)
+@command_line_option('print')
+@command_line_option('delete')
 def lx_config(args):
-	args = parse_command_line(args, [], ['print', 'delete'], help=lixian_help.config)
 	if args.delete:
 		assert len(args) == 1
 		delete_config(args[0])
