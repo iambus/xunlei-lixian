@@ -241,7 +241,6 @@ def download_task(args):
 		else:
 			download_multiple_tasks(client, download, tasks, download_args)
 	elif args.all:
-		#tasks = client.read_all_completed()
 		tasks = client.read_all_tasks()
 		download_multiple_tasks(client, download, tasks, download_args)
 	else:
@@ -286,7 +285,7 @@ def list_task(args):
 	elif status == 'all':
 		tasks = client.read_all_tasks()
 	elif status == 'completed':
-		tasks = client.read_all_completed()
+		tasks = filter(lambda x: x['status_text'] == 'completed', client.read_all_tasks()) # by #139
 	elif status == 'deleted':
 		tasks = client.read_all_deleted()
 	elif status == 'expired':
