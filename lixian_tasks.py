@@ -12,7 +12,7 @@ import lixian_hash_ed2k
 
 import lixian_tasks_extended
 
-def to_utf_8(url):
+def native_to_utf_8(url):
 	try:
 		return url.decode(default_encoding).encode('utf-8')
 	except:
@@ -232,7 +232,7 @@ def find_normal_tasks_to_download(client, links):
 			print link
 		links_to_add = filter(is_url, to_add)
 		if links_to_add:
-			client.add_batch_tasks(map(to_utf_8, links_to_add))
+			client.add_batch_tasks(map(native_to_utf_8, links_to_add))
 		for link in to_add:
 			if is_url(link):
 				# add_batch_tasks doesn't work for bt task, add bt task one by one...

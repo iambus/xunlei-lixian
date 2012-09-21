@@ -20,12 +20,6 @@ from lixian_encoding import default_encoding
 def from_native(s):
 	return s.decode(default_encoding)
 
-def to_utf_8(url):
-	try:
-		return url.decode(default_encoding).encode('utf-8')
-	except:
-		return url
-
 def to_str(s):
 	assert type(s) in (str, unicode)
 	return s.encode(default_encoding) if type(s) == unicode else s
@@ -409,6 +403,33 @@ def rename_task(args):
 	task = client.get_task_by_id(taskid)
 	client.rename_task(task, from_native(new_name))
 
+def readd_task(args):
+	args = parse_login_command_line(args, [], ['deleted', 'expired'], help=lixian_help.readd)
+	client = XunleiClient(args.username, args.password, args.cookies)
+	if args.deleted:
+		status = 'deleted'
+	elif args.expired:
+		status = 'expired'
+	else:
+		raise NotImplementedError('Please use --expired or --deleted')
+	to_readd = search_tasks(client, args, status=status)
+	non_bt = []
+	bt = []
+	if not to_readd:
+		return
+	print "Below files are going to be re-added:"
+	for x in to_readd:
+		print x['name'].encode(default_encoding)
+		if x['type'] == 'bt':
+			bt.append((x['bt_hash'], x['id']))
+		else:
+			non_bt.append((x['original_url'], x['id']))
+	if non_bt:
+		urls, ids = zip(*non_bt)
+		client.add_batch_tasks(urls, ids)
+	for hash, id in bt:
+		client.add_torrent_task_by_info_hash2(hash, id)
+
 def lixian_info(args):
 	args = parse_login_command_line(args, [], ['id'], alias={'i':'id'}, help=lixian_help.info)
 	client = XunleiClient(args.username, args.password, args.cookies, login=False)
@@ -475,7 +496,7 @@ def execute_command(args=sys.argv[1:]):
 			usage()
 			sys.exit(1)
 		sys.exit(0)
-	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'rename': rename_task, 'info': lixian_info, 'config': lx_config, 'help': lx_help}
+	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'rename': rename_task, 'readd': readd_task, 'info': lixian_info, 'config': lx_config, 'help': lx_help}
 	commands.update(lixian_cli_extended.commands)
 	if command not in commands:
 		usage()

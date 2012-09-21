@@ -348,7 +348,7 @@ class XunleiClient:
 		response = self.urlopen(task_url).read()
 		assert response == 'ret_task(Array)', response
 
-	def add_batch_tasks(self, urls):
+	def add_batch_tasks(self, urls, old_task_ids=None):
 		assert urls
 		urls = list(urls)
 		for url in urls:
@@ -360,7 +360,10 @@ class XunleiClient:
 		#self.urlopen('http://dynamic.cloud.vip.xunlei.com/interface/batch_task_check', data={'url':'\r\n'.join(urls), 'random':current_random()})
 		jsonp = 'jsonp%s' % current_timestamp()
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/batch_task_commit?callback=%s' % jsonp
-		batch_old_taskid = '0' + ',' * (len(urls) - 1) # XXX: what is it?
+		if old_task_ids:
+			batch_old_taskid = ','.join(old_task_ids)
+		else:
+			batch_old_taskid = '0' + ',' * (len(urls) - 1) # XXX: what is it?
 		data = {}
 		for i in range(len(urls)):
 			data['cid[%d]' % i] = ''
@@ -406,7 +409,15 @@ class XunleiClient:
 		with open(path, 'rb') as x:
 			return self.add_torrent_task_by_content(x.read(), os.path.basename(path))
 
+	def add_torrent_task_by_info_hash2(self, sha1, old_task_id=None):
+		'''similar to add_torrent_task_by_info_hash, but faster. I may delete current add_torrent_task_by_info_hash completely in future'''
+		link = 'http://dynamic.cloud.vip.xunlei.com/interface/get_torrent?userid=%s&infoid=%s' % (self.id, sha1)
+		return self.add_torrent_task_by_link(link, old_task_id=old_task_id)
+
 	def add_magnet_task(self, link):
+		return self.add_torrent_task_by_link(link)
+
+	def add_torrent_task_by_link(self, link, old_task_id=None):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/url_query?callback=queryUrl&u=%s&random=%s' % (urllib.quote(link), current_timestamp())
 		response = self.urlopen(url).read()
 		success = re.search(r'queryUrl(\(1,.*\))\s*$', response, flags=re.S)
@@ -427,6 +438,9 @@ class XunleiClient:
 				'findex':''.join(x+'_' for x in toList(findexes)),
 				'size':''.join(x+'_' for x in toList(sizes)),
 				'from':'0'}
+		if old_task_id:
+			data['o_taskid'] = old_task_id
+			data['o_page'] = 'history'
 		jsonp = 'jsonp%s' % current_timestamp()
 		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit?callback=%s' % jsonp
 		response = self.urlopen(commit_url, data=data).read()

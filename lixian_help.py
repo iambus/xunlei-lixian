@@ -9,6 +9,7 @@ basic_commands = [
  ('pause',      "pause tasks on Xunlei cloud"),
  ('restart',    "restart tasks on Xunlei cloud"),
  ('rename',     "rename task"),
+ ('readd',      "re-add tasks"),
  ('config',     "save configuration so you don't have to repeat it"),
  ('info',       "print user id, internal user id, and gdriveid"),
  ('logout',     "logout from Xunlei cloud"),
@@ -258,6 +259,15 @@ Options:
 rename   = '''python lixian_cli.py rename task-id task-name
 
 rename task
+'''
+
+readd   = '''python lixian_cli.py readd [--deleted|--expired] task-id...
+
+re-add deleted/expired tasks
+
+Options:
+ --deleted  re-add deleted tasks
+ --expired  re-add expired tasks
 '''
 
 config   = '''python lixian_cli.py config key [value]
