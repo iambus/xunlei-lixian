@@ -401,9 +401,11 @@ def add_task(args):
 def delete_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_delete = search_tasks(client, args)
-	print "Below files are going to be deleted:"
-	for x in to_delete:
-		print x['name'].encode(default_encoding)
+	from lixian_colors import colors
+	with colors.red.bold():
+		print "Below files are going to be deleted:"
+		for x in to_delete:
+			print x['name'].encode(default_encoding)
 	if args.i:
 		yes_or_no = raw_input('Are your sure to delete below files from Xunlei cloud? ')
 		while yes_or_no.lower() not in ('y', 'yes', 'n', 'no'):
