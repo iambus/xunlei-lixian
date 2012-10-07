@@ -65,7 +65,10 @@ def find_tasks_by_range(tasks, x):
 	m = re.match(r'^#?(\d+)-(\d+)$', x)
 	begin = int(m.group(1))
 	end = int(m.group(2))
-	return filter(lambda x: begin <= x['#'] <= end, tasks)
+	if begin <= end:
+		return filter(lambda x: begin <= x['#'] <= end, tasks)
+	else:
+		return reversed(filter(lambda x: end <= x['#'] <= begin, tasks))
 
 def find_task_by_id(tasks, id):
 	for t in tasks:
@@ -95,8 +98,9 @@ def find_tasks_by_id(tasks, id):
 				t['index'] = sub_id
 				matched.append(t)
 			elif '-' in sub_id:
-				start, end = sub_id.split('-')
-				for i in range(int(start), int(end)+1):
+				start, end = map(int, sub_id.split('-'))
+				r = range(start, end+1) if start <= end else reversed(range(end, start+1))
+				for i in r:
 					t = dict(task)
 					t['index'] = str(i)
 					matched.append(t)
