@@ -4,8 +4,8 @@ __all__ = []
 from lixian import XunleiClient
 from lixian_config import *
 from lixian_encoding import default_encoding
-from lixian_cli_parser import parse_command_line
-from lixian_cli_parser import expand_command_line
+from lixian_cli_parser import *
+from lixian_cli import parse_login
 
 ##################################################
 # command decorator
@@ -171,13 +171,13 @@ def list_torrent(args):
 
 ##################################################
 
-@command(usage='get .torrent by task id or info hash')
+@command(name='get-torrent', usage='get .torrent by task id or info hash')
+@command_line_parser()
+@with_parser(parse_login)
 def get_torrent(args):
 	'''
 	usage: lx get-torrent [info-hash|task-id]...
 	'''
-	from lixian_cli import parse_login_command_line
-	args = parse_login_command_line(args)
 	client = XunleiClient(args.username, args.password, args.cookies)
 	for id in args:
 		id = id.lower()
