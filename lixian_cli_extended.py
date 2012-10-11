@@ -143,8 +143,14 @@ def list_torrent(args):
 	'''
 	usage: lx list-torrent [--size] xxx.torrent...
 	'''
-	args = parse_command_line(args, [], ['size'])
-	for p in args:
+	args = parse_command_line(args, [], ['size'], default={'size':get_config('size')})
+	torrents = args
+	if not torrents:
+		from glob import glob
+		torrents = glob('*.torrent')
+	if not torrents:
+		raise Exception('No .torrent file found')
+	for p in torrents:
 		with open(p, 'rb') as stream:
 			from lixian_hash_bt import bdecode
 			b = bdecode(stream.read())
