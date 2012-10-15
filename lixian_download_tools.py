@@ -4,6 +4,10 @@ import subprocess
 import urllib2
 import os.path
 
+def check_bin(bin):
+	import distutils.spawn
+	assert distutils.spawn.find_executable(bin), "Can't find %s" % bin
+
 def urllib2_download(client, download_url, filename, resuming=False):
 	'''In the case you don't even have wget...'''
 	assert not resuming
@@ -24,6 +28,7 @@ def wget_download(client, download_url, filename, resuming=False):
 	if resuming:
 		wget_opts.append('-c')
 	wget_opts.extend(get_config('wget-opts', '').split())
+	check_bin(wget_opts[0])
 	exit_code = subprocess.call(wget_opts)
 	if exit_code != 0:
 		raise Exception('wget exited abnormaly')
@@ -34,6 +39,7 @@ def curl_download(client, download_url, filename, resuming=False):
 	if resuming:
 		curl_opts += ['--continue-at', '-']
 	curl_opts.extend(get_config('curl-opts', '').split())
+	check_bin(curl_opts[0])
 	exit_code = subprocess.call(curl_opts)
 	if exit_code != 0:
 		raise Exception('curl exited abnormaly')
@@ -48,6 +54,7 @@ def aria2_download(client, download_url, path, resuming=False):
 	if resuming:
 		aria2_opts.append('-c')
 	aria2_opts.extend(get_config('aria2-opts', '').split())
+	check_bin(aria2_opts[0])
 	exit_code = subprocess.call(aria2_opts)
 	if exit_code != 0:
 		raise Exception('aria2c exited abnormaly')
@@ -56,6 +63,7 @@ def axel_download(client, download_url, path, resuming=False):
 	gdriveid = str(client.get_gdriveid())
 	axel_opts = ['axel', '--header=Cookie: gdriveid='+gdriveid, download_url, '--output', path]
 	axel_opts.extend(get_config('axel-opts', '').split())
+	check_bin(axel_opts[0])
 	exit_code = subprocess.call(axel_opts)
 	if exit_code != 0:
 		raise Exception('axel exited abnormaly')
