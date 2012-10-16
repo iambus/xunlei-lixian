@@ -452,12 +452,12 @@ class XunleiClient:
 		response = self.urlopen(url).read()
 
 	def delete_tasks_by_id(self, ids):
-		url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_delete?type=%s&taskids=%s&databases=0,&noCacheIE=%s' % (2, ','.join(ids)+',', current_timestamp()) # XXX: what is 'type'?
-		response = self.urlopen(url).read()
+		jsonp = 'jsonp%s' % current_timestamp()
+		data = {'taskids': ','.join(ids)+',', 'databases': '0,'}
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_delete?callback=%s&type=%s&noCacheIE=%s' % (jsonp, 2, current_timestamp()) # XXX: what is 'type'?
+		response = self.urlopen(url, data=data).read()
 		response = remove_bom(response)
-		response = json.loads(re.match(r'^delete_task_resp\((.+)\)$', response).group(1))
-		assert response['result'] == 1
-		assert response['type'] == 2
+		assert_response(response, jsonp, '{"result":1,"type":2}')
 
 	def delete_task_by_id(self, id):
 		self.delete_tasks_by_id([id])
@@ -650,9 +650,9 @@ def remove_bom(response):
 		response = response[3:]
 	return response
 
-def assert_response(response, jsonp):
+def assert_response(response, jsonp, value=1):
 	response = remove_bom(response)
-	assert response == '%s(1)' % jsonp, repr(response)
+	assert response == '%s(%s)' % (jsonp, value), repr(response)
 
 def parse_url_protocol(url):
 	m = re.match(r'([^:]+)://', url)
