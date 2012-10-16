@@ -447,6 +447,10 @@ class XunleiClient:
 		assert_response(response, jsonp)
 		return cid
 
+	def readd_all_expired_tasks(self):
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/delay_once?callback=anything'
+		response = self.urlopen(url).read()
+
 	def delete_tasks_by_id(self, ids):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_delete?type=%s&taskids=%s&databases=0,&noCacheIE=%s' % (2, ','.join(ids)+',', current_timestamp()) # XXX: what is 'type'?
 		response = self.urlopen(url).read()

@@ -457,14 +457,17 @@ def rename_task(args):
 @with_parser(parse_login)
 @command_line_option('deleted')
 @command_line_option('expired')
+@command_line_option('all')
 def readd_task(args):
-	client = XunleiClient(args.username, args.password, args.cookies)
 	if args.deleted:
 		status = 'deleted'
 	elif args.expired:
 		status = 'expired'
 	else:
 		raise NotImplementedError('Please use --expired or --deleted')
+	client = XunleiClient(args.username, args.password, args.cookies)
+	if status == 'expired' and args.all:
+		return client.readd_all_expired_tasks()
 	to_readd = search_tasks(client, args, status=status)
 	non_bt = []
 	bt = []
