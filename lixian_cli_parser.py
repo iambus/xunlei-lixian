@@ -1,5 +1,5 @@
 
-__all__ = ['parse_command_line', 'Parser', 'command_line_parse', 'command_line_option', 'command_line_value', 'command_line_parser', 'with_parser']
+__all__ = ['expand_command_line', 'parse_command_line', 'Parser', 'command_line_parse', 'command_line_option', 'command_line_value', 'command_line_parser', 'with_parser']
 
 def expand_windows_command_line(args):
 	from glob import glob
