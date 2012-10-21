@@ -390,8 +390,7 @@ def add_task(args):
 	columns = ['id', 'status', 'name']
 	if args.size:
 		columns.append('size')
-	for t in tasks:
-		output_tasks(tasks, columns, args)
+	output_tasks(tasks, columns, args)
 
 @command_line_parser(help=lixian_help.delete)
 @with_parser(parse_login)
