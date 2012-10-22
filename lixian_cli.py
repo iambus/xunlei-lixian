@@ -401,7 +401,7 @@ def delete_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 	to_delete = search_tasks(client, args)
 	from lixian_colors import colors
-	with colors.red.bold():
+	with colors(args.colors).red.bold():
 		print "Below files are going to be deleted:"
 		for x in to_delete:
 			print x['name'].encode(default_encoding)
