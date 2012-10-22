@@ -207,7 +207,7 @@ class ProgressBar:
 			if plus > 0.8:
 				plus = '='
 			elif plus > 0.4:
-				plus = '>'
+				plus = '-'
 			else:
 				plus = ''
 			bar = '=' * dots + plus
