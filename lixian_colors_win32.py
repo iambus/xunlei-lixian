@@ -3,11 +3,13 @@ __all__ = ['WinConsole']
 
 from lixian_colors_console import Console
 
+import ctypes
 from ctypes import windll, byref, Structure
 from ctypes.wintypes import SHORT, WORD
 
 import sys
 
+INVALID_HANDLE_VALUE = -1
 STD_OUTPUT_HANDLE = -11
 STD_ERROR_HANDLE = -12
 
@@ -29,16 +31,26 @@ class CONSOLE_SCREEN_BUFFER_INFO(Structure):
 	            ('dwMaximumWindowSize',  COORD),)
 
 
+def GetWinError():
+	code = ctypes.GetLastError()
+	message = ctypes.FormatError(code)
+	return '[Error %s] %s' % (code, message)
+
 def GetStdHandle(handle):
-	return windll.kernel32.GetStdHandle(handle)
+	h = windll.kernel32.GetStdHandle(handle)
+	if h == INVALID_HANDLE_VALUE:
+		raise OSError(GetWinError())
+	return h
 
 def GetConsoleScreenBufferInfo(handle):
 	info = CONSOLE_SCREEN_BUFFER_INFO()
-	windll.kernel32.GetConsoleScreenBufferInfo(handle, byref(info))
+	if not windll.kernel32.GetConsoleScreenBufferInfo(handle, byref(info)):
+		raise OSError(GetWinError())
 	return info
 
 def SetConsoleTextAttribute(handle, attributes):
-	windll.Kernel32.SetConsoleTextAttribute(handle, attributes)
+	if not windll.Kernel32.SetConsoleTextAttribute(handle, attributes):
+		raise OSError(GetWinError())
 
 
 FOREGROUND_BLUE            = 0x0001
