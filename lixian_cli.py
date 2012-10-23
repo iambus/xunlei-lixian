@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from lixian import XunleiClient, encypt_password
-import lixian_cli_extended
 from lixian_cli_parser import *
 from lixian_tasks import *
 from lixian_config import *
@@ -556,6 +555,7 @@ def execute_command(args=sys.argv[1:]):
 			sys.exit(1)
 		sys.exit(0)
 	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'rename': rename_task, 'readd': readd_task, 'info': lixian_info, 'config': lx_config, 'help': lx_help}
+	import lixian_cli_extended
 	commands.update(lixian_cli_extended.commands)
 	if command not in commands:
 		usage()
