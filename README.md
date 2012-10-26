@@ -31,7 +31,7 @@ Quick start
 	python lixian_cli.py download url1 url2 url3
 	python lixian_cli.py download --input download-urls-file
 	python lixian_cli.py download --input download-urls-file --delete
-	python lixian_cli.py download --input download-urls-file --ouput-dir root-dir-to-save-files
+	python lixian_cli.py download --input download-urls-file --output-dir root-dir-to-save-files
 	python lixian_cli.py download bt://torrent-info-hash
 	python lixian_cli.py download --bt 1.torrent
 	python lixian_cli.py download --bt torrent-info-hash
