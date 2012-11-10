@@ -398,7 +398,13 @@ def add_task(args):
 @command_line_option('all')
 def delete_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
-	to_delete = search_tasks(client, args)
+	if len(args):
+		to_delete = search_tasks(client, args)
+	elif args.all:
+		to_delete = client.read_all_tasks()
+	if not to_delete:
+		print 'Nothing to delete'
+		return
 	from lixian_colors import colors
 	with colors(args.colors).red.bold():
 		print "Below files are going to be deleted:"
