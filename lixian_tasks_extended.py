@@ -7,6 +7,8 @@ sites = {
 'http://*.qjwm.com/*':'lixian_qjwm',
 'http://simplecd.*/':'lixian_simplecd',
 'http://www.simplecd.*/':'lixian_simplecd',
+'http://samplecd.*/':'lixian_simplecd',
+'http://www.samplecd.*/':'lixian_simplecd',
 'http://www.icili.com/emule/download/':'lixian_icili',
 }
 
