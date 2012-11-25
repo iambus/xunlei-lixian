@@ -560,6 +560,8 @@ def execute_command(args=sys.argv[1:]):
 			usage()
 			sys.exit(1)
 		sys.exit(0)
+	import lixian_alias
+	command = lixian_alias.to_alias(command)
 	commands = {'login': login, 'logout': logout, 'download': download_task, 'list': list_task, 'add': add_task, 'delete': delete_task, 'pause': pause_task, 'restart': restart_task, 'rename': rename_task, 'readd': readd_task, 'info': lixian_info, 'config': lx_config, 'help': lx_help}
 	import lixian_cli_extended
 	commands.update(lixian_cli_extended.commands)
