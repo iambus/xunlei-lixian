@@ -120,6 +120,7 @@ def download_single_task(client, download, task, options):
 	overwrite = options.get('overwrite')
 	mini_hash = options.get('mini_hash')
 	no_hash = options.get('no_hash')
+	no_bt_dir = options.get('no_bt_dir')
 
 	assert client.get_gdriveid()
 	if task['status_text'] != 'completed':
@@ -171,6 +172,8 @@ def download_single_task(client, download, task, options):
 		if single_file:
 			dirname = output_dir
 		else:
+			if no_bt_dir:
+				output_path = os.path.dirname(output_path)
 			dirname = output_path
 		assert dirname # dirname must be non-empty, otherwise dirname + os.path.sep + ... might be dangerous
 		if dirname and not os.path.exists(dirname):
@@ -241,10 +244,11 @@ def download_multiple_tasks(client, download, tasks, options):
 @command_line_option('overwrite')
 @command_line_option('mini-hash', default=get_config('mini-hash'))
 @command_line_option('hash', default=get_config('hash', True))
+@command_line_option('bt-dir', default=True)
 def download_task(args):
 	import lixian_download_tools
 	download = lixian_download_tools.get_tool(args.tool)
-	download_args = {'output':args.output, 'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash}
+	download_args = {'output':args.output, 'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash, 'no_bt_dir': not args.bt_dir}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
 	if len(args) or args.input:
