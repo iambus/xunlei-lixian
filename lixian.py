@@ -393,7 +393,8 @@ class XunleiClient:
 					'size':''.join(f['subsize']+'_' for f in bt['filelist']),
 					'from':'0'}
 			response = self.urlopen(commit_url, data=data).read()
-			assert_response(response, jsonp)
+			#assert_response(response, jsonp)
+			assert re.match(r'%s\({"id":"\d+","progress":1}\)' % jsonp, response), repr(response)
 			return bt_hash
 		already_exists = re.search(r"parent\.edit_bt_list\((\{.*\}),''\)", response, flags=re.S)
 		if already_exists:
