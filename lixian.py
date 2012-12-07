@@ -445,7 +445,8 @@ class XunleiClient:
 		jsonp = 'jsonp%s' % current_timestamp()
 		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit?callback=%s' % jsonp
 		response = self.urlopen(commit_url, data=data).read()
-		assert_response(response, jsonp)
+		#assert_response(response, jsonp)
+		assert re.match(r'%s\({"id":"\d+","progress":1}\)' % jsonp, response), repr(response)
 		return cid
 
 	def readd_all_expired_tasks(self):
