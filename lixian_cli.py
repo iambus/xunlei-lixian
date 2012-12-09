@@ -121,6 +121,7 @@ def download_single_task(client, download, task, options):
 	mini_hash = options.get('mini_hash')
 	no_hash = options.get('no_hash')
 	no_bt_dir = options.get('no_bt_dir')
+	save_torrent_file = options.get('save_torrent_file')
 
 	assert client.get_gdriveid()
 	if task['status_text'] != 'completed':
@@ -202,6 +203,18 @@ def download_single_task(client, download, task, options):
 					os.makedirs(subdir)
 			download_url = str(f['xunlei_url'])
 			download2(client, download_url, path, f)
+		if save_torrent_file:
+			info_hash = str(task['bt_hash'])
+			if single_file:
+				torrent = os.path.join(dirname, escape_filename(task['name']).encode(default_encoding) + '.torrent')
+			else:
+				torrent = os.path.join(dirname, info_hash + '.torrent')
+			if os.path.exists(torrent):
+				pass
+			else:
+				content = client.get_torrent_file_by_info_hash(info_hash)
+				with open(torrent, 'wb') as ouput_stream:
+					ouput_stream.write(content)
 		if not no_hash:
 			torrent_file = client.get_torrent_file(task)
 			print 'Hashing bt ...'
@@ -245,10 +258,11 @@ def download_multiple_tasks(client, download, tasks, options):
 @command_line_option('mini-hash', default=get_config('mini-hash'))
 @command_line_option('hash', default=get_config('hash', True))
 @command_line_option('bt-dir', default=True)
+@command_line_option('save-torrent-file')
 def download_task(args):
 	import lixian_download_tools
 	download = lixian_download_tools.get_tool(args.tool)
-	download_args = {'output':args.output, 'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash, 'no_bt_dir': not args.bt_dir}
+	download_args = {'output':args.output, 'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash, 'no_bt_dir': not args.bt_dir, 'save_torrent_file':args.save_torrent_file}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	links = None
 	if len(args) or args.input:
