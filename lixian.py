@@ -370,7 +370,7 @@ class XunleiClient:
 			data['url[%d]' % i] = urllib.quote(to_utf_8(urls[i])) # fix per request #98
 		data['batch_old_taskid'] = batch_old_taskid
 		response = self.urlopen(url, data=data).read()
-		assert_response(response, jsonp)
+		assert_response(response, jsonp, len(urls))
 
 	def add_torrent_task_by_content(self, content, path='attachment.torrent'):
 		assert re.match(r'd\d+:', content), 'Probably not a valid content file [%s...]' % repr(content[:17])
