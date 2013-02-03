@@ -219,6 +219,45 @@ class XunleiClient:
 		'''read all pages of completed tasks'''
 		return self.read_all_tasks(2)
 
+	def read_categories(self):
+		url = 'http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0' % self.id
+		self.set_page_size(1)
+		html = self.urlread(url)
+		self.set_page_size(self.page_size)
+		nav = re.search(r'<div class="lx_ul">.*<div class="tq_play">', html, flags=re.S).group()
+		folders = re.findall(r'''setLxCookie\('class_check',(\d+)\);return false;" title=""><em class="ic_link_new "></em>([^<>]+)</a>''', nav)
+		return {name.decode('utf-8'): int(id) for id, name in folders}
+
+	def get_category_id(self, category):
+		return self.read_categories()[category]
+
+	def read_all_tasks_by_category(self, category):
+		category_id = self.get_category_id(category)
+		jsonp = 'jsonp%s' % current_timestamp()
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/show_class?callback=%s&type_id=%d' % (jsonp, category_id)
+		html = self.urlread(url)
+		response = json.loads(re.match(r'^%s\((.+)\)$' % jsonp, html).group(1))
+		assert response['rtcode'] == '0', response['rtcode']
+		info = response['info']
+		return [
+			{'id': t['id'],
+			 'type': re.match(r'[^:]+', t['url']).group(),
+			 'name': t['taskname'],
+			 'status': int(t['download_status']),
+			 'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed', '5':'pending'}[t['download_status']],
+			 'size': int(t['ysfilesize']),
+			 'original_url': t['url'],
+			 'xunlei_url': t['lixian_url'] or None,
+			 'bt_hash': t['cid'],
+			 'dcid': t['cid'],
+			 'gcid': t['gcid'],
+			 'date': t['dt_committed'][:10].replace('-', '.'),
+			 'progress': '%s%%' % t['progress'],
+			 'speed': '%s' % t['speed'], # TODO: add unit
+			 'client': self,
+			 } for t in info['tasks']
+		]
+
 	def read_history_page_url(self, url):
 		self.set_cookie('.vip.xunlei.com', 'lx_nf_all', urllib.quote('page_check_all=history&fltask_all_guoqi=1&class_check=0&page_check=task&fl_page_id=0&class_check_new=0&set_tab_status=11'))
 		page = self.urlread(url).decode('utf-8', 'ignore')
