@@ -239,7 +239,7 @@ class XunleiClient:
 		response = json.loads(re.match(r'^%s\((.+)\)$' % jsonp, html).group(1))
 		assert response['rtcode'] == '0', response['rtcode']
 		info = response['info']
-		return [
+		tasks = [
 			{'id': t['id'],
 			 'type': re.match(r'[^:]+', t['url']).group().lower(),
 			 'name': t['taskname'],
@@ -257,6 +257,9 @@ class XunleiClient:
 			 'client': self,
 			 } for t in info['tasks']
 		]
+		for i, task in enumerate(tasks):
+			task['#'] = i
+		return tasks
 
 	def read_history_page_url(self, url):
 		self.set_cookie('.vip.xunlei.com', 'lx_nf_all', urllib.quote('page_check_all=history&fltask_all_guoqi=1&class_check=0&page_check=task&fl_page_id=0&class_check_new=0&set_tab_status=11'))

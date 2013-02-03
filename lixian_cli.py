@@ -252,6 +252,7 @@ def download_multiple_tasks(client, download, tasks, options):
 @command_line_value('output-dir', default=get_config('output-dir'))
 @command_line_option('torrent', alias='bt')
 @command_line_option('all')
+@command_line_value('category')
 @command_line_option('delete', default=get_config('delete'))
 @command_line_option('continue', alias='c', default=get_config('continue'))
 @command_line_option('overwrite')
@@ -275,6 +276,9 @@ def download_task(args):
 	elif args.all:
 		tasks = client.read_all_tasks()
 		download_multiple_tasks(client, download, tasks, download_args)
+	elif args.category:
+		tasks = client.read_all_tasks_by_category(from_native(args.category))
+		download_multiple_tasks(client, download, tasks, download_args)
 	else:
 		usage(doc=lixian_help.download, message='Not enough arguments')
 
@@ -287,6 +291,7 @@ def download_task(args):
 @command_line_option('completed')
 @command_line_option('deleted')
 @command_line_option('expired')
+@command_line_value('category')
 @command_line_option('id', default=get_config('id', True))
 @command_line_option('name', default=True)
 @command_line_option('status', default=True)
@@ -323,6 +328,8 @@ def list_task(args):
 		tasks.sort(key=lambda x: int(x['index']))
 	elif len(ids):
 		tasks = search_tasks(client, args, status=status)
+	elif args.category:
+		tasks = client.read_all_tasks_by_category(from_native(args.category))
 	elif status == 'all':
 		tasks = client.read_all_tasks()
 	elif status == 'completed':
