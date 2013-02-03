@@ -241,7 +241,7 @@ class XunleiClient:
 		info = response['info']
 		return [
 			{'id': t['id'],
-			 'type': re.match(r'[^:]+', t['url']).group(),
+			 'type': re.match(r'[^:]+', t['url']).group().lower(),
 			 'name': t['taskname'],
 			 'status': int(t['download_status']),
 			 'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed', '5':'pending'}[t['download_status']],
@@ -581,7 +581,7 @@ def parse_task(html):
 		mini_map[mini_key] = k
 	taskid = mini_map['taskname'][8:]
 	url = mini_info['f_url']
-	task_type = re.match(r'[^:]+', url).group()
+	task_type = re.match(r'[^:]+', url).group().lower()
 	task = {'id': taskid,
 			'type': task_type,
 			'name': mini_info['taskname'],
