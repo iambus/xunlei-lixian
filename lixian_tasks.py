@@ -10,7 +10,7 @@ from lixian_encoding import default_encoding
 import lixian_hash_bt
 import lixian_hash_ed2k
 
-import lixian_tasks_extended
+import lixian_extend_links
 
 def native_to_utf_8(url):
 	try:
@@ -226,7 +226,7 @@ def return_my_tasks(all_tasks, links):
 	return tasks
 
 def find_normal_tasks_to_download(client, links):
-	links = lixian_tasks_extended.extend_links(links)
+	links = lixian_extend_links.extend_links(links)
 	all_tasks = client.read_all_tasks()
 	found, missing, all = search_in_tasks(all_tasks, links)
 	to_add = set(missing)

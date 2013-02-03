@@ -111,12 +111,12 @@ def extend_links(args):
 	lx extend-links --name urls...
 	'''
 	args = parse_command_line(args, [], ['name'])
-	import lixian_tasks_extended
+	import lixian_extend_links
 	if args.name:
-		for x in lixian_tasks_extended.extend_links_name(args):
+		for x in lixian_extend_links.extend_links_name(args):
 			print x.encode(default_encoding)
 	else:
-		for x in lixian_tasks_extended.extend_links(args):
+		for x in lixian_extend_links.extend_links(args):
 			print x
 
 ##################################################
