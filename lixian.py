@@ -226,7 +226,7 @@ class XunleiClient:
 		self.set_page_size(self.page_size)
 		nav = re.search(r'<div class="lx_ul">.*<div class="tq_play">', html, flags=re.S).group()
 		folders = re.findall(r'''setLxCookie\('class_check',(\d+)\);return false;" title=""><em class="ic_link_new "></em>([^<>]+)</a>''', nav)
-		return {name.decode('utf-8'): int(id) for id, name in folders}
+		return dict((name.decode('utf-8'), int(id)) for id, name in folders)
 
 	def get_category_id(self, category):
 		return self.read_categories()[category]
