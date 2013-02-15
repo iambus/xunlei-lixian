@@ -22,7 +22,18 @@ class http_client(asynchat.async_chat):
 		host, port, path = m.groups()
 		port = int(port or 80)
 		path = path or '/'
-		if socket.gethostbyname(host) == '180.168.41.175':
+
+		def resolve_host(host):
+			try:
+				return socket.gethostbyname(host)
+			except:
+				pass
+		host_ip = resolve_host(host)
+		if not host_ip:
+			self.log_error("host can't be resolved: " + host)
+			self.size = None
+			return
+		if host_ip == '180.168.41.175':
 			# fuck shanghai dian DNS
 			self.log_error('gethostbyname failed')
 			self.size = None
