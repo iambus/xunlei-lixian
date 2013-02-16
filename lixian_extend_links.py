@@ -71,7 +71,7 @@ def in_site(url, site):
 		p = fnmatch.translate(site)
 		return re.match(p, url)
 
-def extend_link(link):
+def try_to_extend_link(link):
 	for p in sites:
 		if in_site(link, p):
 			x = parse_pattern(link)
@@ -80,7 +80,9 @@ def extend_link(link):
 				return filter_links(links, x[1])
 			else:
 				return __import__(sites[p]).extend_link(link)
-	return [link]
+
+def extend_link(link):
+	return try_to_extend_link(link) or [link]
 
 def extend_links_rich(links):
 	return sum(map(extend_link, links), [])

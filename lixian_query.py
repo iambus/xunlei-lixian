@@ -5,13 +5,7 @@ import re
 import lixian_url
 import lixian_hash_bt
 import lixian_hash_ed2k
-from lixian_encoding import default_encoding
-
-def native_to_utf_8(url):
-	try:
-		return url.decode(default_encoding).encode('utf-8')
-	except:
-		return url
+import lixian_encoding
 
 
 def link_normalize(url):
@@ -75,7 +69,7 @@ class TaskBase(object):
 	def get_task_by_id(self, id):
 		t = self.find_task_by_id(id)
 		if not t:
-			raise Exception('Not task found for id '+id)
+			raise Exception('No task found for id '+id)
 		return t
 
 	def find_task_by_hash(self, hash):
@@ -87,6 +81,12 @@ class TaskBase(object):
 		for t in self.get_tasks():
 			if link_equals(t['original_url'], url):
 				return t
+
+	def get_task_by_url(self, url):
+		t = self.find_task_by_url(url)
+		if not t:
+			raise Exception('No task found for ' + lixian_encoding.to_native(url))
+		return t
 
 	def add_url_task(self, url):
 		self.jobs[0].append(url)
@@ -103,7 +103,7 @@ class TaskBase(object):
 	def commit(self):
 		urls, bts = self.jobs
 		if urls:
-			self.client.add_batch_tasks(map(native_to_utf_8, urls))
+			self.client.add_batch_tasks(map(lixian_encoding.try_native_to_utf_8, urls))
 		for bt_type, value in bts:
 			if bt_type == 'hash':
 				print 'Adding bt task', value # TODO: print the thing user inputs (may be not hash)
@@ -205,8 +205,7 @@ def sub_id_processor(base, x):
 	if not task:
 		return
 
-	from lixian_encoding import default_encoding
-	assert task['type'] == 'bt', 'task %s is not a bt task' % task['name'].encode(default_encoding)
+	assert task['type'] == 'bt', 'task %s is not a bt task' % lixian_encoding.to_native(task['name'])
 	subs = []
 	if re.match(r'\[.*\]', sub_id):
 		for sub_id in re.split(r'\s*,\s*', sub_id[1:-1]):
@@ -316,11 +315,25 @@ def magnet_processor(base, url):
 
 ##################################################
 
-class UrlExtendQuery(Query):
-	pass
+class BatchUrlsQuery(Query):
+	def __init__(self, base, urls):
+		super(BatchUrlsQuery, self).__init__(base)
+		self.urls = urls
+
+	def prepare(self):
+		for url in self.urls:
+			if not self.base.find_task_by_url(url):
+				self.base.add_url_task(url)
+
+	def get_tasks(self):
+		return map(self.base.get_task_by_url, self.urls)
 
 def url_extend_processor(base, url):
-	pass
+	import lixian_extend_links
+	extended = lixian_extend_links.try_to_extend_link(url)
+	if extended:
+		extended = map(lixian_extend_links.to_url, extended)
+		return BatchUrlsQuery(base, extended)
 
 ##################################################
 
