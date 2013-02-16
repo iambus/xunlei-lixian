@@ -7,9 +7,28 @@ from lixian_encoding import default_encoding
 from lixian_cli_parser import *
 from lixian_cli import parse_login
 
-##################################################
-# command decorator
-##################################################
+
+commands = {}
+
+extended_commands = []
+
+def update_helps(commands):
+	helps = dict((name, doc) for (name, usage, doc) in commands)
+
+	if commands:
+		import lixian_help
+		lixian_help.extended_usage = '''\nExtended commands:
+''' + lixian_help.join_commands([(x[0], x[1]) for x in commands])
+
+	for name, usage, doc in commands:
+		setattr(lixian_help, name, doc)
+
+def register_command(command):
+	extended_commands.append(command)
+	global commands
+	commands = dict((x.command_name, x) for x in extended_commands)
+	update_helps([(x.command_name, x.command_usage, x.command_help) for x in extended_commands])
+
 
 def command(name='', usage='', help=''):
 	def as_command(f):
@@ -20,6 +39,7 @@ def command(name='', usage='', help=''):
 		import textwrap
 		if f.command_help:
 			f.command_help = textwrap.dedent(f.command_help)
+		register_command(f)
 		return f
 	return as_command
 
@@ -290,37 +310,4 @@ def download_aria2(args):
 		download_aria2_temp(aria2_conf, j)
 	else:
 		download_aria2_stdin(aria2_conf, j)
-
-##################################################
-# update helps
-##################################################
-
-extended_commands = [
-		echo,
-		print_hash,
-		lx_diagnostics,
-		decode_url,
-		kuai,
-		extend_links,
-		list_torrent,
-		get_torrent,
-		export_aria2,
-		download_aria2,
-		]
-
-commands = dict((x.command_name, x) for x in extended_commands)
-
-def update_helps(commands):
-	helps = dict((name, doc) for (name, usage, doc) in commands)
-
-	if commands:
-		import lixian_help
-		lixian_help.extended_usage = '''\nExtended commands:
-''' + lixian_help.join_commands([(x[0], x[1]) for x in commands])
-
-	for name, usage, doc in commands:
-		assert not hasattr(lixian_help, name)
-		setattr(lixian_help, name, doc)
-
-update_helps([(x.command_name, x.command_usage, x.command_help) for x in extended_commands])
 
