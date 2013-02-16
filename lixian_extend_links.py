@@ -1,16 +1,34 @@
 
 import re
 
-sites = {
-'http://kuai.xunlei.com/d/':'lixian_kuai',
-'http://www.verycd.com/topics/':'lixian_verycd',
-'http://*.qjwm.com/*':'lixian_qjwm',
-'http://simplecd.*/':'lixian_simplecd',
-'http://www.simplecd.*/':'lixian_simplecd',
-'http://samplecd.*/':'lixian_simplecd',
-'http://www.samplecd.*/':'lixian_simplecd',
-'http://www.icili.com/emule/download/':'lixian_icili',
-}
+page_parsers = {}
+
+def register_parser(site, extend_link):
+	page_parsers[site] = extend_link
+
+def load_parsers():
+	import os
+	import os.path
+	parser_dir = os.path.join(os.path.dirname(__file__), "lixian_plugins", "parsers")
+	parsers = os.listdir(parser_dir)
+	parsers = [re.sub(r'\.py$', '', p) for p in parsers if p.endswith('.py') and not p.startswith('_')]
+	for p in parsers:
+		__import__('lixian_plugins.parsers.' + p)
+
+
+def in_site(url, site):
+	if url.startswith(site):
+		return True
+	if '*' in site:
+		import fnmatch
+		p = fnmatch.translate(site)
+		return re.match(p, url)
+
+def find_parser(link):
+	for p in page_parsers:
+		if in_site(link, p):
+			return page_parsers[p]
+
 
 def to_name(x):
 	if type(x) == dict:
@@ -63,23 +81,16 @@ def parse_pattern(link):
 			p = p[:-1]
 		return u, p.split('/')
 
-def in_site(url, site):
-	if url.startswith(site):
-		return True
-	if '*' in site:
-		import fnmatch
-		p = fnmatch.translate(site)
-		return re.match(p, url)
 
 def try_to_extend_link(link):
-	for p in sites:
-		if in_site(link, p):
-			x = parse_pattern(link)
-			if x:
-				links = __import__(sites[p]).extend_link(x[0])
-				return filter_links(links, x[1])
-			else:
-				return __import__(sites[p]).extend_link(link)
+	parser = find_parser(link)
+	if parser:
+		x = parse_pattern(link)
+		if x:
+			links = parser(x[0])
+			return filter_links(links, x[1])
+		else:
+			return parser(link)
 
 def extend_link(link):
 	return try_to_extend_link(link) or [link]

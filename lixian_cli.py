@@ -547,6 +547,7 @@ def lx_help(args):
 		usage(lixian_help.help)
 
 def execute_command(args=sys.argv[1:]):
+	import lixian_plugins # load plugins at import
 	if not args:
 		usage()
 		sys.exit(1)

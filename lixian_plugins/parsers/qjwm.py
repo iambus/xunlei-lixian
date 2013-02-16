@@ -1,4 +1,6 @@
 
+from lixian_plugins.api import page_parser
+
 import urllib2
 import re
 
@@ -13,6 +15,7 @@ def qjwm_link(url):
 		return url
 
 
+@page_parser('http://*.qjwm.com/*')
 def extend_link(url):
 	url = qjwm_link(url)
 	return url and [url] or []

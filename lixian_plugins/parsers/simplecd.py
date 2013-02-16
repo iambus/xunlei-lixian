@@ -1,4 +1,6 @@
 
+from lixian_plugins.api import page_parser
+
 import urllib2
 import re
 
@@ -16,6 +18,10 @@ def simplecd_links(url):
 	links = re.findall(r'ed2k://[^\s<>]+', table)
 	return links
 
+@page_parser(['http://simplecd.*/',
+              'http://www.simplecd.*/',
+              'http://samplecd.*/',
+              'http://www.samplecd.*/'])
 def extend_link(url):
 	links = simplecd_links(url)
 	from lixian_hash_ed2k import parse_ed2k_file

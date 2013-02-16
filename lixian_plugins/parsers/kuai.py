@@ -1,4 +1,6 @@
 
+from lixian_plugins.api import page_parser
+
 import urllib
 import re
 
@@ -23,6 +25,7 @@ def parse_link(html):
 	#info['name'] = urllib.unquote(info['name'])
 	return info
 
+@page_parser('http://kuai.xunlei.com/d/')
 def kuai_links(url):
 	assert url.startswith('http://kuai.xunlei.com/d/'), url
 	html = urllib.urlopen(url).read().decode('utf-8')
