@@ -385,6 +385,8 @@ def add_task(args):
 	tasks = find_tasks_to_download(client, args)
 	print 'All tasks added. Checking status...'
 	columns = ['id', 'status', 'name']
+	if get_config('n'):
+		columns.insert(0, 'n')
 	if args.size:
 		columns.append('size')
 	output_tasks(tasks, columns, args)
