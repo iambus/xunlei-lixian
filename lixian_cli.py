@@ -287,7 +287,7 @@ def download_task(args):
 @with_parser(parse_login)
 @with_parser(parse_colors)
 @with_parser(parse_size)
-@command_line_option('all')
+@command_line_option('all', default=True)
 @command_line_option('completed')
 @command_line_option('deleted')
 @command_line_option('expired')
@@ -304,13 +304,6 @@ def download_task(args):
 @command_line_option('date')
 @command_line_option('n', default=get_config('n'))
 def list_task(args):
-	status = 'all'
-	if args.completed:
-		status = 'completed'
-	elif args.deleted:
-		status = 'deleted'
-	elif args.expired:
-		status = 'expired'
 
 	parent_ids = [a[:-1] for a in args if re.match(r'^#?\d+/$', a)]
 	if parent_ids and not all(re.match(r'^#?\d+/$', a) for a in args):
@@ -321,25 +314,13 @@ def list_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 	if parent_ids:
 		args[0] = args[0][:-1]
-		tasks = search_tasks(client, args, status=status)
+		tasks = search_tasks(client, args)
 		assert len(tasks) == 1
 		tasks = client.list_bt(tasks[0])
 		#tasks = client.list_bt(client.get_task_by_id(parent_ids[0]))
 		tasks.sort(key=lambda x: int(x['index']))
-	elif len(ids):
-		tasks = search_tasks(client, args, status=status)
-	elif args.category:
-		tasks = client.read_all_tasks_by_category(from_native(args.category))
-	elif status == 'all':
-		tasks = client.read_all_tasks()
-	elif status == 'completed':
-		tasks = filter(lambda x: x['status_text'] == 'completed', client.read_all_tasks()) # by #139
-	elif status == 'deleted':
-		tasks = client.read_all_deleted()
-	elif status == 'expired':
-		tasks = client.read_all_expired()
 	else:
-		raise NotImplementedError(status)
+		tasks = search_tasks(client, args)
 	columns = ['n', 'id', 'name', 'status', 'size', 'progress', 'speed', 'date', 'dcid', 'gcid', 'original-url', 'download-url']
 	columns = filter(lambda k: getattr(args, k), columns)
 
@@ -489,7 +470,7 @@ def readd_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 	if status == 'expired' and args.all:
 		return client.readd_all_expired_tasks()
-	to_readd = search_tasks(client, args, status=status)
+	to_readd = search_tasks(client, args)
 	non_bt = []
 	bt = []
 	if not to_readd:

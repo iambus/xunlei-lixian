@@ -44,6 +44,9 @@ class TaskBase(object):
 		elif args.expired:
 			self.fetch_tasks = client.read_all_expired
 			self.get_default = self.get_tasks
+		elif args.completed:
+			self.fetch_tasks = client.read_all_tasks
+			self.get_default = lambda: filter(lambda x: x['status_text'] == 'completed', self.get_tasks())
 		elif args.all:
 			self.fetch_tasks = client.read_all_tasks
 			self.get_default = self.get_tasks
@@ -471,7 +474,7 @@ def find_tasks_to_download(client, args):
 		links.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
 	return query_tasks(client, args, list(args))
 
-def search_tasks(client, args, status='all'):
+def search_tasks(client, args):
 	return query_tasks(client, args, list(args), readonly=True)
 
 def expand_bt_sub_tasks(client, task):
