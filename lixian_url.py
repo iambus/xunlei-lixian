@@ -3,7 +3,7 @@ import base64
 import urllib
 
 def xunlei_url_encode(url):
-	return 'thunder://'+base64.encodestring('AA'+url+'ZZ')
+	return 'thunder://'+base64.encodestring('AA'+url+'ZZ').replace('\n', '')
 
 def xunlei_url_decode(url):
 	assert url.startswith('thunder://')
@@ -12,7 +12,7 @@ def xunlei_url_decode(url):
 	return url[2:-2]
 
 def flashget_url_decode(encode):
-	return 'Flashget://'+base64.encodestring('[FLASHGET]'+url+'[FLASHGET]')
+	return 'Flashget://'+base64.encodestring('[FLASHGET]'+url+'[FLASHGET]').replace('\n', '')
 
 def flashget_url_decode(url):
 	assert url.startswith('Flashget://')
@@ -27,7 +27,7 @@ def flashgetx_url_decode(url):
 	return 'ed2k://|file|'+base64.decodestring(name)+'|'+size+'|'+hash+'/'
 
 def qqdl_url_encode(url):
-	return 'qqdl://' + base64.encodestring(url)
+	return 'qqdl://' + base64.encodestring(url).replace('\n', '')
 
 def qqdl_url_decode(url):
 	assert url.startswith('qqdl://')
