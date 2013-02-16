@@ -7,7 +7,7 @@ __all__ = ['command',
 # commands
 ##################################################
 
-from lixian_commands import command
+from lixian_plugins.commands import command
 
 ##################################################
 # queries
