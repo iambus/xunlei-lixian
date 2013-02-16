@@ -19,11 +19,11 @@ def get_torrent(args):
 		import re
 		if re.match(r'[a-fA-F0-9]{40}$', id):
 			torrent = client.get_torrent_file_by_info_hash(id)
-		elif re.match(r'#?\d+$', id):
+		elif re.match(r'\d+$', id):
 			tasks = client.read_all_tasks()
-			from lixian_tasks import find_task_by_id
-			task = find_task_by_id(tasks, id)
-			assert task, id + ' not found'
+			import lixian_query
+			base = lixian_query.TaskBase(client, args)
+			task = base.get_task_by_id(id)
 			id = task['bt_hash']
 			id = id.lower()
 			torrent = client.get_torrent_file_by_info_hash(id)
