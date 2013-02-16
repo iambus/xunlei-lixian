@@ -1,5 +1,40 @@
 
-__all__ = ['page_parser', 'command']
+__all__ = ['command',
+           'user_query', 'extract_info_hash_from_url', 'download_torrent_from_url',
+           'page_parser']
+
+##################################################
+# commands
+##################################################
+
+from lixian_commands import command
+
+##################################################
+# queries
+##################################################
+
+from lixian_query import user_query
+
+def extract_info_hash_from_url(regexp):
+	import lixian_queries
+	import re
+	@user_query
+	def processor(base, x):
+		m = re.match(regexp, x)
+		if m:
+			return lixian_queries.BtHashQuery(base, m.group(1))
+
+def download_torrent_from_url(regexp):
+	import lixian_queries
+	import re
+	@user_query
+	def processor(base, x):
+		if re.match(regexp, x):
+			return lixian_queries.bt_url_processor(base, x)
+
+##################################################
+# parsers
+##################################################
 
 def page_parser(pattern):
 	def f(extend_links):
@@ -8,6 +43,3 @@ def page_parser(pattern):
 		for p in patterns:
 			lixian_extend_links.register_parser(p, extend_links)
 	return f
-
-from lixian_commands import command
-
