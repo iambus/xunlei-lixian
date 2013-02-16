@@ -38,8 +38,8 @@ def download_torrent_from_url(regexp):
 
 def page_parser(pattern):
 	def f(extend_links):
-		import lixian_extend_links
+		import lixian_plugins.parsers
 		patterns = pattern if type(pattern) is list else [pattern]
 		for p in patterns:
-			lixian_extend_links.register_parser(p, extend_links)
+			lixian_plugins.parsers.register_parser(p, extend_links)
 	return f

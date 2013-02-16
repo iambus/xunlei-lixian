@@ -219,10 +219,10 @@ class BatchUrlsQuery(Query):
 @query(priority=6)
 @bt_query(priority=6)
 def url_extend_processor(base, url):
-	import lixian_extend_links
-	extended = lixian_extend_links.try_to_extend_link(url)
+	import lixian_plugins.parsers
+	extended = lixian_plugins.parsers.try_to_extend_link(url)
 	if extended:
-		extended = map(lixian_extend_links.to_url, extended)
+		extended = map(lixian_plugins.parsers.to_url, extended)
 		return BatchUrlsQuery(base, extended)
 
 ##################################################

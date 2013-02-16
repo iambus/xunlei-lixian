@@ -16,11 +16,11 @@ def extend_links(args):
 	from lixian_encoding import default_encoding
 
 	args = parse_command_line(args, [], ['name'])
-	import lixian_extend_links
+	import lixian_plugins.parsers
 	if args.name:
-		for x in lixian_extend_links.extend_links_name(args):
+		for x in lixian_plugins.parsers.extend_links_name(args):
 			print x.encode(default_encoding)
 	else:
-		for x in lixian_extend_links.extend_links(args):
+		for x in lixian_plugins.parsers.extend_links(args):
 			print x
 

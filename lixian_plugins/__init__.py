@@ -5,7 +5,7 @@ def load_plugins():
 	import lixian_query
 	lixian_query.load_default_queries()
 	lixian_query.load_plugin_queries()
-	import lixian_extend_links
-	lixian_extend_links.load_parsers()
+	import lixian_plugins.parsers
+	lixian_plugins.parsers.load_parsers()
 
 load_plugins()
