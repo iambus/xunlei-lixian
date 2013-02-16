@@ -1,5 +1,5 @@
 
-__all__ = ['search_tasks', 'find_task_by_url', 'find_task_by_url_or_path', 'find_tasks_to_download', 'find_torrent_tasks_to_download', 'find_normal_tasks_to_download', 'expand_bt_sub_tasks', 'is_url', 'is_local_bt']
+__all__ = ['search_tasks', 'find_task_by_url', 'find_task_by_url_or_path', 'find_tasks_to_download', 'expand_bt_sub_tasks', 'is_url', 'is_local_bt']
 
 import re
 import os

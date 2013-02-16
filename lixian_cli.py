@@ -401,15 +401,7 @@ def output_tasks(tasks, columns, args, top=True):
 def add_task(args):
 	assert len(args) or args.input
 	client = XunleiClient(args.username, args.password, args.cookies)
-	links = []
-	links.extend(args)
-	if args.input:
-		import fileinput
-		links.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
-	if not args.torrent:
-		tasks = find_normal_tasks_to_download(client, links)
-	else:
-		tasks = find_torrent_tasks_to_download(client, links)
+	tasks = find_tasks_to_download(client, args)
 	print 'All tasks added. Checking status...'
 	columns = ['id', 'status', 'name']
 	if args.size:
