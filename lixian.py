@@ -560,7 +560,7 @@ class XunleiClient:
 		for x in tasks:
 			if x['id'] == id:
 				return x
-		raise Exception('Not task found for id '+id)
+		raise Exception('No task found for id '+id)
 
 
 def current_timestamp():
