@@ -143,8 +143,7 @@ def search_in_tasks(tasks, keywords):
 				continue
 		# search date
 		if re.match(r'^\d{4}\.\d{2}\.\d{2}$', x):
-			raise NotImplementedError()
-			matched = filter(lambda t: t['date'] == v, tasks)
+			matched = filter(lambda t: t['date'] == x, tasks)
 			if matched:
 				found += matched
 				continue
