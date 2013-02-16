@@ -87,8 +87,8 @@ python lixian_cli.py download bt-task-id/file-id
 python lixian_cli.py download --all
 python lixian_cli.py download mkv
 python lixian_cli.py download 2012.04.04
-python lixian_cli.py download #0 #1 #2
-python lixian_cli.py download #0-2
+python lixian_cli.py download 0 1 2
+python lixian_cli.py download 0-2
 
 python lixian_cli.py add url
 python lixian_cli.py add --bt 1.torrent
@@ -172,8 +172,8 @@ Examples:
  python lixian_cli.py download --all
  python lixian_cli.py download mkv
  python lixian_cli.py download 2012.04.04
- python lixian_cli.py download #0 #1 #2
- python lixian_cli.py download #0-2
+ python lixian_cli.py download 0 1 2
+ python lixian_cli.py download 0-2
 '''
 
 list     = '''python lixian_cli.py list

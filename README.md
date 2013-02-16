@@ -40,8 +40,8 @@ Quick start
 	python lixian_cli.py download --all
 	python lixian_cli.py download mkv
 	python lixian_cli.py download 2012.04.04
-	python lixian_cli.py download #0 #1 #2
-	python lixian_cli.py download #0-2
+	python lixian_cli.py download 0 1 2
+	python lixian_cli.py download 0-2
 
 	python lixian_cli.py add url
 	python lixian_cli.py add --bt 1.torrent
@@ -223,13 +223,11 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 类似任务id，也可以指定任务的序列号。序列号从0开始。可以使用lx list -n查看序列号。如果希望lx list默认显示序列号，可以使用lx config n。若要下载任务列表中的第一个任务：
 
-    lx download #0
+    lx download 0
 
 要下载前三个任务：
 
-    lx download #0-2
-
-注：#也可以省略。因为Shell里#会被当成注释。所以可以lx download 0或者lx download "#0"。
+    lx download 0-2
 
 对于bt任务，如果只想下载部分文件，可以在task id后指定文件id：
 
