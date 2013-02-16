@@ -1,4 +1,5 @@
-__author__ = 'Boyu Guo <iambus@gmail.com>'
+
+__all__ = ['page_parser', 'command']
 
 def page_parser(pattern):
 	def f(extend_links):
@@ -7,3 +8,6 @@ def page_parser(pattern):
 		for p in patterns:
 			lixian_extend_links.register_parser(p, extend_links)
 	return f
+
+from lixian_commands import command
+
