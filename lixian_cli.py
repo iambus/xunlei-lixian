@@ -2,7 +2,7 @@
 
 from lixian import XunleiClient, encypt_password
 from lixian_cli_parser import *
-from lixian_tasks import *
+from lixian_query import *
 from lixian_config import *
 import lixian_help
 import lixian_hash
