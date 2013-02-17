@@ -12,56 +12,56 @@ def find_matcher(keyword, filters):
 def has_task_filter(keyword):
 	return bool(find_matcher(keyword, task_filters))
 
-def match_thing(thing, keyword):
-	m = find_matcher(keyword, task_filters if type(thing) == dict else name_filters)
-	if m:
-		return bool(m(keyword, thing))
+def filter_tasks_with_matcher(tasks, keyword, (mode, m)):
+	if mode == 'single':
+		return filter(lambda x: m(keyword, x), tasks)
+	elif mode == 'batch':
+		return m(keyword, tasks)
 	else:
-		return None
+		raise NotImplementedError(mode)
 
 def filter_tasks(tasks, keyword):
-	# XXX: should return None if thing list is empty?
 	m = find_matcher(keyword, task_filters)
 	if m:
-		return filter(lambda x: m(keyword, x), tasks)
+		return filter_tasks_with_matcher(tasks, keyword, m)
 
 def filter_things(things, keyword):
-	# XXX: return None if thing list is empty?
 	if not things:
-		return
+		# XXX: neither None or things should be OK
+		return things
 	assert len(set(map(type, things))) == 1
 	filters = task_filters if type(things[0]) == dict else name_filters
 	m = find_matcher(keyword, filters)
 	if m:
-		return filter(lambda x: m(keyword, x), things)
+		return filter_tasks_with_matcher(things, keyword, m)
 
-def define_task_filter(pattern, matcher):
-	task_filters[pattern] = matcher
+def define_task_filter(pattern, matcher, batch=False):
+	task_filters[pattern] = ('batch' if batch else 'single', matcher)
 
-def define_name_filter(pattern, matcher):
-	name_filters[pattern] = matcher
-	task_filters[pattern] = lambda k, x: matcher(k, x['name'])
+def define_name_filter(pattern, matcher, batch=False):
+	name_filters[pattern] = ('batch' if batch else 'single', matcher)
+	task_filters[pattern] = ('batch' if batch else 'single', lambda k, x: matcher(k, x['name']))
 
-def task_filter(pattern=None, protocol=None):
+def task_filter(pattern=None, protocol=None, batch=False):
 	assert bool(pattern) ^ bool(protocol)
 	def define_filter(matcher):
 		if pattern:
-			define_task_filter(pattern, matcher)
+			define_task_filter(pattern, matcher, batch)
 		else:
 			assert re.match(r'^\w+$', protocol), protocol
-			define_task_filter(r'^%s:' % protocol, lambda k, x: matcher(re.sub(r'^\w+:', '', k), x))
+			define_task_filter(r'^%s:' % protocol, lambda k, x: matcher(re.sub(r'^\w+:', '', k), x), batch)
 		return matcher
 	return define_filter
 
-def name_filter(pattern=None, protocol=None):
+def name_filter(pattern=None, protocol=None, batch=False):
 	# FIXME: duplicate code
 	assert bool(pattern) ^ bool(protocol)
 	def define_filter(matcher):
 		if pattern:
-			define_name_filter(pattern, matcher)
+			define_name_filter(pattern, matcher, batch)
 		else:
 			assert re.match(r'^\w+$', protocol), protocol
-			define_name_filter(r'^%s:' % protocol, lambda k, x: matcher(re.sub(r'^\w+:', '', k), x))
+			define_name_filter(r'^%s:' % protocol, lambda k, x: matcher(re.sub(r'^\w+:', '', k), x), batch)
 		return matcher
 	return define_filter
 

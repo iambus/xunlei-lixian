@@ -5,6 +5,12 @@ import re
 
 @task_filter(protocol='size')
 def filter_by_size(keyword, task):
+	'''
+	Example:
+	lx download size:10m-
+	lx download size:1G+
+	lx download 0/size:1g-
+	'''
 	m = re.match(r'^([<>])?(\d+(?:\.\d+)?)([GM])?([+-])?$', keyword, flags=re.I)
 	assert m, keyword
 	less_or_great, n, u, less_or_more = m.groups()
