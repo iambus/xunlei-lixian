@@ -35,7 +35,11 @@ def filter_expr1(links, p, get_name):
 				indexes.append(i)
 		return [links[x] for x in indexes]
 	elif re.match(r'^\d+$', p):
-		return [links[int(p)]]
+		n = int(p)
+		if 0 <= n < len(links):
+			return [links[int(p)]]
+		else:
+			return filter(lambda x: re.search(p, get_name(x), re.I), links)
 	elif p == '*':
 		return links
 	elif re.match(r'\.\w+$', p):
