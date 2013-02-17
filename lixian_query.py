@@ -29,22 +29,16 @@ class TaskBase(object):
 		self.client = client
 		if args.category:
 			self.fetch_tasks = lambda: client.read_all_tasks_by_category(args.category)
-			self.get_default = self.get_tasks
 		elif args.deleted:
 			self.fetch_tasks = client.read_all_deleted
-			self.get_default = self.get_tasks
 		elif args.expired:
 			self.fetch_tasks = client.read_all_expired
-			self.get_default = self.get_tasks
 		elif args.completed:
 			self.fetch_tasks = client.read_all_tasks
-			self.get_default = lambda: filter(lambda x: x['status_text'] == 'completed', self.get_tasks())
 		elif args.all:
 			self.fetch_tasks = client.read_all_tasks
-			self.get_default = self.get_tasks
 		else:
 			self.fetch_tasks = client.read_all_tasks
-			self.get_default = lambda: []
 		# TODO: check args.limit
 
 		self.tasks = None
@@ -239,13 +233,45 @@ def enrich_bt(base, tasks):
 			t['base'] = base
 	return tasks
 
+class AllQuery(Query):
+	def __init__(self, base):
+		super(AllQuery, self).__init__(base)
+	def get_tasks(self):
+		return self.base.get_tasks()
+
+class CompletedQuery(Query):
+	def __init__(self, base):
+		super(CompletedQuery, self).__init__(base)
+	def get_tasks(self):
+		return filter(lambda x: x['status_text'] == 'completed', self.base.get_tasks())
+
+class NoneQuery(Query):
+	def __init__(self, base):
+		super(NoneQuery, self).__init__(base)
+	def get_tasks(self):
+		return []
+
+def default_query(options):
+	if options.category:
+		return AllQuery
+	elif options.deleted:
+		return AllQuery
+	elif options.expired:
+		return AllQuery
+	elif options.completed:
+		return CompletedQuery
+	elif options.all:
+		return AllQuery
+	else:
+		return NoneQuery
+
 def query_tasks(client, options, args, readonly=False):
 	load_default_queries() # IMPORTANT: init default queries
 	base = TaskBase(client, options)
-	if not len(args):
-		return enrich_bt(base, base.get_default())
 	# analysis queries
 	queries = [to_query(base, arg, bt_processors if options.torrent else processors) for arg in args]
+	if not queries:
+		queries = [default_query(options)(base)]
 	if not readonly:
 		# prepare actions (e.g. add tasks)
 		for query in queries:
