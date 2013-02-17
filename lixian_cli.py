@@ -112,7 +112,9 @@ def verify_mini_bt_hash(dirname, files):
 
 def download_single_task(client, download, task, options):
 	output = options.get('output')
+	output = output and os.path.expanduser(output)
 	output_dir = options.get('output_dir')
+	output_dir = output_dir and os.path.expanduser(output_dir)
 	delete = options.get('delete')
 	resuming = options.get('resuming')
 	overwrite = options.get('overwrite')
