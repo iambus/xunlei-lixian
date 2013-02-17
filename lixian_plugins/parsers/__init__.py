@@ -60,7 +60,7 @@ def try_to_extend_link(link):
 		if x:
 			links = parser(x[0])
 			import lixian_filter_expr
-			return lixian_filter_expr.filter_expr(links, x[1], to_name)
+			return lixian_filter_expr.filter_expr(links, x[1])
 		else:
 			return parser(link)
 

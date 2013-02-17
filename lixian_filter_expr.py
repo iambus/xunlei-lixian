@@ -3,7 +3,14 @@ __all__ = ['filter_expr']
 
 import re
 
-def filter_expr1(links, p, get_name):
+def get_name(x):
+	assert isinstance(x, (basestring, dict))
+	if type(x) == dict:
+		return x['name']
+	else:
+		return x
+
+def filter_expr1(links, p):
 	if not links:
 		return links
 	if re.match(r'^\[[^][]+\]$', p):
@@ -54,9 +61,9 @@ def filter_expr1(links, p, get_name):
 		else:
 			return filter_results
 
-def filter_expr(links, expr, get_name):
+def filter_expr(links, expr):
 	for p in expr.split('/'):
-		links = filter_expr1(links, p, get_name)
+		links = filter_expr1(links, p)
 	return links
 
 

@@ -90,7 +90,7 @@ def sub_id_processor(base, x):
 	assert task['type'] == 'bt', 'task %s is not a bt task' % lixian_encoding.to_native(task['name'])
 	files = base.get_files(task)
 	import lixian_filter_expr
-	files = lixian_filter_expr.filter_expr(files, sub_id, lambda x: x['name'])
+	files = lixian_filter_expr.filter_expr(files, sub_id)
 	subs = [x['index'] for x in files]
 	return SubTaskQuery(base, task, subs)
 
