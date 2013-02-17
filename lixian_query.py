@@ -25,26 +25,23 @@ def link_equals(x1, x2):
 
 
 class TaskBase(object):
-	def __init__(self, client, args):
+	def __init__(self, client, list_tasks, readonly=False):
 		self.client = client
-		if args.category:
-			self.fetch_tasks = lambda: client.read_all_tasks_by_category(args.category)
-		elif args.deleted:
-			self.fetch_tasks = client.read_all_deleted
-		elif args.expired:
-			self.fetch_tasks = client.read_all_expired
-		elif args.completed:
-			self.fetch_tasks = client.read_all_tasks
-		elif args.all:
-			self.fetch_tasks = client.read_all_tasks
-		else:
-			self.fetch_tasks = client.read_all_tasks
-		# TODO: check args.limit
+		self.fetch_tasks = list_tasks
+		self.readonly = readonly
+
+		self.queries = []
 
 		self.tasks = None
 		self.files = {}
 
 		self.jobs = [[], []]
+
+	def register_queries(self, queries):
+		self.queries += queries
+
+	def unregister_query(self, query):
+		self.queries.remove(query)
 
 	def get_tasks(self):
 		if self.tasks is None:
@@ -123,6 +120,28 @@ class TaskBase(object):
 		self.jobs = [[], []]
 		self.refresh_tasks()
 
+	def execute_queries(self):
+		if not self.readonly:
+			# prepare actions (e.g. add tasks)
+			for query in self.queries:
+				query.prepare()
+			# commit and refresh task list
+			self.commit()
+		# merge results
+		tasks = []
+		for query in self.queries:
+			tasks += query.get_tasks()
+		tasks = merge_tasks(tasks)
+		enrich_bt(self, tasks)
+		return tasks
+
+def enrich_bt(base, tasks):
+	for t in tasks:
+		if t['type'] == 'bt':
+			# XXX: a dirty trick to cache requests
+			t['base'] = base
+	return tasks
+
 class Query(object):
 	def __init__(self, base):
 		self.bind(base)
@@ -192,6 +211,20 @@ def load_plugin_queries():
 # query
 ##################################################
 
+def to_list_tasks(client, args):
+	if args.category:
+		return lambda: client.read_all_tasks_by_category(args.category)
+	elif args.deleted:
+		return client.read_all_deleted
+	elif args.expired:
+		return client.read_all_expired
+	elif args.completed:
+		return client.read_all_tasks
+	elif args.all:
+		return client.read_all_tasks
+	else:
+		return client.read_all_tasks
+
 def to_query(base, arg, processors):
 	for _, process in sorted(processors):
 		q = process(base, arg)
@@ -226,13 +259,6 @@ def merge_tasks(tasks):
 				task_mapping[task] = task
 	return result_tasks
 
-def enrich_bt(base, tasks):
-	for t in tasks:
-		if t['type'] == 'bt':
-			# XXX: a dirty trick to cache requests
-			t['base'] = base
-	return tasks
-
 class AllQuery(Query):
 	def __init__(self, base):
 		super(AllQuery, self).__init__(base)
@@ -265,26 +291,14 @@ def default_query(options):
 	else:
 		return NoneQuery
 
-def query_tasks(client, options, args, readonly=False):
+def parse_queries(base, args):
+	return [to_query(base, arg, bt_processors if args.torrent else processors) for arg in args] or [default_query(args)(base)]
+
+def query_tasks(client, args, readonly=False):
 	load_default_queries() # IMPORTANT: init default queries
-	base = TaskBase(client, options)
-	# analysis queries
-	queries = [to_query(base, arg, bt_processors if options.torrent else processors) for arg in args]
-	if not queries:
-		queries = [default_query(options)(base)]
-	if not readonly:
-		# prepare actions (e.g. add tasks)
-		for query in queries:
-			query.prepare()
-		# commit and refresh task list
-		base.commit()
-	# merge results
-	tasks = []
-	for query in queries:
-		tasks += query.get_tasks()
-	tasks = merge_tasks(tasks)
-	enrich_bt(base, tasks)
-	return tasks
+	base = TaskBase(client, to_list_tasks(client, args), readonly=readonly)
+	base.register_queries(parse_queries(base, args))
+	return base.execute_queries()
 
 ##################################################
 # compatible APIs
@@ -296,10 +310,10 @@ def find_tasks_to_download(client, args):
 	if args.input:
 		import fileinput
 		links.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
-	return query_tasks(client, args, list(args))
+	return query_tasks(client, args)
 
 def search_tasks(client, args):
-	return query_tasks(client, args, list(args), readonly=True)
+	return query_tasks(client, args, readonly=True)
 
 def expand_bt_sub_tasks(task):
 	files = task['base'].get_files(task) # XXX: a dirty trick to cache requests
