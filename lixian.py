@@ -56,7 +56,10 @@ class XunleiClient:
 
 	@retry
 	def urlopen(self, url, **args):
-		#print url
+#		print url
+#		import traceback
+#		for line in traceback.format_stack():
+#			print line.strip()
 		if 'data' in args and type(args['data']) == dict:
 			args['data'] = urlencode(args['data'])
 		return self.opener.open(urllib2.Request(url, **args), timeout=60)

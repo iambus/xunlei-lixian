@@ -27,7 +27,6 @@ def link_equals(x1, x2):
 class TaskBase(object):
 	def __init__(self, client, args):
 		self.client = client
-		self.tasks = None
 		if args.category:
 			self.fetch_tasks = lambda: client.read_all_tasks_by_category(args.category)
 			self.get_default = self.get_tasks
@@ -48,6 +47,9 @@ class TaskBase(object):
 			self.get_default = lambda: []
 		# TODO: check args.limit
 
+		self.tasks = None
+		self.files = {}
+
 		self.jobs = [[], []]
 
 	def get_tasks(self):
@@ -58,6 +60,14 @@ class TaskBase(object):
 	def refresh_tasks(self):
 		self.tasks = self.fetch_tasks()
 		return self.tasks
+
+	def get_files(self, task):
+		assert isinstance(task, dict), task
+		id = task['id']
+		if id in self.files:
+			return self.files[id]
+		self.files[id] = self.client.list_bt(task)
+		return self.files[id]
 
 	def find_task_by_id(self, id):
 		assert isinstance(id, basestring), repr(id)
@@ -145,6 +155,7 @@ bt_processors = []
 
 # 0
 # 1 -- builtin -- most
+# 2 -- subs -- 0/[0-9]
 # 4 -- magnet
 # 5 -- user
 # 6 -- extend url
@@ -193,7 +204,7 @@ def to_query(base, arg, processors):
 			return q
 	raise NotImplementedError('No proper query process found for: ' + arg)
 
-def merge_bt_sub_tasks(tasks):
+def merge_tasks(tasks):
 	result_tasks = []
 	task_mapping = {}
 	for task in tasks:
@@ -220,6 +231,11 @@ def merge_bt_sub_tasks(tasks):
 				task_mapping[task] = task
 	return result_tasks
 
+def enrich_bt(base, tasks):
+	for t in tasks:
+		if 'files' in t:
+			files = base.get_files(t)
+			t['files'] = [files[i] for i in t['files']]
 
 def query_tasks(client, options, args, readonly=False):
 	load_default_queries() # IMPORTANT: init default queries
@@ -238,7 +254,9 @@ def query_tasks(client, options, args, readonly=False):
 	tasks = []
 	for query in queries:
 		tasks += query.get_tasks()
-	return merge_bt_sub_tasks(tasks)
+	tasks = merge_tasks(tasks)
+	enrich_bt(base, tasks)
+	return tasks
 
 ##################################################
 # compatible APIs
@@ -263,22 +281,12 @@ def expand_bt_sub_tasks(client, task):
 		single_file = True
 	if 'files' in task:
 		ordered_files = []
-		indexed_files = dict((f['index'], f) for f in files)
-		subs = []
-		for index in task['files']:
-			if index == '*':
-				subs.extend([x['index'] for x in files])
-			elif index.startswith('.'):
-				subs.extend([x['index'] for x in files if x['name'].lower().endswith(index.lower())])
+		for t in task['files']:
+			assert isinstance(t, dict)
+			if t['status_text'] != 'completed':
+				not_ready.append(t)
 			else:
-				subs.append(int(index))
-		for index in subs:
-			t = indexed_files[index]
-			if t not in ordered_files:
-				if t['status_text'] != 'completed':
-					not_ready.append(t)
-				else:
-					ordered_files.append(t)
+				ordered_files.append(t)
 		files = ordered_files
 	return files, not_ready, single_file
 

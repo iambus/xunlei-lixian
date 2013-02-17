@@ -43,7 +43,7 @@ class MultipleTasksQuery(Query):
 @query(priority=1)
 @bt_query(priority=1)
 def range_id_processor(base, x):
-	m = re.match(r'^#?(\d+)-(\d+)$', x)
+	m = re.match(r'^(\d+)-(\d+)$', x)
 	if not m:
 		return
 	begin = int(m.group(1))
@@ -73,10 +73,10 @@ class SubTaskQuery(Query):
 			result.append(t)
 		return result
 
-@query(priority=1)
-@bt_query(priority=1)
+@query(priority=2)
+@bt_query(priority=2)
 def sub_id_processor(base, x):
-	m = re.match(r'^#?(\d+)/([-.\w\[\],\s*]+)$', x)
+	m = re.match(r'^(\d+)/(.+)$', x)
 	if not m:
 		return
 	task_id, sub_id = m.groups()
@@ -86,27 +86,10 @@ def sub_id_processor(base, x):
 
 	import lixian_encoding
 	assert task['type'] == 'bt', 'task %s is not a bt task' % lixian_encoding.to_native(task['name'])
-	subs = []
-	if re.match(r'\[.*\]', sub_id):
-		for sub_id in re.split(r'\s*,\s*', sub_id[1:-1]):
-			assert re.match(r'^\d+(-\d+)?|\.\w+$', sub_id), sub_id
-			if sub_id.startswith('.'):
-				subs.append(sub_id)
-			elif '-' in sub_id:
-				start, end = map(int, sub_id.split('-'))
-				r = range(start, end+1) if start <= end else reversed(range(end, start+1))
-				for i in r:
-					subs.append(str(i))
-			else:
-				assert re.match(r'^\d+$', sub_id), sub_id
-				subs.append(sub_id)
-	elif re.match(r'^\.\w+$', sub_id):
-		subs.append(sub_id)
-	elif sub_id == '*':
-		subs.append(sub_id)
-	else:
-		assert re.match(r'^\d+$', sub_id), sub_id
-		subs.append(sub_id)
+	files = base.get_files(task)
+	import lixian_filter_expr
+	files = lixian_filter_expr.filter_expr(files, sub_id, lambda x: x['name'])
+	subs = [x['index'] for x in files]
 	return SubTaskQuery(base, task, subs)
 
 ##################################################
