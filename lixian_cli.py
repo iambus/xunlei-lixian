@@ -169,7 +169,7 @@ def download_single_task(client, download, task, options):
 	gdriveid = str(client.get_gdriveid())
 
 	if task['type'] == 'bt':
-		files, skipped, single_file = expand_bt_sub_tasks(client, task)
+		files, skipped, single_file = expand_bt_sub_tasks(task)
 		if single_file:
 			dirname = output_dir
 		else:

@@ -233,9 +233,9 @@ def merge_tasks(tasks):
 
 def enrich_bt(base, tasks):
 	for t in tasks:
-		if 'files' in t:
-			files = base.get_files(t)
-			t['files'] = [files[i] for i in t['files']]
+		if t['type'] == 'bt':
+			# XXX: a dirty trick to cache requests
+			t['base'] = base
 
 def query_tasks(client, options, args, readonly=False):
 	load_default_queries() # IMPORTANT: init default queries
@@ -273,16 +273,17 @@ def find_tasks_to_download(client, args):
 def search_tasks(client, args):
 	return query_tasks(client, args, list(args), readonly=True)
 
-def expand_bt_sub_tasks(client, task):
-	files = client.list_bt(task)
+def expand_bt_sub_tasks(task):
+	files = task['base'].get_files(task) # XXX: a dirty trick to cache requests
 	not_ready = []
 	single_file = False
 	if len(files) == 1 and files[0]['name'] == task['name']:
 		single_file = True
 	if 'files' in task:
 		ordered_files = []
-		for t in task['files']:
-			assert isinstance(t, dict)
+		for i in task['files']:
+			assert isinstance(i, int)
+			t = files[i]
 			if t['status_text'] != 'completed':
 				not_ready.append(t)
 			else:
