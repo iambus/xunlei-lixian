@@ -186,6 +186,18 @@ class TaskBase(object):
 		self.download_jobs = waiting
 		return completed
 
+	def refresh_status(self):
+		self.refresh_tasks()
+		self.files = {}
+		tasks = []
+		for old_task in self.download_jobs:
+			new_task = dict(self.get_task_by_id(old_task['id']))
+			if 'files' in old_task:
+				files = self.get_files(new_task)
+				new_task['files'] = [files[f['index']] for f in old_task['files']]
+			tasks.append(new_task)
+		self.download_jobs = tasks
+
 class Query(object):
 	def __init__(self, base):
 		self.bind(base)

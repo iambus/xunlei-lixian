@@ -260,18 +260,60 @@ def download_multiple_tasks(client, download, tasks, options):
 @command_line_option('hash', default=get_config('hash', True))
 @command_line_option('bt-dir', default=True)
 @command_line_option('save-torrent-file')
+@command_line_option('watch')
+@command_line_option('watch-present')
+@command_line_value('watch-interval', default=get_config('watch-interval', '3m'))
 def download_task(args):
 	import lixian_download_tools
 	download = lixian_download_tools.get_tool(args.tool)
 	download_args = {'output':args.output, 'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash, 'no_bt_dir': not args.bt_dir, 'save_torrent_file':args.save_torrent_file}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	assert len(args) or args.input or args.all or args.category, 'Not enough arguments'
-	tasks = lixian_query.find_tasks_to_download(client, args)
-	if args.output:
-		assert len(tasks) == 1
-		download_single_task(client, download, tasks[0], download_args)
+	query = lixian_query.build_query(client, args)
+	query.query_once()
+
+	def sleep(n):
+		assert isinstance(n, (int, basestring)), repr(n)
+		import time
+		if isinstance(n, basestring):
+			n, u = re.match(r'^(\d+)([smh])?$', n.lower()).groups()
+			n = int(n) * {None: 1, 's': 1, 'm': 60, 'h': 3600}[u]
+		time.sleep(n)
+
+	if args.watch_present:
+		assert not args.output, 'not supported with watch option yet'
+		tasks = query.pull_completed()
+		while True:
+			if tasks:
+				download_multiple_tasks(client, download, tasks, download_args)
+			if not query.download_jobs:
+				break
+			if not tasks:
+				sleep(args.watch_interval)
+			query.refresh_status()
+			tasks = query.pull_completed()
+
+	elif args.watch:
+		assert not args.output, 'not supported with watch option yet'
+		tasks = query.pull_completed()
+		while True:
+			if tasks:
+				download_multiple_tasks(client, download, tasks, download_args)
+			if (not query.download_jobs) and (not query.queries):
+				break
+			if not tasks:
+				sleep(args.watch_interval)
+			query.refresh_status()
+			query.query_search()
+			tasks = query.pull_completed()
+
 	else:
-		download_multiple_tasks(client, download, tasks, download_args)
+		tasks = query.peek_download_jobs()
+		if args.output:
+			assert len(tasks) == 1
+			download_single_task(client, download, tasks[0], download_args)
+		else:
+			download_multiple_tasks(client, download, tasks, download_args)
 
 
 @command_line_parser(help=lixian_help.list)
