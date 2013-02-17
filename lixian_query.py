@@ -1,6 +1,6 @@
 
 __all__ = ['query', 'bt_query', 'user_query', 'Query',
-           'query_tasks', 'find_tasks_to_download', 'search_tasks', 'expand_bt_sub_tasks']
+           'build_query', 'find_tasks_to_download', 'search_tasks', 'expand_bt_sub_tasks']
 
 import lixian_hash_bt
 import lixian_hash_ed2k
@@ -122,7 +122,6 @@ class TaskBase(object):
 		self.commit_jobs = [[], []]
 		self.refresh_tasks()
 
-
 	def prepare(self):
 		# prepare actions (e.g. add tasks)
 		for query in self.queries:
@@ -130,35 +129,62 @@ class TaskBase(object):
 		# commit and refresh task list
 		self.commit()
 
+	def query_complete(self):
+		for query in list(self.queries):
+			query.query_complete()
+
+	def merge_results(self):
+		tasks = merge_tasks(self.download_jobs)
+		for t in tasks:
+			if t['type'] == 'bt':
+				# XXX: a dirty trick to cache requests
+				t['base'] = self
+		self.download_jobs = tasks
 
 	def query_once(self):
 		self.prepare()
 		# merge results
 		for query in self.queries:
 			self.download_jobs += query.query_once()
-
-	def query_complete(self):
-		for query in self.queries:
-			query.query_complete()
+		self.query_complete()
+		self.merge_results()
 
 	def query_search(self):
 		for query in self.queries:
 			self.download_jobs += query.query_search()
+		self.merge_results()
 
 	def peek_download_jobs(self):
-		tasks = merge_tasks(self.download_jobs)
-		enrich_bt(self, tasks)
-		return tasks
+		return self.download_jobs
 
 	def pull_completed(self):
-		raise NotImplementedError()
-
-def enrich_bt(base, tasks):
-	for t in tasks:
-		if t['type'] == 'bt':
-			# XXX: a dirty trick to cache requests
-			t['base'] = base
-	return tasks
+		completed = []
+		waiting = []
+		for t in self.download_jobs:
+			if t['status_text'] == 'completed':
+				completed.append(t)
+			elif t['type'] != 'bt':
+				waiting.append(t)
+			elif 'files' not in t:
+				waiting.append(t)
+			else:
+				i_completed = []
+				i_waiting = []
+				for f in t['files']:
+					if f['status_text'] == 'completed':
+						i_completed.append(f)
+					else:
+						i_waiting.append(f)
+				if i_completed:
+					tt = dict(t)
+					tt['files'] = i_completed
+					completed.append(tt)
+				if i_waiting:
+					tt = dict(t)
+					tt['files'] = i_waiting
+					waiting.append(tt)
+		self.download_jobs = waiting
+		return completed
 
 class Query(object):
 	def __init__(self, base):
@@ -258,31 +284,33 @@ def to_query(base, arg, processors):
 			return q
 	raise NotImplementedError('No proper query process found for: ' + arg)
 
+def merge_files(files1, files2):
+	ids = []
+	files = []
+	for f in files1 + files2:
+		if f['id'] not in ids:
+			files.append(f)
+			ids.append(f['id'])
+	return files
+
 def merge_tasks(tasks):
 	result_tasks = []
 	task_mapping = {}
 	for task in tasks:
-		if type(task) == dict:
-			id = task['id']
-			if id in task_mapping:
-				if 'index' in task and 'files' in task_mapping[id]:
-					task_mapping[id]['files'].append(task['index'])
-			else:
-				if 'index' in task:
-					t = dict(task)
-					t['files'] = [t['index']]
-					del t['index']
-					result_tasks.append(t)
-					task_mapping[id] = t
-				else:
-					result_tasks.append(task)
-					task_mapping[id] = task
+		assert type(task) == dict, repr(type)
+		id = task['id']
+		assert 'index' not in task
+		if id in task_mapping:
+			if 'files' in task and 'files' in task_mapping[id]:
+				task_mapping[id]['files'] = merge_files(task_mapping[id]['files'], task['files'])
 		else:
-			if task in task_mapping:
-				pass
+			if 'files' in task:
+				t = dict(task)
+				result_tasks.append(t)
+				task_mapping[id] = t
 			else:
 				result_tasks.append(task)
-				task_mapping[task] = task
+				task_mapping[id] = task
 	return result_tasks
 
 class AllQuery(Query):
@@ -353,9 +381,8 @@ def expand_bt_sub_tasks(task):
 		single_file = True
 	if 'files' in task:
 		ordered_files = []
-		for i in task['files']:
-			assert isinstance(i, int)
-			t = files[i]
+		for t in task['files']:
+			assert isinstance(t, dict)
 			if t['status_text'] != 'completed':
 				not_ready.append(t)
 			else:

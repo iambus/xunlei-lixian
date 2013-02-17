@@ -78,24 +78,19 @@ class SubTaskQuery(Query):
 		self.subs = subs
 
 	def query_once(self):
-		result = []
-		task = self.base.get_task_by_id(self.task['id'])
-		for i in self.subs:
-			t = dict(task)
-			t['index'] = i
-			result.append(t)
-		return result
+		task = dict(self.base.get_task_by_id(self.task['id']))
+		files = self.base.get_files(task)
+		task['files'] = self.subs
+		return [task]
 
 	def query_search(self):
 		task = self.base.find_task_by_id(self.task['id'])
 		if not task:
 			return []
-		result = []
-		for i in self.subs:
-			t = dict(task)
-			t['index'] = i
-			result.append(t)
-		return result
+		task = dict(task)
+		files = self.base.get_files(task)
+		task['files'] = self.subs
+		return [task]
 
 	def query_complete(self):
 		self.unregister()
@@ -118,7 +113,7 @@ def sub_id_processor(base, x):
 	files = base.get_files(task)
 	import lixian_filter_expr
 	files = lixian_filter_expr.filter_expr(files, sub_id)
-	subs = [x['index'] for x in files]
+	subs = [x for x in files]
 	return SubTaskQuery(base, task, subs)
 
 ##################################################
