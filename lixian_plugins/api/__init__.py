@@ -33,6 +33,13 @@ def download_torrent_from_url(regexp):
 			return lixian_queries.bt_url_processor(base, x)
 
 ##################################################
+# filters
+##################################################
+
+from lixian_plugins.filters import task_filter
+from lixian_plugins.filters import name_filter
+
+##################################################
 # parsers
 ##################################################
 

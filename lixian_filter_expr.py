@@ -4,6 +4,8 @@ __all__ = ['filter_expr']
 import re
 
 def filter_expr1(links, p, get_name):
+	if not links:
+		return links
 	if re.match(r'^\[[^][]+\]$', p):
 		matched = []
 		for p in re.split(r'\s*,\s*', p[1:-1]):
@@ -45,7 +47,12 @@ def filter_expr1(links, p, get_name):
 	elif re.match(r'\.\w+$', p):
 		return filter(lambda x: get_name(x).lower().endswith(p.lower()), links)
 	else:
-		return filter(lambda x: re.search(p, get_name(x), re.I), links)
+		import lixian_plugins.filters
+		filter_results = lixian_plugins.filters.filter_things(links, p)
+		if filter_results is None:
+			return filter(lambda x: re.search(p, get_name(x), re.I), links)
+		else:
+			return filter_results
 
 def filter_expr(links, expr, get_name):
 	for p in expr.split('/'):

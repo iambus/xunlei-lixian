@@ -262,6 +262,26 @@ def bt_url_processor(base, url):
 
 ##################################################
 
+class FilterQuery(Query):
+	def __init__(self, base, x):
+		super(FilterQuery, self).__init__(base)
+		self.keyword = x
+
+	def get_tasks(self):
+		import lixian_plugins.filters
+		tasks = lixian_plugins.filters.filter_tasks(self.base.get_tasks(), self.keyword)
+		assert tasks is not None
+		return tasks
+
+@query(priority=8)
+@bt_query(priority=8)
+def filter_processor(base, x):
+	import lixian_plugins.filters
+	if lixian_plugins.filters.has_task_filter(x):
+		return FilterQuery(base, x)
+
+##################################################
+
 class DefaultQuery(Query):
 	def __init__(self, base, x):
 		super(DefaultQuery, self).__init__(base)

@@ -160,6 +160,7 @@ bt_processors = []
 # 5 -- user
 # 6 -- extend url
 # 7 -- plain url, bt url
+# 8 -- filter
 # 9 -- default -- text search
 
 def query(priority):
@@ -186,10 +187,10 @@ def load_plugin_queries():
 	import os
 	import os.path
 	import re
-	parser_dir = os.path.join(os.path.dirname(__file__), "lixian_plugins", "queries")
-	parsers = os.listdir(parser_dir)
-	parsers = [re.sub(r'\.py$', '', p) for p in parsers if p.endswith('.py') and not p.startswith('_')]
-	for p in parsers:
+	query_dir = os.path.join(os.path.dirname(__file__), "lixian_plugins", "queries")
+	queries = os.listdir(query_dir)
+	queries = [re.sub(r'\.py$', '', p) for p in queries if p.endswith('.py') and not p.startswith('_')]
+	for p in queries:
 		__import__('lixian_plugins.queries.' + p)
 
 

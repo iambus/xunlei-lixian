@@ -5,10 +5,12 @@ def load_plugins():
 	import lixian_query
 	lixian_query.load_default_queries()
 	lixian_query.load_plugin_queries()
+	import lixian_plugins.filters
+	lixian_plugins.filters.load_filters()
 	import lixian_plugins.parsers
 	lixian_plugins.parsers.load_parsers()
-	# load lixian_plugins/*.py
 
+	# load lixian_plugins/*.py
 	import os
 	import os.path
 	import re
