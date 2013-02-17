@@ -237,12 +237,13 @@ def enrich_bt(base, tasks):
 		if t['type'] == 'bt':
 			# XXX: a dirty trick to cache requests
 			t['base'] = base
+	return tasks
 
 def query_tasks(client, options, args, readonly=False):
 	load_default_queries() # IMPORTANT: init default queries
 	base = TaskBase(client, options)
 	if not len(args):
-		return base.get_default()
+		return enrich_bt(base, base.get_default())
 	# analysis queries
 	queries = [to_query(base, arg, bt_processors if options.torrent else processors) for arg in args]
 	if not readonly:
