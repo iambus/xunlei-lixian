@@ -48,8 +48,8 @@ def task_filter(pattern=None, protocol=None, batch=False):
 		if pattern:
 			define_task_filter(pattern, matcher, batch)
 		else:
-			assert re.match(r'^\w+$', protocol), protocol
-			define_task_filter(r'^%s:' % protocol, lambda k, x: matcher(re.sub(r'^\w+:', '', k), x), batch)
+			assert re.match(r'^[\w-]+$', protocol), protocol
+			define_task_filter(r'^%s:' % protocol, lambda k, x: matcher(re.sub(r'^[\w-]+:', '', k), x), batch)
 		return matcher
 	return define_filter
 

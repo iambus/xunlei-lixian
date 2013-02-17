@@ -3,7 +3,7 @@ from lixian_plugins.api import task_filter
 
 import re
 
-@task_filter(protocol='total_size', batch=True)
+@task_filter(protocol='total-size', batch=True)
 def fetch_by_total_size(keyword, tasks):
 	'''
 	Example:
