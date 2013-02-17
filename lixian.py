@@ -622,7 +622,7 @@ def parse_bt_list(js):
 	files = []
 	for record in result['Record']:
 		files.append({
-			'id': int(record['taskid']),
+			'id': record['taskid'],
 			'index': record['id'],
 			'type': 'bt',
 			'name': record['title'], # TODO: support folder
