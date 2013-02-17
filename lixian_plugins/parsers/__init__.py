@@ -42,34 +42,6 @@ def to_url(x):
 	else:
 		return x
 
-def filter_links1(links, p):
-	if re.match(r'^\[[^][]+\]$', p):
-		indexes = []
-		for p in re.split(r'\s*,\s*', p[1:-1]):
-			if re.match(r'^\d+$', p):
-				i = int(p)
-				if i not in indexes:
-					indexes.append(i)
-			elif '-' in p:
-				start, end = p.split('-')
-				if not start:
-					start = 0
-				if not end:
-					end = len(links) - 1
-				for i in range(int(start), int(end)+1):
-					if i not in indexes:
-						indexes.append(i)
-			else:
-				raise NotImplementedError(p)
-		return [links[x] for x in indexes if 0 <= x < len(links)]
-	else:
-		return filter(lambda x: re.search(p, to_name(x), re.I), links)
-
-def filter_links(links, patterns):
-	for p in patterns:
-		links = filter_links1(links, p)
-	return links
-
 def parse_pattern(link):
 	m = re.search(r'[^:]//', link)
 	if m:
@@ -79,8 +51,7 @@ def parse_pattern(link):
 		if p.endswith('/'):
 			u += '/'
 			p = p[:-1]
-		return u, p.split('/')
-
+		return u, p
 
 def try_to_extend_link(link):
 	parser = find_parser(link)
@@ -88,7 +59,8 @@ def try_to_extend_link(link):
 		x = parse_pattern(link)
 		if x:
 			links = parser(x[0])
-			return filter_links(links, x[1])
+			import lixian_filter_expr
+			return lixian_filter_expr.filter_expr(links, x[1], to_name)
 		else:
 			return parser(link)
 
