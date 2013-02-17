@@ -2,7 +2,7 @@
 
 from lixian import XunleiClient, encypt_password
 from lixian_cli_parser import *
-from lixian_query import *
+import lixian_query
 from lixian_config import *
 import lixian_help
 import lixian_hash
@@ -169,7 +169,7 @@ def download_single_task(client, download, task, options):
 	gdriveid = str(client.get_gdriveid())
 
 	if task['type'] == 'bt':
-		files, skipped, single_file = expand_bt_sub_tasks(task)
+		files, skipped, single_file = lixian_query.expand_bt_sub_tasks(task)
 		if single_file:
 			dirname = output_dir
 		else:
@@ -266,7 +266,7 @@ def download_task(args):
 	download_args = {'output':args.output, 'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash, 'no_bt_dir': not args.bt_dir, 'save_torrent_file':args.save_torrent_file}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	assert len(args) or args.input or args.all or args.category, 'Not enough arguments'
-	tasks = find_tasks_to_download(client, args)
+	tasks = lixian_query.find_tasks_to_download(client, args)
 	if args.output:
 		assert len(tasks) == 1
 		download_single_task(client, download, tasks[0], download_args)
@@ -305,13 +305,13 @@ def list_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 	if parent_ids:
 		args[0] = args[0][:-1]
-		tasks = search_tasks(client, args)
+		tasks = lixian_query.search_tasks(client, args)
 		assert len(tasks) == 1
 		tasks = client.list_bt(tasks[0])
 		#tasks = client.list_bt(client.get_task_by_id(parent_ids[0]))
 		tasks.sort(key=lambda x: int(x['index']))
 	else:
-		tasks = search_tasks(client, args)
+		tasks = lixian_query.search_tasks(client, args)
 	columns = ['n', 'id', 'name', 'status', 'size', 'progress', 'speed', 'date', 'dcid', 'gcid', 'original-url', 'download-url']
 	columns = filter(lambda k: getattr(args, k), columns)
 
@@ -373,7 +373,7 @@ def output_tasks(tasks, columns, args, top=True):
 def add_task(args):
 	assert len(args) or args.input
 	client = XunleiClient(args.username, args.password, args.cookies)
-	tasks = find_tasks_to_download(client, args)
+	tasks = lixian_query.find_tasks_to_download(client, args)
 	print 'All tasks added. Checking status...'
 	columns = ['id', 'status', 'name']
 	if get_config('n'):
@@ -390,7 +390,7 @@ def add_task(args):
 def delete_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 	if len(args):
-		to_delete = search_tasks(client, args)
+		to_delete = lixian_query.search_tasks(client, args)
 	elif args.all:
 		to_delete = client.read_all_tasks()
 	if not to_delete:
@@ -418,7 +418,7 @@ def delete_task(args):
 @command_line_option('all')
 def pause_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
-	to_pause = search_tasks(client, args)
+	to_pause = lixian_query.search_tasks(client, args)
 	print "Below files are going to be paused:"
 	for x in to_pause:
 		print x['name'].encode(default_encoding)
@@ -431,7 +431,7 @@ def pause_task(args):
 @command_line_option('all')
 def restart_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
-	to_restart = search_tasks(client, args)
+	to_restart = lixian_query.search_tasks(client, args)
 	print "Below files are going to be restarted:"
 	for x in to_restart:
 		print x['name'].encode(default_encoding)
@@ -463,7 +463,7 @@ def readd_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
 	if status == 'expired' and args.all:
 		return client.readd_all_expired_tasks()
-	to_readd = search_tasks(client, args)
+	to_readd = lixian_query.search_tasks(client, args)
 	non_bt = []
 	bt = []
 	if not to_readd:
