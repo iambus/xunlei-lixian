@@ -17,8 +17,15 @@ class SingleTaskQuery(Query):
 		super(SingleTaskQuery, self).__init__(base)
 		self.id = t['id']
 
-	def get_tasks(self):
+	def query_once(self):
 		return [self.base.get_task_by_id(self.id)]
+
+	def query_search(self):
+		t = self.base.find_task_by_id(self.id)
+		return [t] if t else []
+
+	def query_complete(self):
+		self.unregister()
 
 @query(priority=1)
 @bt_query(priority=1)
@@ -37,8 +44,14 @@ class MultipleTasksQuery(Query):
 		super(MultipleTasksQuery, self).__init__(base)
 		self.tasks = tasks
 
-	def get_tasks(self):
+	def query_once(self):
 		return map(self.base.get_task_by_id, (t['id'] for t in self.tasks))
+
+	def query_search(self):
+		return filter(bool, map(self.base.find_task_by_id, (t['id'] for t in self.tasks)))
+
+	def query_complete(self):
+		self.unregister()
 
 @query(priority=1)
 @bt_query(priority=1)
@@ -64,7 +77,7 @@ class SubTaskQuery(Query):
 		self.task = t
 		self.subs = subs
 
-	def get_tasks(self):
+	def query_once(self):
 		result = []
 		task = self.base.get_task_by_id(self.task['id'])
 		for i in self.subs:
@@ -72,6 +85,20 @@ class SubTaskQuery(Query):
 			t['index'] = i
 			result.append(t)
 		return result
+
+	def query_search(self):
+		task = self.base.find_task_by_id(self.task['id'])
+		if not task:
+			return []
+		result = []
+		for i in self.subs:
+			t = dict(task)
+			t['index'] = i
+			result.append(t)
+		return result
+
+	def query_complete(self):
+		self.unregister()
 
 @query(priority=2)
 @bt_query(priority=2)
@@ -101,7 +128,7 @@ class DateQuery(Query):
 		super(DateQuery, self).__init__(base)
 		self.text = x
 
-	def get_tasks(self):
+	def query_once(self):
 		return filter(lambda t: t['name'].lower().find(self.text.lower()) != -1, self.base.get_tasks())
 
 @query(priority=1)
@@ -124,10 +151,17 @@ class BtHashQuery(Query):
 		if not self.task:
 			self.base.add_bt_task_by_hash(self.hash)
 
-	def get_tasks(self):
+	def query_once(self):
 		t = self.base.find_task_by_hash(self.hash)
 		assert t, 'Task not found: bt://' + self.hash
 		return [t]
+
+	def query_search(self):
+		t = self.base.find_task_by_hash(self.hash)
+		return [t] if t else []
+
+	def query_complete(self):
+		self.unregister()
 
 @query(priority=1)
 @bt_query(priority=1)
@@ -150,10 +184,17 @@ class LocalBtQuery(Query):
 		if not self.task:
 			self.base.add_bt_task_by_content(self.torrent, self.path)
 
-	def get_tasks(self):
+	def query_once(self):
 		t = self.base.find_task_by_hash(self.hash)
 		assert t, 'Task not found: bt://' + self.hash
 		return [t]
+
+	def query_search(self):
+		t = self.base.find_task_by_hash(self.hash)
+		return [t] if t else []
+
+	def query_complete(self):
+		self.unregister()
 
 @query(priority=1)
 @bt_query(priority=1)
@@ -175,10 +216,17 @@ class MagnetQuery(Query):
 		if not self.task:
 			self.base.add_magnet_task(self.url)
 
-	def get_tasks(self):
+	def query_once(self):
 		t = self.base.find_task_by_hash(self.hash)
 		assert t, 'Task not found: bt://' + self.hash
 		return [t]
+
+	def query_search(self):
+		t = self.base.find_task_by_hash(self.hash)
+		return [t] if t else []
+
+	def query_complete(self):
+		self.unregister()
 
 @query(priority=4)
 @bt_query(priority=4)
@@ -198,8 +246,14 @@ class BatchUrlsQuery(Query):
 			if not self.base.find_task_by_url(url):
 				self.base.add_url_task(url)
 
-	def get_tasks(self):
+	def query_once(self):
 		return map(self.base.get_task_by_url, self.urls)
+
+	def query_search(self):
+		return filter(bool, map(self.base.find_task_by_url, self.urls))
+
+	def query_complete(self):
+		self.unregister()
 
 @query(priority=6)
 @bt_query(priority=6)
@@ -222,10 +276,17 @@ class UrlQuery(Query):
 		if not self.task:
 			self.base.add_url_task(self.url)
 
-	def get_tasks(self):
+	def query_once(self):
 		t = self.base.find_task_by_url(self.url)
 		assert t, 'Task not found: bt://' + self.url
 		return [t]
+
+	def query_search(self):
+		t = self.base.find_task_by_url(self.url)
+		return [t] if t else []
+
+	def query_complete(self):
+		self.unregister()
 
 @query(priority=7)
 def url_processor(base, url):
@@ -246,10 +307,17 @@ class BtUrlQuery(Query):
 		if not self.task:
 			self.base.add_bt_task_by_content(self.torrent, self.url)
 
-	def get_tasks(self):
+	def query_once(self):
 		t = self.base.find_task_by_hash(self.hash)
 		assert t, 'Task not found: bt://' + self.hash
 		return [t]
+
+	def query_search(self):
+		t = self.base.find_task_by_hash(self.hash)
+		return [t] if t else []
+
+	def query_complete(self):
+		self.unregister()
 
 @bt_query(priority=7)
 def bt_url_processor(base, url):
@@ -267,7 +335,7 @@ class FilterQuery(Query):
 		super(FilterQuery, self).__init__(base)
 		self.keyword = x
 
-	def get_tasks(self):
+	def query_once(self):
 		import lixian_plugins.filters
 		tasks = lixian_plugins.filters.filter_tasks(self.base.get_tasks(), self.keyword)
 		assert tasks is not None
@@ -287,7 +355,7 @@ class DefaultQuery(Query):
 		super(DefaultQuery, self).__init__(base)
 		self.text = x
 
-	def get_tasks(self):
+	def query_once(self):
 		return filter(lambda t: t['name'].lower().find(self.text.lower()) != -1, self.base.get_tasks())
 
 @query(priority=9)

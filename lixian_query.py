@@ -35,7 +35,9 @@ class TaskBase(object):
 		self.tasks = None
 		self.files = {}
 
-		self.jobs = [[], []]
+		self.commit_jobs = [[], []]
+
+		self.download_jobs = []
 
 	def register_queries(self, queries):
 		self.queries += queries
@@ -89,19 +91,19 @@ class TaskBase(object):
 		return t
 
 	def add_url_task(self, url):
-		self.jobs[0].append(url)
+		self.commit_jobs[0].append(url)
 
 	def add_bt_task_by_hash(self, hash):
-		self.jobs[1].append(['hash', hash])
+		self.commit_jobs[1].append(['hash', hash])
 
 	def add_bt_task_by_content(self, content, name):
-		self.jobs[1].append(['content', (content, name)])
+		self.commit_jobs[1].append(['content', (content, name)])
 
 	def add_magnet_task(self, hash):
-		self.jobs[1].append(['magnet', hash])
+		self.commit_jobs[1].append(['magnet', hash])
 
 	def commit(self):
-		urls, bts = self.jobs
+		urls, bts = self.commit_jobs
 		if urls:
 			self.client.add_batch_tasks(map(lixian_encoding.try_native_to_utf_8, urls))
 		for bt_type, value in bts:
@@ -117,23 +119,39 @@ class TaskBase(object):
 				self.client.add_task(value)
 			else:
 				raise NotImplementedError(bt_type)
-		self.jobs = [[], []]
+		self.commit_jobs = [[], []]
 		self.refresh_tasks()
 
-	def execute_queries(self):
-		if not self.readonly:
-			# prepare actions (e.g. add tasks)
-			for query in self.queries:
-				query.prepare()
-			# commit and refresh task list
-			self.commit()
-		# merge results
-		tasks = []
+
+	def prepare(self):
+		# prepare actions (e.g. add tasks)
 		for query in self.queries:
-			tasks += query.get_tasks()
-		tasks = merge_tasks(tasks)
+			query.prepare()
+		# commit and refresh task list
+		self.commit()
+
+
+	def query_once(self):
+		self.prepare()
+		# merge results
+		for query in self.queries:
+			self.download_jobs += query.query_once()
+
+	def query_complete(self):
+		for query in self.queries:
+			query.query_complete()
+
+	def query_search(self):
+		for query in self.queries:
+			self.download_jobs += query.query_search()
+
+	def peek_download_jobs(self):
+		tasks = merge_tasks(self.download_jobs)
 		enrich_bt(self, tasks)
 		return tasks
+
+	def pull_completed(self):
+		raise NotImplementedError()
 
 def enrich_bt(base, tasks):
 	for t in tasks:
@@ -151,12 +169,20 @@ class Query(object):
 		self.client = base.client
 		return self
 
+	def unregister(self):
+		self.base.unregister_query(self)
+
 	def prepare(self):
 		pass
 
-	def get_tasks(self):
+	def query_once(self):
 		raise NotImplementedError()
 
+	def query_complete(self):
+		pass
+
+	def query_search(self):
+		return self.query_once()
 
 ##################################################
 # register
@@ -262,19 +288,19 @@ def merge_tasks(tasks):
 class AllQuery(Query):
 	def __init__(self, base):
 		super(AllQuery, self).__init__(base)
-	def get_tasks(self):
+	def query_once(self):
 		return self.base.get_tasks()
 
 class CompletedQuery(Query):
 	def __init__(self, base):
 		super(CompletedQuery, self).__init__(base)
-	def get_tasks(self):
+	def query_once(self):
 		return filter(lambda x: x['status_text'] == 'completed', self.base.get_tasks())
 
 class NoneQuery(Query):
 	def __init__(self, base):
 		super(NoneQuery, self).__init__(base)
-	def get_tasks(self):
+	def query_once(self):
 		return []
 
 def default_query(options):
@@ -294,26 +320,30 @@ def default_query(options):
 def parse_queries(base, args):
 	return [to_query(base, arg, bt_processors if args.torrent else processors) for arg in args] or [default_query(args)(base)]
 
-def query_tasks(client, args, readonly=False):
+def build_query(client, args, readonly=False):
+	links = []
+	links.extend(args)
+	if args.input:
+		import fileinput
+		links.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
 	load_default_queries() # IMPORTANT: init default queries
 	base = TaskBase(client, to_list_tasks(client, args), readonly=readonly)
 	base.register_queries(parse_queries(base, args))
-	return base.execute_queries()
+	return base
 
 ##################################################
 # compatible APIs
 ##################################################
 
 def find_tasks_to_download(client, args):
-	links = []
-	links.extend(args)
-	if args.input:
-		import fileinput
-		links.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
-	return query_tasks(client, args)
+	base = build_query(client, args)
+	base.query_once()
+	return base.peek_download_jobs()
 
 def search_tasks(client, args):
-	return query_tasks(client, args, readonly=True)
+	base = build_query(client, args)
+	base.query_search()
+	return base.peek_download_jobs()
 
 def expand_bt_sub_tasks(task):
 	files = task['base'].get_files(task) # XXX: a dirty trick to cache requests
