@@ -263,22 +263,13 @@ def download_task(args):
 	download = lixian_download_tools.get_tool(args.tool)
 	download_args = {'output':args.output, 'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash, 'no_bt_dir': not args.bt_dir, 'save_torrent_file':args.save_torrent_file}
 	client = XunleiClient(args.username, args.password, args.cookies)
-	links = None
-	if len(args) or args.input:
-		tasks = find_tasks_to_download(client, args)
-		if args.output:
-			assert len(tasks) == 1
-			download_single_task(client, download, tasks[0], download_args)
-		else:
-			download_multiple_tasks(client, download, tasks, download_args)
-	elif args.all:
-		tasks = client.read_all_tasks()
-		download_multiple_tasks(client, download, tasks, download_args)
-	elif args.category:
-		tasks = client.read_all_tasks_by_category(from_native(args.category))
-		download_multiple_tasks(client, download, tasks, download_args)
+	assert len(args) or args.input or args.all or args.category, 'Not enough arguments'
+	tasks = find_tasks_to_download(client, args)
+	if args.output:
+		assert len(tasks) == 1
+		download_single_task(client, download, tasks[0], download_args)
 	else:
-		usage(doc=lixian_help.download, message='Not enough arguments')
+		download_multiple_tasks(client, download, tasks, download_args)
 
 
 @command_line_parser(help=lixian_help.list)
