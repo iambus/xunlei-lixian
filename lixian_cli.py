@@ -15,9 +15,7 @@ import re
 from getpass import getpass
 
 from lixian_encoding import default_encoding
-
-def from_native(s):
-	return s.decode(default_encoding)
+from lixian_encoding import from_native
 
 def to_str(s):
 	assert type(s) in (str, unicode)

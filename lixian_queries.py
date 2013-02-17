@@ -76,6 +76,9 @@ class SubTaskQuery(Query):
 @query(priority=2)
 @bt_query(priority=2)
 def sub_id_processor(base, x):
+	import lixian_encoding
+	x = lixian_encoding.from_native(x)
+
 	m = re.match(r'^(\d+)/(.+)$', x)
 	if not m:
 		return
@@ -84,7 +87,6 @@ def sub_id_processor(base, x):
 	if not task:
 		return
 
-	import lixian_encoding
 	assert task['type'] == 'bt', 'task %s is not a bt task' % lixian_encoding.to_native(task['name'])
 	files = base.get_files(task)
 	import lixian_filter_expr

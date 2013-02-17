@@ -13,6 +13,12 @@ def to_native(s):
 	else:
 		return s
 
+def from_native(s):
+	if type(s) == str:
+		return s.decode(default_encoding)
+	else:
+		return s
+
 def try_native_to_utf_8(url):
 	try:
 		return url.decode(default_encoding).encode('utf-8')
