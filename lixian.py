@@ -119,6 +119,9 @@ class XunleiClient:
 		c = cookielib.Cookie(version=0, name=k, value=v, port=None, port_specified=False, domain=domain, domain_specified=True, domain_initial_dot=False, path='/', path_specified=True, secure=False, expires=None, discard=True, comment=None, comment_url=None, rest={}, rfc2109=False)
 		self.cookiejar.set_cookie(c)
 
+	def del_cookie(self, domain, k):
+		self.cookiejar.clear(domain=domain, path="/", name=k)
+
 	def set_gdriveid(self, id):
 		self.set_cookie('.vip.xunlei.com', 'gdriveid', id)
 
@@ -169,6 +172,7 @@ class XunleiClient:
 		#self.urlopen('http://dynamic.vip.xunlei.com/login/indexlogin_contr/logout/').read()
 		ckeys = ["vip_isvip","lx_sessionid","vip_level","lx_login","dl_enable","in_xl","ucid","lixian_section"]
 		ckeys1 = ["sessionid","usrname","nickname","usernewno","userid"]
+		self.del_cookie('.vip.xunlei.com', 'gdriveid')
 		for k in ckeys:
 			self.set_cookie('.vip.xunlei.com', k, '')
 		for k in ckeys1:
