@@ -8,6 +8,7 @@ import lixian_help
 import lixian_hash
 import lixian_hash_bt
 import lixian_hash_ed2k
+from lixian_colors import colors
 import sys
 import os
 import os.path
@@ -126,7 +127,8 @@ def download_single_task(client, download, task, options):
 	assert client.get_gdriveid()
 	if task['status_text'] != 'completed':
 		if 'files' not in task:
-			print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
+			with colors(options.get('colors')).yellow():
+				print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
 			return
 	def download1(client, url, path, size):
 		if not os.path.exists(path):
@@ -151,7 +153,8 @@ def download_single_task(client, download, task, options):
 		download1(client, url, path, size)
 		verify = verify_basic_hash if no_hash else verify_hash
 		if not verify(path, task):
-			print 'hash error, redownloading...'
+			with colors(options.get('colors')).yellow():
+				print 'hash error, redownloading...'
 			os.remove(path)
 			download1(client, url, path, size)
 			if not verify(path, task):
@@ -180,18 +183,21 @@ def download_single_task(client, download, task, options):
 		if dirname and not os.path.exists(dirname):
 			os.makedirs(dirname)
 		for t in skipped:
-			print 'skip task %s/%s (%s) as the status is %s' % (t['id'], t['index'], t['name'].encode(default_encoding), t['status_text'])
+			with colors(options.get('colors')).yellow():
+				print 'skip task %s/%s (%s) as the status is %s' % (t['id'], t['index'], t['name'].encode(default_encoding), t['status_text'])
 		if mini_hash and resuming and verify_mini_bt_hash(dirname, files):
 			print task['name'].encode(default_encoding), 'is already done'
 			if delete and 'files' not in task:
 				client.delete_task(task)
 			return
+		with colors(options.get('colors')).green():
+			print output_name + '/'
 		for f in files:
 			name = f['name']
 			if f['status_text'] != 'completed':
 				print 'Skipped %s file %s ...' % (f['status_text'], name.encode(default_encoding))
 				continue
-			print 'Downloading', name.encode(default_encoding), '...'
+			print name.encode(default_encoding), '...'
 			# XXX: if file name is escaped, hashing bt won't get correct file
 			splitted_path = map(escape_filename, name.split('\\'))
 			name = os.path.join(*splitted_path).encode(default_encoding)
@@ -229,7 +235,9 @@ def download_single_task(client, download, task, options):
 	else:
 		if output_dir and not os.path.exists(output_dir):
 			os.makedirs(output_dir)
-		print 'Downloading', output_name, '...'
+
+		with colors(options.get('colors')).green():
+			print output_name, '...'
 		download2(client, download_url, output_path, task)
 
 	if delete and 'files' not in task:
@@ -240,12 +248,14 @@ def download_multiple_tasks(client, download, tasks, options):
 		download_single_task(client, download, task, options)
 	skipped = filter(lambda t: t['status_text'] != 'completed', tasks)
 	if skipped:
-		print "Below tasks were skipped as they were not ready:"
+		with colors(options.get('colors')).yellow():
+			print "Below tasks were skipped as they were not ready:"
 		for task in skipped:
 			print task['id'], task['status_text'], task['name'].encode(default_encoding)
 
 @command_line_parser(help=lixian_help.download)
 @with_parser(parse_login)
+@with_parser(parse_colors)
 @command_line_value('tool', default=get_config('tool', 'wget'))
 @command_line_value('input', alias='i')
 @command_line_value('output', alias='o')
@@ -266,7 +276,16 @@ def download_multiple_tasks(client, download, tasks, options):
 def download_task(args):
 	import lixian_download_tools
 	download = lixian_download_tools.get_tool(args.tool)
-	download_args = {'output':args.output, 'output_dir':args.output_dir, 'delete':args.delete, 'resuming':args._args['continue'], 'overwrite':args.overwrite, 'mini_hash':args.mini_hash, 'no_hash': not args.hash, 'no_bt_dir': not args.bt_dir, 'save_torrent_file':args.save_torrent_file}
+	download_args = {'output': args.output,
+	                 'output_dir': args.output_dir,
+	                 'delete': args.delete,
+	                 'resuming': args._args['continue'],
+	                 'overwrite': args.overwrite,
+	                 'mini_hash': args.mini_hash,
+	                 'no_hash': not args.hash,
+	                 'no_bt_dir': not args.bt_dir,
+	                 'save_torrent_file': args.save_torrent_file,
+	                 'colors': args.colors}
 	client = XunleiClient(args.username, args.password, args.cookies)
 	assert len(args) or args.input or args.all or args.category, 'Not enough arguments'
 	query = lixian_query.build_query(client, args)
@@ -360,7 +379,6 @@ def list_task(args):
 	output_tasks(tasks, columns, args, not parent_ids)
 
 def output_tasks(tasks, columns, args, top=True):
-	from lixian_colors import colors
 	for i, t in enumerate(tasks):
 		status_colors = {
 				'waiting': 'yellow',
@@ -438,7 +456,6 @@ def delete_task(args):
 	if not to_delete:
 		print 'Nothing to delete'
 		return
-	from lixian_colors import colors
 	with colors(args.colors).red.bold():
 		print "Below files are going to be deleted:"
 		for x in to_delete:
