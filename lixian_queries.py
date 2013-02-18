@@ -5,6 +5,7 @@ from lixian_query import bt_query
 
 import lixian_hash_bt
 import lixian_url
+import lixian_encoding
 
 import re
 
@@ -98,7 +99,6 @@ class SubTaskQuery(Query):
 @query(priority=2)
 @bt_query(priority=2)
 def sub_id_processor(base, x):
-	import lixian_encoding
 	x = lixian_encoding.from_native(x)
 
 	m = re.match(r'^(\d+)/(.+)$', x)
@@ -348,7 +348,7 @@ def filter_processor(base, x):
 class DefaultQuery(Query):
 	def __init__(self, base, x):
 		super(DefaultQuery, self).__init__(base)
-		self.text = x
+		self.text = lixian_encoding.from_native(x)
 
 	def query_once(self):
 		return filter(lambda t: t['name'].lower().find(self.text.lower()) != -1, self.base.get_tasks())
