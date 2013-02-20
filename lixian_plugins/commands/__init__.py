@@ -34,14 +34,3 @@ def command(name='', usage='', help=''):
 		return f
 	return as_command
 
-def load_commands():
-	import os
-	import os.path
-	import re
-	command_dir = os.path.dirname(__file__)
-	commands = os.listdir(command_dir)
-	commands = [re.sub(r'\.py$', '', p) for p in commands if p.endswith('.py') and not p.startswith('_')]
-	for p in commands:
-		__import__('lixian_plugins.commands.' + p)
-
-

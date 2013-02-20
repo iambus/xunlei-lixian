@@ -260,16 +260,6 @@ def user_query(processor):
 def load_default_queries():
 	import lixian_queries
 
-def load_plugin_queries():
-	import os
-	import os.path
-	import re
-	query_dir = os.path.join(os.path.dirname(__file__), "lixian_plugins", "queries")
-	queries = os.listdir(query_dir)
-	queries = [re.sub(r'\.py$', '', p) for p in queries if p.endswith('.py') and not p.startswith('_')]
-	for p in queries:
-		__import__('lixian_plugins.queries.' + p)
-
 
 ##################################################
 # query

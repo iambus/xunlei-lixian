@@ -65,11 +65,3 @@ def name_filter(pattern=None, protocol=None, batch=False):
 		return matcher
 	return define_filter
 
-def load_filters():
-	import os
-	import os.path
-	filter_dir = os.path.dirname(__file__)
-	filters = os.listdir(filter_dir)
-	filters = [re.sub(r'\.py$', '', p) for p in filters if p.endswith('.py') and not p.startswith('_')]
-	for p in filters:
-		__import__('lixian_plugins.filters.' + p)

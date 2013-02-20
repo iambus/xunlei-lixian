@@ -6,15 +6,6 @@ page_parsers = {}
 def register_parser(site, extend_link):
 	page_parsers[site] = extend_link
 
-def load_parsers():
-	import os
-	import os.path
-	parser_dir = os.path.dirname(__file__)
-	parsers = os.listdir(parser_dir)
-	parsers = [re.sub(r'\.py$', '', p) for p in parsers if p.endswith('.py') and not p.startswith('_')]
-	for p in parsers:
-		__import__('lixian_plugins.parsers.' + p)
-
 
 def in_site(url, site):
 	if url.startswith(site):
