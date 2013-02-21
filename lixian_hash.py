@@ -57,7 +57,7 @@ def main(args):
 					'--verify-md4':verify_md4,
 					'--verify-dcid':verify_dcid,
 					'--verify-ed2k':lixian_hash_ed2k.verify_ed2k_link,
-					'--verify-bt':lixian_hash_bt.verify_bt_file,
+					'--verify-bt': lambda f, t: lixian_hash_bt.verify_bt_file(t, f),
 				   }[option]
 		assert len(args) == 2
 		hash, path = args
