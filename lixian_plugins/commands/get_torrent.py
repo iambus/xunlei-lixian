@@ -22,7 +22,7 @@ def get_torrent(args):
 		elif re.match(r'\d+$', id):
 			tasks = client.read_all_tasks()
 			import lixian_query
-			base = lixian_query.TaskBase(client, args)
+			base = lixian_query.TaskBase(client, client.read_all_tasks)
 			task = base.get_task_by_id(id)
 			id = task['bt_hash']
 			id = id.lower()
