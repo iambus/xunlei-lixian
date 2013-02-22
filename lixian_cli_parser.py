@@ -153,6 +153,8 @@ def command_line_parser(*args, **kwargs):
 				pass
 			parse_no_body.args_stack = f.args_stack
 			parser = parser.with_parser(parse_no_body)
+		import functools
+		@functools.wraps(f)
 		def parse(args_list):
 			return f(parser(args_list, *args, **kwargs))
 		return parse
