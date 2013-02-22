@@ -199,16 +199,17 @@ def verify_bt_multiple(folder, info, file_set=None, progress_callback=None):
 						sha1_update_stream(sha1sum, stream, size)
 						piece_left -= size
 		else:
-			while size >= piece_left:
-				size -= piece_left
-				sha1_stream.next_sha1()
-				sha1sum = hashlib.sha1()
-				piece_left = piece_length
 			if size:
-				complete_piece = False
-				piece_left -= size
-			else:
-				complete_piece = True
+				while size >= piece_left:
+					size -= piece_left
+					sha1_stream.next_sha1()
+					sha1sum = hashlib.sha1()
+					piece_left = piece_length
+				if size:
+					complete_piece = False
+					piece_left -= size
+				else:
+					complete_piece = True
 
 	if piece_left < piece_length:
 		if complete_piece:
