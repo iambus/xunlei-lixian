@@ -6,8 +6,8 @@ from lixian_config import *
 from lixian_encoding import default_encoding
 from lixian_cli_parser import command_line_parser
 from lixian_cli_parser import with_parser
-from lixian_cli import parse_login
-from lixian_cli import command_line_value
+from lixian_cli_parser import command_line_value
+from lixian_commands.util import parse_login
 
 def export_aria2_conf(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
