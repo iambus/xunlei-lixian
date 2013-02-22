@@ -4,15 +4,19 @@ from lixian_plugins.api import command
 from lixian import XunleiClient
 from lixian_config import *
 from lixian_encoding import default_encoding
+from lixian_cli_parser import command_line_parser
+from lixian_cli_parser import with_parser
+from lixian_cli import parse_login
+from lixian_cli import command_line_value
 
 def export_aria2_conf(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
-	import lixian_tasks
-	tasks = lixian_tasks.search_tasks(client, args, status=(args.completed and 'completed' or 'all'))
+	import lixian_query
+	tasks = lixian_query.search_tasks(client, args)
 	files = []
 	for task in tasks:
 		if task['type'] == 'bt':
-			subs, skipped, single_file = lixian_tasks.expand_bt_sub_tasks(client, task)
+			subs, skipped, single_file = lixian_query.expand_bt_sub_tasks(task)
 			if not subs:
 				continue
 			if single_file:
@@ -35,12 +39,12 @@ def export_aria2_conf(args):
 	return output
 
 @command(usage='export task download urls as aria2 format')
+@command_line_parser()
+@with_parser(parse_login)
 def export_aria2(args):
 	'''
 	usage: lx export-aria2 [id|name]...
 	'''
-	from lixian_cli import parse_login_command_line
-	args = parse_login_command_line(args)
 	print export_aria2_conf(args)
 
 def download_aria2_stdin(aria2_conf, j):
@@ -71,17 +75,17 @@ def download_aria2_temp(aria2_conf, j):
 		raise Exception('aria2c exited abnormaly')
 
 @command(usage='concurrently download tasks in aria2')
+@command_line_parser()
+@with_parser(parse_login)
+@command_line_value('max-concurrent-downloads', alias='j', default=get_config('aria2-j', '5'))
 def download_aria2(args):
 	'''
 	usage: lx download-aria2 -j 5 [id|name]...
 	'''
-	from lixian_cli import parse_login_command_line
-	args = parse_login_command_line(args, keys=['j'], alias={'max-concurrent-downloads':'j'})
-	j = get_config('aria2-j', args.j) or '5'
 	aria2_conf = export_aria2_conf(args)
 	import platform
 	if platform.system() == 'Windows':
-		download_aria2_temp(aria2_conf, j)
+		download_aria2_temp(aria2_conf, args.max_concurrent_downloads)
 	else:
-		download_aria2_stdin(aria2_conf, j)
+		download_aria2_stdin(aria2_conf, args.max_concurrent_downloads)
 
