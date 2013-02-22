@@ -49,6 +49,12 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}, help=None)
 					options[k] = True
 				else:
 					options[k] = args.pop(0)
+			elif '=' in k and k[:k.index('=')] in alias:
+				k, v = k[:k.index('=')], k[k.index('=')+1:]
+				k = alias[k]
+				if k not in keys:
+					raise RuntimeError('Invalid boolean option '+x)
+				options[k] = v
 			else:
 				if help:
 					print 'Unknown option ' + x
