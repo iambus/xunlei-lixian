@@ -51,13 +51,19 @@ def verify_dcid(path, dcid):
 
 def main(args):
 	option = args.pop(0)
+	def verify_bt(f, t):
+		from lixian_progress import SimpleProgressBar
+		bar = SimpleProgressBar()
+		result = lixian_hash_bt.verify_bt_file(t, f, progress_callback=bar.update)
+		bar.done()
+		return result
 	if option.startswith('--verify'):
 		hash_fun = {'--verify-sha1':verify_sha1,
 					'--verify-md5':verify_md5,
 					'--verify-md4':verify_md4,
 					'--verify-dcid':verify_dcid,
 					'--verify-ed2k':lixian_hash_ed2k.verify_ed2k_link,
-					'--verify-bt': lambda f, t: lixian_hash_bt.verify_bt_file(t, f),
+					'--verify-bt': verify_bt,
 				   }[option]
 		assert len(args) == 2
 		hash, path = args
