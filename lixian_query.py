@@ -351,11 +351,9 @@ def parse_queries(base, args):
 	return [to_query(base, arg, bt_processors if args.torrent else processors) for arg in args] or [default_query(args)(base)]
 
 def build_query(client, args, readonly=False):
-	links = []
-	links.extend(args)
 	if args.input:
 		import fileinput
-		links.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
+		args._left.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
 	load_default_queries() # IMPORTANT: init default queries
 	base = TaskBase(client, to_list_tasks(client, args), readonly=readonly)
 	base.register_queries(parse_queries(base, args))
