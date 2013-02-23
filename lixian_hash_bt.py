@@ -163,7 +163,10 @@ def verify_bt_multiple(folder, info, file_set=None, progress_callback=None):
 	path_encoding = info.get('encoding', 'utf-8')
 	files = []
 	for x in info['files']:
-		unicode_path = [p.decode(path_encoding) for p in x['path']]
+		if 'path.utf-8' in x:
+			unicode_path = [p.decode('utf-8') for p in x['path.utf-8']]
+		else:
+			unicode_path = [p.decode(path_encoding) for p in x['path']]
 		native_path = [p.encode(default_encoding) for p in unicode_path]
 		utf8_path = [p.encode('utf-8') for p in unicode_path]
 		files.append({'path':os.path.join(folder, apply(os.path.join, native_path)), 'length':x['length'], 'file':utf8_path})
