@@ -14,10 +14,7 @@ import lixian_query
 @command_line_option('all')
 def delete_task(args):
 	client = XunleiClient(args.username, args.password, args.cookies)
-	if len(args):
-		to_delete = lixian_query.search_tasks(client, args)
-	elif args.all:
-		to_delete = client.read_all_tasks()
+	to_delete = lixian_query.search_tasks(client, args)
 	if not to_delete:
 		print 'Nothing to delete'
 		return
