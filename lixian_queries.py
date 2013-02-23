@@ -111,24 +111,6 @@ def sub_id_processor(base, x):
 
 ##################################################
 
-class DateQuery(SearchQuery):
-	def __init__(self, base, x):
-		super(DateQuery, self).__init__(base)
-		self.text = x
-
-	def query_search(self):
-		return filter(lambda t: t['name'].lower().find(self.text.lower()) != -1, self.base.get_tasks())
-
-@query(priority=1)
-@bt_query(priority=1)
-def date_processor(base, x):
-	if re.match(r'^\d{4}\.\d{2}\.\d{2}$', x):
-		matched = filter(lambda t: t['date'] == x, base.get_tasks())
-		if matched:
-			return MultipleTasksQuery(base, matched)
-
-##################################################
-
 class BtHashQuery(ExactQuery):
 	def __init__(self, base, x):
 		super(BtHashQuery, self).__init__(base)
