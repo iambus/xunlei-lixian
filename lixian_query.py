@@ -1,5 +1,5 @@
 
-__all__ = ['query', 'bt_query', 'user_query', 'Query',
+__all__ = ['query', 'bt_query', 'user_query', 'Query', 'ExactQuery', 'SearchQuery',
            'build_query', 'find_tasks_to_download', 'search_tasks', 'expand_bt_sub_tasks']
 
 import lixian_hash_bt
@@ -217,10 +217,36 @@ class Query(object):
 		raise NotImplementedError()
 
 	def query_complete(self):
+		raise NotImplementedError()
+
+	def query_search(self):
+		raise NotImplementedError()
+
+class ExactQuery(Query):
+	def __init__(self, base):
+		super(ExactQuery, self).__init__(base)
+
+	def query_once(self):
+		raise NotImplementedError()
+
+	def query_complete(self):
+		self.unregister()
+
+	def query_search(self):
+		raise NotImplementedError()
+
+class SearchQuery(Query):
+	def __init__(self, base):
+		super(SearchQuery, self).__init__(base)
+
+	def query_once(self):
+		return self.query_search()
+
+	def query_complete(self):
 		pass
 
 	def query_search(self):
-		return self.query_once()
+		raise NotImplementedError()
 
 ##################################################
 # register
@@ -315,22 +341,22 @@ def merge_tasks(tasks):
 				task_mapping[id] = task
 	return result_tasks
 
-class AllQuery(Query):
+class AllQuery(SearchQuery):
 	def __init__(self, base):
 		super(AllQuery, self).__init__(base)
-	def query_once(self):
+	def query_search(self):
 		return self.base.get_tasks()
 
-class CompletedQuery(Query):
+class CompletedQuery(SearchQuery):
 	def __init__(self, base):
 		super(CompletedQuery, self).__init__(base)
-	def query_once(self):
+	def query_search(self):
 		return filter(lambda x: x['status_text'] == 'completed', self.base.get_tasks())
 
-class NoneQuery(Query):
+class NoneQuery(SearchQuery):
 	def __init__(self, base):
 		super(NoneQuery, self).__init__(base)
-	def query_once(self):
+	def query_search(self):
 		return []
 
 def default_query(options):

@@ -1,5 +1,6 @@
 
-from lixian_query import Query
+from lixian_query import ExactQuery
+from lixian_query import SearchQuery
 from lixian_query import query
 from lixian_query import bt_query
 
@@ -13,7 +14,7 @@ import re
 # queries
 ##################################################
 
-class SingleTaskQuery(Query):
+class SingleTaskQuery(ExactQuery):
 	def __init__(self, base, t):
 		super(SingleTaskQuery, self).__init__(base)
 		self.id = t['id']
@@ -25,8 +26,6 @@ class SingleTaskQuery(Query):
 		t = self.base.find_task_by_id(self.id)
 		return [t] if t else []
 
-	def query_complete(self):
-		self.unregister()
 
 @query(priority=1)
 @bt_query(priority=1)
@@ -40,7 +39,7 @@ def single_id_processor(base, x):
 
 ##################################################
 
-class MultipleTasksQuery(Query):
+class MultipleTasksQuery(ExactQuery):
 	def __init__(self, base, tasks):
 		super(MultipleTasksQuery, self).__init__(base)
 		self.tasks = tasks
@@ -50,9 +49,6 @@ class MultipleTasksQuery(Query):
 
 	def query_search(self):
 		return filter(bool, map(self.base.find_task_by_id, (t['id'] for t in self.tasks)))
-
-	def query_complete(self):
-		self.unregister()
 
 @query(priority=1)
 @bt_query(priority=1)
@@ -72,7 +68,7 @@ def range_id_processor(base, x):
 
 ##################################################
 
-class SubTaskQuery(Query):
+class SubTaskQuery(ExactQuery):
 	def __init__(self, base, t, subs):
 		super(SubTaskQuery, self).__init__(base)
 		self.task = t
@@ -92,9 +88,6 @@ class SubTaskQuery(Query):
 		files = self.base.get_files(task)
 		task['files'] = self.subs
 		return [task]
-
-	def query_complete(self):
-		self.unregister()
 
 @query(priority=2)
 @bt_query(priority=2)
@@ -118,12 +111,12 @@ def sub_id_processor(base, x):
 
 ##################################################
 
-class DateQuery(Query):
+class DateQuery(SearchQuery):
 	def __init__(self, base, x):
 		super(DateQuery, self).__init__(base)
 		self.text = x
 
-	def query_once(self):
+	def query_search(self):
 		return filter(lambda t: t['name'].lower().find(self.text.lower()) != -1, self.base.get_tasks())
 
 @query(priority=1)
@@ -136,7 +129,7 @@ def date_processor(base, x):
 
 ##################################################
 
-class BtHashQuery(Query):
+class BtHashQuery(ExactQuery):
 	def __init__(self, base, x):
 		super(BtHashQuery, self).__init__(base)
 		self.hash = re.match(r'^(?:bt://)?([0-9a-f]{40})$', x, flags=re.I).group(1).lower()
@@ -155,9 +148,6 @@ class BtHashQuery(Query):
 		t = self.base.find_task_by_hash(self.hash)
 		return [t] if t else []
 
-	def query_complete(self):
-		self.unregister()
-
 @query(priority=1)
 @bt_query(priority=1)
 def bt_hash_processor(base, x):
@@ -166,7 +156,7 @@ def bt_hash_processor(base, x):
 
 ##################################################
 
-class LocalBtQuery(Query):
+class LocalBtQuery(ExactQuery):
 	def __init__(self, base, x):
 		super(LocalBtQuery, self).__init__(base)
 		self.path = x
@@ -188,9 +178,6 @@ class LocalBtQuery(Query):
 		t = self.base.find_task_by_hash(self.hash)
 		return [t] if t else []
 
-	def query_complete(self):
-		self.unregister()
-
 @query(priority=1)
 @bt_query(priority=1)
 def local_bt_processor(base, x):
@@ -200,7 +187,7 @@ def local_bt_processor(base, x):
 
 ##################################################
 
-class MagnetQuery(Query):
+class MagnetQuery(ExactQuery):
 	def __init__(self, base, x):
 		super(MagnetQuery, self).__init__(base)
 		self.url = x
@@ -220,9 +207,6 @@ class MagnetQuery(Query):
 		t = self.base.find_task_by_hash(self.hash)
 		return [t] if t else []
 
-	def query_complete(self):
-		self.unregister()
-
 @query(priority=4)
 @bt_query(priority=4)
 def magnet_processor(base, url):
@@ -231,7 +215,7 @@ def magnet_processor(base, url):
 
 ##################################################
 
-class BatchUrlsQuery(Query):
+class BatchUrlsQuery(ExactQuery):
 	def __init__(self, base, urls):
 		super(BatchUrlsQuery, self).__init__(base)
 		self.urls = urls
@@ -247,9 +231,6 @@ class BatchUrlsQuery(Query):
 	def query_search(self):
 		return filter(bool, map(self.base.find_task_by_url, self.urls))
 
-	def query_complete(self):
-		self.unregister()
-
 @query(priority=6)
 @bt_query(priority=6)
 def url_extend_processor(base, url):
@@ -261,7 +242,7 @@ def url_extend_processor(base, url):
 
 ##################################################
 
-class UrlQuery(Query):
+class UrlQuery(ExactQuery):
 	def __init__(self, base, x):
 		super(UrlQuery, self).__init__(base)
 		self.url = lixian_url.url_unmask(x)
@@ -280,9 +261,6 @@ class UrlQuery(Query):
 		t = self.base.find_task_by_url(self.url)
 		return [t] if t else []
 
-	def query_complete(self):
-		self.unregister()
-
 @query(priority=7)
 def url_processor(base, url):
 	if re.match(r'\w+://', url):
@@ -290,7 +268,7 @@ def url_processor(base, url):
 
 ##################################################
 
-class BtUrlQuery(Query):
+class BtUrlQuery(ExactQuery):
 	def __init__(self, base, url, torrent):
 		super(BtUrlQuery, self).__init__(base)
 		self.url = url
@@ -311,9 +289,6 @@ class BtUrlQuery(Query):
 		t = self.base.find_task_by_hash(self.hash)
 		return [t] if t else []
 
-	def query_complete(self):
-		self.unregister()
-
 @bt_query(priority=7)
 def bt_url_processor(base, url):
 	if not re.match(r'http://', url):
@@ -325,12 +300,12 @@ def bt_url_processor(base, url):
 
 ##################################################
 
-class FilterQuery(Query):
+class FilterQuery(SearchQuery):
 	def __init__(self, base, x):
 		super(FilterQuery, self).__init__(base)
 		self.keyword = x
 
-	def query_once(self):
+	def query_search(self):
 		import lixian_plugins.filters
 		tasks = lixian_plugins.filters.filter_tasks(self.base.get_tasks(), self.keyword)
 		assert tasks is not None
@@ -345,12 +320,12 @@ def filter_processor(base, x):
 
 ##################################################
 
-class DefaultQuery(Query):
+class DefaultQuery(SearchQuery):
 	def __init__(self, base, x):
 		super(DefaultQuery, self).__init__(base)
 		self.text = lixian_encoding.from_native(x)
 
-	def query_once(self):
+	def query_search(self):
 		return filter(lambda t: t['name'].lower().find(self.text.lower()) != -1, self.base.get_tasks())
 
 @query(priority=9)
