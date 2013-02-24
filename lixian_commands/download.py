@@ -124,14 +124,19 @@ def download_single_task(client, download, task, options):
 			if delete and 'files' not in task:
 				client.delete_task(task)
 			return
-		with colors(options.get('colors')).green():
-			print output_name + '/'
+		if not single_file:
+			with colors(options.get('colors')).green():
+				print output_name + '/'
 		for f in files:
 			name = f['name']
 			if f['status_text'] != 'completed':
 				print 'Skipped %s file %s ...' % (f['status_text'], name.encode(default_encoding))
 				continue
-			print name.encode(default_encoding), '...'
+			if not single_file:
+				print name.encode(default_encoding), '...'
+			else:
+				with colors(options.get('colors')).green():
+					print name.encode(default_encoding), '...'
 			# XXX: if file name is escaped, hashing bt won't get correct file
 			splitted_path = map(escape_filename, name.split('\\'))
 			name = os.path.join(*splitted_path).encode(default_encoding)
