@@ -5,6 +5,7 @@ from lixian_commands.util import *
 from lixian_cli_parser import *
 from lixian_config import get_config
 import lixian_help
+from getpass import getpass
 
 @command_line_parser(help=lixian_help.login)
 @with_parser(parse_login)
