@@ -50,7 +50,7 @@ class FileLogger:
 		self.console.debug(message)
 		self.logger.debug(message)
 	def trace(self, message):
-		self.logger.trace(message)
+		self.logger.log(level=TRACE, msg=message)
 
 default_logger = None
 
