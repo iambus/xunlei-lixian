@@ -26,6 +26,18 @@ def retry(f):
 		raise
 	return withretry
 
+class Logger:
+	def stdout(self, message):
+		print message
+	def info(self, message):
+		print message
+	def debug(self, message):
+		pass
+	def trace(self, message):
+		pass
+
+logger = Logger()
+
 class XunleiClient:
 	page_size = 100
 	bt_page_size = 9999
@@ -49,7 +61,7 @@ class XunleiClient:
 
 	@retry
 	def urlopen(self, url, **args):
-#		print url
+		logger.debug(url)
 #		import traceback
 #		for line in traceback.format_stack():
 #			print line.strip()
@@ -76,6 +88,7 @@ class XunleiClient:
 	def urlread(self, url, **args):
 		data = self.urlread1(url, **args)
 		if self.is_session_timeout(data):
+			logger.debug('session timed out')
 			self.login()
 			data = self.urlread1(url, **args)
 		return data
@@ -166,6 +179,7 @@ class XunleiClient:
 		if not password:
 			raise NotImplementedError('user is not logged in')
 
+		logger.debug('login')
 		cachetime = current_timestamp()
 		check_url = 'http://login.xunlei.com/check?u=%s&cachetime=%d' % (username, cachetime)
 		login_page = self.urlopen(check_url).read()
@@ -247,7 +261,11 @@ class XunleiClient:
 		self.set_page_size(1)
 		html = self.urlread(url)
 		self.set_page_size(self.page_size)
-		nav = re.search(r'<div class="lx_ul">.*<div class="tq_play">', html, flags=re.S).group()
+		m = re.search(r'<div class="lx_ul">.*<div class="tq_play">', html, flags=re.S)
+		if not m:
+			logger.trace(html)
+			raise RuntimeError('Invalid response')
+		nav = m.group()
 		folders = re.findall(r'''setLxCookie\('class_check',(\d+)\);return false;" title=""><em class="ic_link_new "></em>([^<>]+)</a>''', nav)
 		return dict((name.decode('utf-8'), int(id)) for id, name in folders)
 

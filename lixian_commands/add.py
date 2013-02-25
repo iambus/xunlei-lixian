@@ -9,6 +9,7 @@ import lixian_query
 @command_line_parser(help=lixian_help.add)
 @with_parser(parse_login)
 @with_parser(parse_colors)
+@with_parser(parse_logging)
 @with_parser(parse_size)
 @command_line_value('input', alias='i')
 @command_line_option('torrent', alias='bt')

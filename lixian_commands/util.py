@@ -1,5 +1,5 @@
 
-__all__ = ['parse_login', 'parse_colors', 'parse_size', 'output_tasks', 'usage']
+__all__ = ['parse_login', 'parse_colors', 'parse_logging', 'parse_size', 'output_tasks', 'usage']
 
 from lixian_cli_parser import *
 from lixian_config import get_config
@@ -22,6 +22,21 @@ def parse_login(args):
 @command_line_option('colors', default=get_config('colors', True))
 def parse_colors(args):
 	pass
+
+@command_line_value('log-level', default=get_config('log-level'))
+@command_line_value('log-path', default=get_config('log-path'))
+def parse_logging(args):
+	path = args.log_path
+	level = args.log_level
+	if path or level:
+		import lixian_logging
+		level = level or 'info'
+		level = {'info': lixian_logging.INFO, 'debug': lixian_logging.DEBUG, 'trace': lixian_logging.TRACE}[level.lower()]
+		lixian_logging.init_logger(use_colors=args.colors, level=level, path=path)
+		logger = lixian_logging.get_logger()
+		import lixian
+		# inject logger to lixian (this makes lixian.py zero-dependency)
+		lixian.logger = logger
 
 @command_line_option('size', default=get_config('size'))
 @command_line_option('format-size', default=get_config('format-size'))
