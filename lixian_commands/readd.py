@@ -8,6 +8,7 @@ import lixian_query
 
 @command_line_parser(help=lixian_help.readd)
 @with_parser(parse_login)
+@with_parser(parse_logging)
 @command_line_option('deleted')
 @command_line_option('expired')
 @command_line_option('all')

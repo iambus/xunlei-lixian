@@ -9,6 +9,7 @@ import sys
 
 @command_line_parser(help=lixian_help.rename)
 @with_parser(parse_login)
+@with_parser(parse_logging)
 def rename_task(args):
 	if len(args) != 2 or not re.match(r'\d+$', args[0]):
 		usage(lixian_help.rename, 'Incorrect arguments')
