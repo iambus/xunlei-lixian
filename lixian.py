@@ -133,7 +133,8 @@ class XunleiClient:
 		self.cookiejar.set_cookie(c)
 
 	def del_cookie(self, domain, k):
-		self.cookiejar.clear(domain=domain, path="/", name=k)
+		if self.has_cookie(domain, k):
+			self.cookiejar.clear(domain=domain, path="/", name=k)
 
 	def set_gdriveid(self, id):
 		self.set_cookie('.vip.xunlei.com', 'gdriveid', id)
@@ -195,6 +196,7 @@ class XunleiClient:
 		self.save_cookies()
 
 	def logout(self):
+		logger.debug('logout')
 		#session_id = self.get_cookie('.xunlei.com', 'sessionid')
 		#timestamp = current_timestamp()
 		#url = 'http://login.xunlei.com/unregister?sessionid=%s&cachetime=%s&noCacheIE=%s' % (session_id, timestamp, timestamp)
