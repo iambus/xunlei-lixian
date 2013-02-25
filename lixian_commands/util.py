@@ -25,9 +25,15 @@ def parse_colors(args):
 
 @command_line_value('log-level', default=get_config('log-level'))
 @command_line_value('log-path', default=get_config('log-path'))
+@command_line_option('debug')
+@command_line_option('trace')
 def parse_logging(args):
 	path = args.log_path
 	level = args.log_level
+	if args.trace:
+		level = 'trace'
+	elif args.debug:
+		level = 'debug'
 	if path or level:
 		import lixian_logging
 		level = level or 'info'
