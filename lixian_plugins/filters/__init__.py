@@ -38,9 +38,9 @@ def filter_things(things, keyword):
 def define_task_filter(pattern, matcher, batch=False):
 	task_filters[pattern] = ('batch' if batch else 'single', matcher)
 
-def define_name_filter(pattern, matcher, batch=False):
-	name_filters[pattern] = ('batch' if batch else 'single', matcher)
-	task_filters[pattern] = ('batch' if batch else 'single', lambda k, x: matcher(k, x['name']))
+def define_name_filter(pattern, matcher):
+	name_filters[pattern] = ('single', matcher)
+	task_filters[pattern] = ('single', lambda k, x: matcher(k, x['name']))
 
 def task_filter(pattern=None, protocol=None, batch=False):
 	assert bool(pattern) ^ bool(protocol)
@@ -53,15 +53,15 @@ def task_filter(pattern=None, protocol=None, batch=False):
 		return matcher
 	return define_filter
 
-def name_filter(pattern=None, protocol=None, batch=False):
+def name_filter(pattern=None, protocol=None):
 	# FIXME: duplicate code
 	assert bool(pattern) ^ bool(protocol)
 	def define_filter(matcher):
 		if pattern:
-			define_name_filter(pattern, matcher, batch)
+			define_name_filter(pattern, matcher)
 		else:
 			assert re.match(r'^\w+$', protocol), protocol
-			define_name_filter(r'^%s:' % protocol, lambda k, x: matcher(re.sub(r'^\w+:', '', k), x), batch)
+			define_name_filter(r'^%s:' % protocol, lambda k, x: matcher(re.sub(r'^\w+:', '', k), x))
 		return matcher
 	return define_filter
 
