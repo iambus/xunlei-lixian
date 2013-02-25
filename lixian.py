@@ -359,7 +359,7 @@ class XunleiClient:
 
 		random = current_random()
 		check_url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_check?callback=queryCid&url=%s&random=%s&tcache=%s' % (urllib.quote(url), random, current_timestamp())
-		js = self.urlopen(check_url).read().decode('utf-8')
+		js = self.urlread(check_url).decode('utf-8')
 		qcid = re.match(r'^queryCid(\(.+\))\s*$', js).group(1)
 		qcid = literal_eval(qcid)
 		if len(qcid) == 8:
@@ -394,7 +394,7 @@ class XunleiClient:
 		    'o_taskid': '0',
 		    })
 
-		response = self.urlopen(task_url).read()
+		response = self.urlread(task_url)
 		assert response == 'ret_task(Array)', response
 
 	def add_batch_tasks(self, urls, old_task_ids=None):
@@ -418,7 +418,7 @@ class XunleiClient:
 			data['cid[%d]' % i] = ''
 			data['url[%d]' % i] = urllib.quote(to_utf_8(urls[i])) # fix per request #98
 		data['batch_old_taskid'] = batch_old_taskid
-		response = self.urlopen(url, data=data).read()
+		response = self.urlread(url, data=data)
 		assert_response(response, jsonp, len(urls))
 
 	def add_torrent_task_by_content(self, content, path='attachment.torrent'):
@@ -429,7 +429,7 @@ class XunleiClient:
 
 		content_type, body = encode_multipart_formdata([], [('filepath', path, content)])
 
-		response = self.urlopen(upload_url, data=body, headers={'Content-Type': content_type}).read().decode('utf-8')
+		response = self.urlread(upload_url, data=body, headers={'Content-Type': content_type}).decode('utf-8')
 
 		upload_success = re.search(r'<script>document\.domain="xunlei\.com";var btResult =(\{.*\});</script>', response, flags=re.S)
 		if upload_success:
@@ -441,7 +441,7 @@ class XunleiClient:
 					'findex':''.join(f['id']+'_' for f in bt['filelist']),
 					'size':''.join(f['subsize']+'_' for f in bt['filelist']),
 					'from':'0'}
-			response = self.urlopen(commit_url, data=data).read()
+			response = self.urlread(commit_url, data=data)
 			#assert_response(response, jsonp)
 			assert re.match(r'%s\({"id":"\d+","progress":1}\)' % jsonp, response), repr(response)
 			return bt_hash
@@ -469,7 +469,7 @@ class XunleiClient:
 
 	def add_torrent_task_by_link(self, link, old_task_id=None):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/url_query?callback=queryUrl&u=%s&random=%s' % (urllib.quote(link), current_timestamp())
-		response = self.urlopen(url).read()
+		response = self.urlread(url)
 		success = re.search(r'queryUrl(\(1,.*\))\s*$', response, flags=re.S)
 		if not success:
 			already_exists = re.search(r"queryUrl\(-1,'([^']{40})", response, flags=re.S)
@@ -493,20 +493,20 @@ class XunleiClient:
 			data['o_page'] = 'history'
 		jsonp = 'jsonp%s' % current_timestamp()
 		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit?callback=%s' % jsonp
-		response = self.urlopen(commit_url, data=data).read()
+		response = self.urlread(commit_url, data=data)
 		#assert_response(response, jsonp)
 		assert re.match(r'%s\({"id":"\d+","progress":1}\)' % jsonp, response), repr(response)
 		return cid
 
 	def readd_all_expired_tasks(self):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/delay_once?callback=anything'
-		response = self.urlopen(url).read()
+		response = self.urlread(url)
 
 	def delete_tasks_by_id(self, ids):
 		jsonp = 'jsonp%s' % current_timestamp()
 		data = {'taskids': ','.join(ids)+',', 'databases': '0,'}
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_delete?callback=%s&type=%s&noCacheIE=%s' % (jsonp, 2, current_timestamp()) # XXX: what is 'type'?
-		response = self.urlopen(url, data=data).read()
+		response = self.urlread(url, data=data)
 		response = remove_bom(response)
 		assert_response(response, jsonp, '{"result":1,"type":2}')
 
@@ -521,7 +521,7 @@ class XunleiClient:
 
 	def pause_tasks_by_id(self, ids):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/task_pause?tid=%s&uid=%s&noCacheIE=%s' % (','.join(ids)+',', self.id, current_timestamp())
-		assert self.urlopen(url).read() == 'pause_task_resp()'
+		assert self.urlread(url) == 'pause_task_resp()'
 
 	def pause_task_by_id(self, id):
 		self.pause_tasks_by_id([id])
@@ -547,7 +547,7 @@ class XunleiClient:
 			form.append(urlencode(data))
 		form.append(urlencode({'type':1}))
 		data = '&'.join(form)
-		response = self.urlopen(url, data=data).read()
+		response = self.urlread(url, data=data)
 		assert_response(response, jsonp)
 
 	def rename_task(self, task, new_name):
@@ -556,7 +556,7 @@ class XunleiClient:
 		taskid = task['id']
 		bt = '1' if task['type'] == 'bt' else '0'
 		url = url+'?'+urlencode({'taskid':taskid, 'bt':bt, 'filename':new_name.encode('utf-8')})
-		response = self.urlopen(url).read()
+		response = self.urlread(url)
 		assert '"result":0' in response, response
 
 	def restart_task(self, task):
