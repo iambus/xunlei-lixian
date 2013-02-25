@@ -30,6 +30,8 @@ class XunleiClient:
 	page_size = 100
 	bt_page_size = 9999
 	def __init__(self, username=None, password=None, cookie_path=None, login=True):
+		self.username = username
+		self.password = password
 		self.cookie_path = cookie_path
 		if cookie_path:
 			self.cookiejar = cookielib.LWPCookieJar()
@@ -41,16 +43,7 @@ class XunleiClient:
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
 		if login:
 			if not self.has_logged_in():
-				if not username and self.has_cookie('.xunlei.com', 'usernewno'):
-					username = self.get_username()
-				if not username:
-					import lixian_config
-					username = lixian_config.get_config('username')
-#				if not username:
-#					raise NotImplementedError('user is not logged in')
-				if not password:
-					raise NotImplementedError('user is not logged in')
-				self.login(username, password)
+				self.login()
 			else:
 				self.id = self.get_userid()
 
@@ -64,7 +57,7 @@ class XunleiClient:
 			args['data'] = urlencode(args['data'])
 		return self.opener.open(urllib2.Request(url, **args), timeout=60)
 
-	def urlread(self, url, **args):
+	def urlread1(self, url, **args):
 		args.setdefault('headers', {})
 		headers = args['headers']
 		headers.setdefault('Accept-Encoding', 'gzip, deflate')
@@ -78,6 +71,13 @@ class XunleiClient:
 			data = ungzip(data)
 		elif response.info().get('Content-Encoding') == 'deflate':
 			data = undeflate(data)
+		return data
+
+	def urlread(self, url, **args):
+		data = self.urlread1(url, **args)
+		if self.is_session_timeout(data):
+			self.login()
+			data = self.urlread1(url, **args)
 		return data
 
 	def load_cookies(self):
@@ -149,7 +149,23 @@ class XunleiClient:
 		self.set_page_size(self.page_size)
 		return r
 
-	def login(self, username, password):
+	def is_session_timeout(self, html):
+		return html == '''<script>document.cookie ="sessionid=; path=/; domain=xunlei.com"; document.cookie ="lx_sessionid=; path=/; domain=vip.xunlei.com";top.location='http://cloud.vip.xunlei.com/task.html?error=1'</script>'''
+
+	def login(self, username=None, password=None):
+		username = self.username
+		password = self.password
+		if not username and self.has_cookie('.xunlei.com', 'usernewno'):
+			username = self.get_username()
+		if not username:
+			# TODO: don't depend on lixian_config
+			import lixian_config
+			username = lixian_config.get_config('username')
+#			if not username:
+#				raise NotImplementedError('user is not logged in')
+		if not password:
+			raise NotImplementedError('user is not logged in')
+
 		cachetime = current_timestamp()
 		check_url = 'http://login.xunlei.com/check?u=%s&cachetime=%d' % (username, cachetime)
 		login_page = self.urlopen(check_url).read()
