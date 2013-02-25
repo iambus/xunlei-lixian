@@ -31,7 +31,6 @@ def parse_logging(args):
 	if path or level:
 		import lixian_logging
 		level = level or 'info'
-		level = {'info': lixian_logging.INFO, 'debug': lixian_logging.DEBUG, 'trace': lixian_logging.TRACE}[level.lower()]
 		lixian_logging.init_logger(use_colors=args.colors, level=level, path=path)
 		logger = lixian_logging.get_logger()
 		import lixian

@@ -36,11 +36,11 @@ class ConsoleLogger:
 		pass
 
 class FileLogger:
-	def __init__(self, path, level=INFO):
-		self.level = level
-		self.path = path
-		self.console = ConsoleLogger(level)
-		self.logger = file_logger(path, level)
+	def __init__(self, path, level=INFO, file_level=None, console_level=None):
+		console_level = console_level or level
+		file_level = file_level or level
+		self.console = ConsoleLogger(console_level)
+		self.logger = file_logger(path, file_level)
 	def stdout(self, message):
 		self.console.stdout(message)
 	def info(self, message):
@@ -57,11 +57,33 @@ default_logger = None
 def init_logger(use_colors=True, level=INFO, path=None):
 	global default_logger
 	if not default_logger:
-		assert level in (INFO, DEBUG, TRACE)
-		if path:
-			default_logger = FileLogger(path, level)
+		if isinstance(level, int):
+			assert level in (INFO, DEBUG, TRACE)
+			console_level = level
+			file_level = level
+		elif isinstance(level, basestring):
+			level = level.lower()
+			if level in ('info', 'debug', 'trace'):
+				level = {'info': INFO, 'debug': DEBUG, 'trace': TRACE}[level]
+				console_level = level
+				file_level = level
+			else:
+				console_level = INFO
+				file_level = DEBUG
+				for level in level.split(','):
+					device, level = level.split(':')
+					if device == 'console':
+						console_level = {'info': INFO, 'debug': DEBUG, 'trace': TRACE}[level]
+					elif device == 'file':
+						file_level = {'info': INFO, 'debug': DEBUG, 'trace': TRACE}[level]
+					else:
+						raise NotImplementedError('Invalid logging level: ' + device)
 		else:
-			default_logger = ConsoleLogger(level)
+			raise NotImplementedError(type(level))
+		if path:
+			default_logger = FileLogger(path, console_level=console_level, file_level=file_level)
+		else:
+			default_logger = ConsoleLogger(console_level)
 
 def get_logger():
 	init_logger()
