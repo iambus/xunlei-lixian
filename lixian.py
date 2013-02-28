@@ -188,6 +188,7 @@ class XunleiClient:
 		check_url = 'http://login.xunlei.com/check?u=%s&cachetime=%d' % (username, cachetime)
 		login_page = self.urlopen(check_url).read()
 		verifycode = self.get_cookie('.xunlei.com', 'check_result')[2:].upper()
+		assert verifycode
 		password = encypt_password(password)
 		password = md5(password+verifycode)
 		login_page = self.urlopen('http://login.xunlei.com/sec2login/', data={'u': username, 'p': password, 'verifycode': verifycode})
