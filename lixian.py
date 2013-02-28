@@ -164,7 +164,10 @@ class XunleiClient:
 		return r
 
 	def is_session_timeout(self, html):
-		return html == '''<script>document.cookie ="sessionid=; path=/; domain=xunlei.com"; document.cookie ="lx_sessionid=; path=/; domain=vip.xunlei.com";top.location='http://cloud.vip.xunlei.com/task.html?error=1'</script>'''
+		is_timeout = html == '''<script>document.cookie ="sessionid=; path=/; domain=xunlei.com"; document.cookie ="lx_sessionid=; path=/; domain=vip.xunlei.com";top.location='http://cloud.vip.xunlei.com/task.html?error=1'</script>''' or html == '''<script>document.cookie ="sessionid=; path=/; domain=xunlei.com"; document.cookie ="lsessionid=; path=/; domain=xunlei.com"; document.cookie ="lx_sessionid=; path=/; domain=vip.xunlei.com";top.location='http://cloud.vip.xunlei.com/task.html?error=2'</script>'''
+		if is_timeout:
+			logger.trace(html)
+		return is_timeout
 
 	def login(self, username=None, password=None):
 		username = self.username
@@ -192,7 +195,9 @@ class XunleiClient:
 		self.set_page_size(1)
 		login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp()).read()
 		self.set_page_size(self.page_size)
-		assert self.is_login_ok(login_page), 'login failed'
+		if not self.is_login_ok(login_page):
+			logger.trace(login_page)
+			raise RuntimeError('login failed')
 		self.save_cookies()
 
 	def logout(self):
