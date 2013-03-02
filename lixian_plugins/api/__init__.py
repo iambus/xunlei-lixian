@@ -1,6 +1,7 @@
 
-__all__ = ['command',
+__all__ = ['command', 'register_alias',
            'user_query', 'extract_info_hash_from_url', 'download_torrent_from_url',
+           'task_filter', 'name_filter',
            'page_parser']
 
 ##################################################
@@ -8,6 +9,12 @@ __all__ = ['command',
 ##################################################
 
 from lixian_plugins.commands import command
+
+##################################################
+# commands
+##################################################
+
+from lixian_alias import register_alias
 
 ##################################################
 # queries
