@@ -57,3 +57,12 @@ def page_parser(pattern):
 		for p in patterns:
 			lixian_plugins.parsers.register_parser(p, extend_links)
 	return f
+
+
+##################################################
+# download tools
+##################################################
+
+from lixian_download_tools import download_tool
+
+

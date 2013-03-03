@@ -1,13 +1,24 @@
 
+__all__ = ['download_tool', 'get_tool']
+
 from lixian_config import *
 import subprocess
 import urllib2
 import os.path
 
+download_tools = {}
+
+def download_tool(name):
+	def register(tool):
+		download_tools[name] = tool
+		return tool
+	return register
+
 def check_bin(bin):
 	import distutils.spawn
 	assert distutils.spawn.find_executable(bin), "Can't find %s" % bin
 
+@download_tool('urllib2')
 def urllib2_download(client, download_url, filename, resuming=False):
 	'''In the case you don't even have wget...'''
 	assert not resuming
@@ -18,10 +29,12 @@ def urllib2_download(client, download_url, filename, resuming=False):
 	with open(filename, 'wb') as output:
 		shutil.copyfileobj(response, output)
 
+@download_tool('asyn')
 def asyn_download(client, download_url, filename, resuming=False):
 	import lixian_download_asyn
 	lixian_download_asyn.download(download_url, filename, headers={'Cookie': 'gdriveid='+str(client.get_gdriveid())}, resuming=resuming)
 
+@download_tool('wget')
 def wget_download(client, download_url, filename, resuming=False):
 	gdriveid = str(client.get_gdriveid())
 	wget_opts = ['wget', '--header=Cookie: gdriveid='+gdriveid, download_url, '-O', filename]
@@ -33,6 +46,7 @@ def wget_download(client, download_url, filename, resuming=False):
 	if exit_code != 0:
 		raise Exception('wget exited abnormaly')
 
+@download_tool('curl')
 def curl_download(client, download_url, filename, resuming=False):
 	gdriveid = str(client.get_gdriveid())
 	curl_opts = ['curl', '-L', download_url, '--cookie', 'gdriveid='+gdriveid, '--output', filename]
@@ -44,6 +58,8 @@ def curl_download(client, download_url, filename, resuming=False):
 	if exit_code != 0:
 		raise Exception('curl exited abnormaly')
 
+@download_tool('aria2')
+@download_tool('aria2c')
 def aria2_download(client, download_url, path, resuming=False):
 	gdriveid = str(client.get_gdriveid())
 	dir = os.path.dirname(path)
@@ -59,6 +75,7 @@ def aria2_download(client, download_url, path, resuming=False):
 	if exit_code != 0:
 		raise Exception('aria2c exited abnormaly')
 
+@download_tool('axel')
 def axel_download(client, download_url, path, resuming=False):
 	gdriveid = str(client.get_gdriveid())
 	axel_opts = ['axel', '--header=Cookie: gdriveid='+gdriveid, download_url, '--output', path]
@@ -68,10 +85,7 @@ def axel_download(client, download_url, path, resuming=False):
 	if exit_code != 0:
 		raise Exception('axel exited abnormaly')
 
-# TODO: support axel, ProZilla
-
-
 def get_tool(name):
-	return {'wget':wget_download, 'curl': curl_download, 'aria2':aria2_download, 'aria2c':aria2_download, 'axel':axel_download, 'asyn':asyn_download, 'urllib2':urllib2_download}[name]
+	return download_tools[name]
 
 
