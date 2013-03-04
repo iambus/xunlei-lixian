@@ -44,7 +44,7 @@ def wget_download(client, download_url, filename, resuming=False):
 	check_bin(wget_opts[0])
 	exit_code = subprocess.call(wget_opts)
 	if exit_code != 0:
-		raise Exception('wget exited abnormaly')
+		raise Exception('wget exited abnormally')
 
 @download_tool('curl')
 def curl_download(client, download_url, filename, resuming=False):
@@ -56,7 +56,7 @@ def curl_download(client, download_url, filename, resuming=False):
 	check_bin(curl_opts[0])
 	exit_code = subprocess.call(curl_opts)
 	if exit_code != 0:
-		raise Exception('curl exited abnormaly')
+		raise Exception('curl exited abnormally')
 
 @download_tool('aria2')
 @download_tool('aria2c')
@@ -73,7 +73,7 @@ def aria2_download(client, download_url, path, resuming=False):
 	check_bin(aria2_opts[0])
 	exit_code = subprocess.call(aria2_opts)
 	if exit_code != 0:
-		raise Exception('aria2c exited abnormaly')
+		raise Exception('aria2c exited abnormally')
 
 @download_tool('axel')
 def axel_download(client, download_url, path, resuming=False):
@@ -83,7 +83,7 @@ def axel_download(client, download_url, path, resuming=False):
 	check_bin(axel_opts[0])
 	exit_code = subprocess.call(axel_opts)
 	if exit_code != 0:
-		raise Exception('axel exited abnormaly')
+		raise Exception('axel exited abnormally')
 
 def get_tool(name):
 	return download_tools[name]
