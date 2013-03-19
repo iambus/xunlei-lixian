@@ -11,7 +11,7 @@ def xunlei_url_decode(url):
 	assert url.startswith('AA') and url.endswith('ZZ')
 	return url[2:-2]
 
-def flashget_url_decode(encode):
+def flashget_url_encode(url):
 	return 'Flashget://'+base64.encodestring('[FLASHGET]'+url+'[FLASHGET]').replace('\n', '')
 
 def flashget_url_decode(url):
@@ -63,7 +63,6 @@ def normalize_unicode_link(url):
 		return re.sub(r'.', escape_unicode, url)
 	else:
 		return re.sub(r'.', escape_str, url)
-	return url
 
 def unquote_url(x):
 	x = urllib.unquote(x)
