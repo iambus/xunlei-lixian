@@ -18,14 +18,16 @@ Quick start
 	python lixian_cli.py list
 	python lixian_cli.py list --completed
 	python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-id
+	python lixian_cli.py list --deleted
+	python lixian_cli.py list --expired
 	python lixian_cli.py list id1 id2
 	python lixian_cli.py list zip rar
 	python lixian_cli.py list 2012.04.04 2012.04.05
 
 	python lixian_cli.py download task-id
 	python lixian_cli.py download ed2k-url
-	python lixian_cli.py download --tool wget ed2k-url
-	python lixian_cli.py download --tool asyn ed2k-url
+	python lixian_cli.py download --tool=wget ed2k-url
+	python lixian_cli.py download --tool=asyn ed2k-url
 	python lixian_cli.py download ed2k-url --output "file to save"
 	python lixian_cli.py download id1 id2 id3
 	python lixian_cli.py download url1 url2 url3
@@ -33,8 +35,8 @@ Quick start
 	python lixian_cli.py download --input download-urls-file --delete
 	python lixian_cli.py download --input download-urls-file --output-dir root-dir-to-save-files
 	python lixian_cli.py download bt://torrent-info-hash
-	python lixian_cli.py download --bt 1.torrent
-	python lixian_cli.py download --bt torrent-info-hash
+	python lixian_cli.py download 1.torrent
+	python lixian_cli.py download torrent-info-hash
 	python lixian_cli.py download --bt http://xxx/xxx.torrent
 	python lixian_cli.py download bt-task-id/file-id
 	python lixian_cli.py download --all
@@ -44,8 +46,8 @@ Quick start
 	python lixian_cli.py download 0-2
 
 	python lixian_cli.py add url
-	python lixian_cli.py add --bt 1.torrent
-	python lixian_cli.py add --bt torrent-info-hash
+	python lixian_cli.py add 1.torrent
+	python lixian_cli.py add torrent-info-hash
 	python lixian_cli.py add --bt http://xxx/xxx.torrent
 
 	python lixian_cli.py delete task-id
@@ -71,7 +73,7 @@ Quick start
 
         git clone git://github.com/iambus/xunlei-lixian.git
 
-3. 安装Python 2.x（请下载最新的2.7版本。3.x版本不支持。）
+3. 安装Python 2.x（请下载最新的2.7版本。不支持Python 3.x。）
 
       http://www.python.org/getit/
 
@@ -109,11 +111,13 @@ https://github.com/iambus/xunlei-lixian/downloads
 
       注：密码保存的时候会加密（hash）
 
-3. 使用lx download下载的文件会自动验证hash。其中ed2k和bt会做完整的hash校验。http下载只做部分校验（目前为止尚未发现迅雷离线能提供完整的hash码）。
+3. 部分命令有短名字。lx d相当于lx download，lx a相当于lx add，lx l相当于lx list，lx x相当于lx list。也可以通过plugin api自己添加alias。
+
+4. 使用lx download下载的文件会自动验证hash。其中ed2k和bt会做完整的hash校验。http下载只做部分校验。
 
       注：包含多个文件的bt种子，如果没有完整下载所有文件，对于已下载的文件，可能有少量片段无法验证。如果很重视文件的正确性请选择下载bt种子中的所有文件。（目前还没有发现由于软件问题而导致hash验证失败的情况。）
 
-4. 如果觉得大文件的hash速度太慢，可以关掉：
+5. 如果觉得大文件的hash速度太慢，可以关掉：
 
         lx download --no-hash ...
 
@@ -121,7 +125,7 @@ https://github.com/iambus/xunlei-lixian/downloads
 
         lx config no-hash
 
-5. lixian_hash.py可以用于手动计算hash。见“其他工具”一节。
+6. lx hash命令可以用于手动计算hash。见“其他工具”一节。
 
 
 命令详解
@@ -139,6 +143,7 @@ https://github.com/iambus/xunlei-lixian/downloads
 * lx pause
 * lx restart
 * lx rename
+* lx readd
 * lx config
 * lx info
 * lx help
@@ -172,7 +177,6 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 下载。目前支持普通的http下载，ed2k下载，和bt下载。可以使用thunder/flashget/qq旋风的连接（bt任务除外）。在信息足够的情况下（见“一些提示”一节的第3条），下载的文件会自动验证hash，出错了会重新下载（我个人目前还没遇到过下载文件损坏的情况）。见“一些提示”一节的第3条。
 
     lx download id
-    lx download #n
     lx download http://somewhere
     lx download ed2k://somefile
     lx download bt://info-hash
@@ -181,14 +185,15 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
     lx download keywords
     lx download date
 
-下载bt的时候需要加--bt参数（或者--torrent参数）。可以指定本地.torrent文件路径，或者.torrent文件的http url，或者torrent文件的info hash。（很多网站使用info hash来标识一个bt种子文件，这种情况你就不需要下载种子了，lx download可以自动下载种子，不过前提是之前已经有人使用迅雷离线下载过同样的种子。[如后所述](#其他工具)，你也可以使用lixian_hash.py --info-hash来手动生成bt种子的info hash。）
+对于bt任务，可以指定本地.torrent文件路径，或者torrent文件的info hash。（很多网站使用info hash来标识一个bt种子文件，这种情况你就不需要下载种子了，lx download可以自动下载种子，不过前提是之前已经有人使用迅雷离线下载过同样的种子。[如后所述](#其他工具)，你也可以使用lx hash --info-hash来手动生成bt种子的info hash。）
 
-    lx download --bt Community.S03E01.720p.HDTV.X264-DIMENSION.torrent
+    lx download Community.S03E01.720p.HDTV.X264-DIMENSION.torrent
+    lx download 61AAA3C6FBB8B71EBE2F5A2A3481296B51D882F6
+    lx download bt://61AAA3C6FBB8B71EBE2F5A2A3481296B51D882F6
+
+如果url本身指向了要添加任务的种子文件，需要加上--bt参数告诉lx脚本这是一个种子。
+
     lx download --bt http://tvu.org.ru/torrent.php?tid=64757
-    lx download --bt 61AAA3C6FBB8B71EBE2F5A2A3481296B51D882F6
-    lx download --bt bt://61AAA3C6FBB8B71EBE2F5A2A3481296B51D882F6
-
-注意，如果你使用最后一种方式，--bt参数是可选的。因为lx download可以从bt://识别出来这是一个bt任务。
 
 可以把多个连接保存到文件里，使用--input参数批量下载：
 
@@ -206,7 +211,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 如果一个文件已经存在，使用参数--continue支持断点续传，使用--overwrite覆盖已存在的文件，重新下载。
 
-你可能需要用--tool参数来指定下载工具。默认的下载工具是wget，有些环境的wget是最低功能版本，不支持指定cookie或者断点续传。这种情况可以使用--tool asyn。这在“支持的下载工具”一节有说明。
+你可能需要用--tool参数来指定下载工具。默认的下载工具是wget，有些环境的wget是最低功能版本，不支持指定cookie或者断点续传。这种情况可以使用--tool=asyn。这在“支持的下载工具”一节有说明。
 
     lx download --tool=wget link
     lx download --tool=asyn link
@@ -247,6 +252,8 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
     lx download bt-task-id/[.mkv,.mp4]
 
+更多的用法：TODO
+
 可以使用--all参数下载所有的任务（如果已经在参数中指定了要下载的链接或者任务id，--all参数会被忽略）：
 
     lx download --all
@@ -275,16 +282,20 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
     lx list id/
 
+可以使用--deleted或者--expired参数来列出已删除和已过期的任务。
+
 详细参数可以参考lx help list。
 
 ### lx add
-添加任务到迅雷离线服务器上。一般来说你可以直接使用lx download下载而无需手动添加。如果你认为这个任务还没人下载过，你可以先手动添加，稍后下载。
+添加任务到迅雷离线服务器上。
 
     lx add url1 url2 url3
     lx add --input links.txt
     lx add --bt torrent-file
     lx add --bt torrent-url
     lx add --bt info-hash
+
+提示：lx download会自动添加任务，而无需执行lx add。
 
 ### lx delete
 从迅雷离线服务器上删除任务。
@@ -318,8 +329,15 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
      lx logout
      lx logout --cookies your-cookies-file
 
-### lx config
+### lx readd
+重新添加已过期或者已删除的任务。
 
+    lx readd --deleted task-id
+    lx readd --expired task-name
+
+提示：可以用lx list --deleted或者lx list --expired列出已删除和过期的任务。
+
+### lx config
 保存配置。配置文件的保存路径是~/.xunlei.lixian.config。虽然你可以差不多可以保存任何参数，但是目前只有以下几个参数会真正起作用：
 
 * username
@@ -338,6 +356,9 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 * wget-opts（见稍后的说明）
 * aria2-opts（见稍后的说明）（见支持的下载工具一节）
 * axel-opts（见稍后的说明）
+* watch-interval
+* log-level
+* log-path
 
 （因为只有这几个参数我觉得是比较有用的。如果你觉得其他的参数有用可以发信给我或者直接open一个issue。）
 
@@ -372,6 +393,14 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 关于gdriveid：理论上gdriveid是下载迅雷离线链接需要的唯一cookie，你可以用lx list --download-url获取下载地址，然后用lx info获取gdriveid，然后手动使用其他工具下载，比如wget "--header=Cookie: gdriveid=your-gdriveid" download-url。
 
+-i参数可以只打印登录ID：
+
+    lx info -i
+
+如果想把登录id复制到剪切板：
+
+    lx info -i | clip
+
 ### lx help
 打印帮助信息。
 
@@ -384,7 +413,7 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 --------------
 
 * wget：默认下载工具。注意有些Linux发行版（比如某些运行在路由设备上的mini系统）自带的wget可能无法满足功能要求。可以尝试使用其他工具。
-* asyn：内置的下载工具。在命令行中加上--tool asyn可以启用。注意此工具的下载表现一般，在高速下载或者设备性能不太好的情况（比如运行在低端路由上），CPU使用可能稍高。在我的RT-N16上，以250K/s的速度下载，CPU使用大概在10%~20%。
+* asyn：内置的下载工具。在命令行中加上--tool=asyn可以启用。注意此工具的下载表现一般，在高速下载或者设备性能不太好的情况（比如运行在低端路由上），CPU使用可能稍高。在我的RT-N16上，以250K/s的速度下载，CPU使用大概在10%~20%。
 * urllib2：内置下载工具。不支持断点续传错误重连，不建议使用。
 * curl：尚未测试。
 * aria2：测试通过。注意某些环境里的aria2c需要加上额外的参数才能运行。可以使用lx config进行配置：lx config -- aria2-opts --event-poll=select
@@ -395,12 +424,12 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 其他工具
 --------
 
-* lixian_hash.py可以用于手动计算hash。
+* lx hash可以用于手动计算hash。
 
-        python lixian_hash.py --ed2k filename
-        python lixian_hash.py --info-hash torrent-file
-        python lixian_hash.py --verify-sha1 filename sha1
-        python lixian_hash.py --verify-bt filename torrent-file
+        lx hash --ed2k filename
+        lx hash --info-hash torrent-file
+        lx hash --verify-sha1 filename sha1
+        lx hash --verify-bt filename torrent-file
 
 * lixian_batch.py是我自己用的一个简单的“多任务”下载脚本。其实就是多个--input文件，每个文件里定义的链接下载到文件所在的目录里。
 
@@ -410,9 +439,9 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 --------
 
 1. --tool=asyn的性能不是很好。见“支持的下载工具”一节里的说明。
-2. 任务匹配有点混乱。比如不能混用id和url：lx download id url；lx download mkv合法，lx download mkv mp4却非法。有时间会重构下。
-3. 有些时候任务添加到服务器上，但是马上刷新拿不到这个数据。这应该是服务器同步的问题。技术上可以自动重刷一遍，但是暂时没有做。用户可以自己重试下。
-4. bt下载的校验如果失败，可能需要重新下载所有文件。从技术上来讲这是没有必要的。但是一来重下出错的片段有些繁琐，二来我自己都从来没遇到过bt校验失败需要重下的情况，所以暂时不考虑支持片段修复。更新：bt校验失败不会重下。
+2. 有些时候任务添加到服务器上，但是马上刷新拿不到这个数据。这应该是服务器同步的问题。技术上可以自动重刷一遍，但是暂时没有做。用户可以自己重试下。
+3. bt下载的校验如果失败，可能需要重新下载所有文件。从技术上来讲这是没有必要的。但是一来重下出错的片段有些繁琐，二来我自己都从来没遇到过bt校验失败需要重下的情况，所以暂时不考虑支持片段修复。更新：bt校验失败不会重下。
+4. 有时候因为帐号异常，登录需要验证码。目前还不支持验证码。
 
 以后
 ----

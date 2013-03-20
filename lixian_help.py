@@ -65,14 +65,16 @@ python lixian_cli.py config password "Your password"
 python lixian_cli.py list
 python lixian_cli.py list --completed
 python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-id
+python lixian_cli.py list --deleted
+python lixian_cli.py list --expired
 python lixian_cli.py list id1 id2
 python lixian_cli.py list zip rar
 python lixian_cli.py list 2012.04.04 2012.04.05
 
 python lixian_cli.py download task-id
 python lixian_cli.py download ed2k-url
-python lixian_cli.py download --tool wget ed2k-url
-python lixian_cli.py download --tool asyn ed2k-url
+python lixian_cli.py download --tool=wget ed2k-url
+python lixian_cli.py download --tool=asyn ed2k-url
 python lixian_cli.py download ed2k-url --output "file to save"
 python lixian_cli.py download id1 id2 id3
 python lixian_cli.py download url1 url2 url3
@@ -80,8 +82,8 @@ python lixian_cli.py download --input download-urls-file
 python lixian_cli.py download --input download-urls-file --delete
 python lixian_cli.py download --input download-urls-file --output-dir root-dir-to-save-files
 python lixian_cli.py download bt://torrent-info-hash
-python lixian_cli.py download --bt 1.torrent
-python lixian_cli.py download --bt torrent-info-hash
+python lixian_cli.py download 1.torrent
+python lixian_cli.py download torrent-info-hash
 python lixian_cli.py download --bt http://xxx/xxx.torrent
 python lixian_cli.py download bt-task-id/file-id
 python lixian_cli.py download --all
@@ -91,8 +93,8 @@ python lixian_cli.py download 0 1 2
 python lixian_cli.py download 0-2
 
 python lixian_cli.py add url
-python lixian_cli.py add --bt 1.torrent
-python lixian_cli.py add --bt torrent-info-hash
+python lixian_cli.py add 1.torrent
+python lixian_cli.py add torrent-info-hash
 python lixian_cli.py add --bt http://xxx/xxx.torrent
 
 python lixian_cli.py delete task-id
@@ -144,7 +146,7 @@ Options:
                                  Default: false.
  --delete                        Delete task from Xunlei cloud after download is finished.
                                  Default: false.
- --torrent         --bt          Treat all arguments as torrent files (e.g. local torrent file, torrent http url, torrent info hash)
+ --torrent         --bt          Treat URLs as torrent files
                                  Default: false.
  --all                           Download all tasks. This option will be ignored if specific download URLs or task ids can be found. 
                                  Default: false.
@@ -156,8 +158,8 @@ Options:
 Examples:
  python lixian_cli.py download task-id
  python lixian_cli.py download ed2k-url
- python lixian_cli.py download --tool wget ed2k-url
- python lixian_cli.py download --tool asyn ed2k-url
+ python lixian_cli.py download --tool=wget ed2k-url
+ python lixian_cli.py download --tool=asyn ed2k-url
  python lixian_cli.py download ed2k-url --output "file to save"
  python lixian_cli.py download id1 id2 id3
  python lixian_cli.py download url1 url2 url3
@@ -165,8 +167,8 @@ Examples:
  python lixian_cli.py download --input download-urls-file --delete
  python lixian_cli.py download --input download-urls-file --output-dir root-dir-to-save-files
  python lixian_cli.py download bt://torrent-info-hash
- python lixian_cli.py download --bt 1.torrent
- python lixian_cli.py download --bt torrent-info-hash
+ python lixian_cli.py download 1.torrent
+ python lixian_cli.py download torrent-info-hash
  python lixian_cli.py download --bt http://xxx/xxx.torrent
  python lixian_cli.py download bt-task-id/file-id
  python lixian_cli.py download --all
@@ -203,6 +205,8 @@ Examples:
  python lixian_cli.py list bt-task-id/
  python lixian_cli.py list --completed
  python lixian_cli.py list --completed --name --original-url --download-url --no-status --no-id
+ python lixian_cli.py list --deleted
+ python lixian_cli.py list --expired
  python lixian_cli.py list id1 id2
  python lixian_cli.py list zip rar
  python lixian_cli.py list 2012.04.04 2012.04.05
@@ -219,8 +223,8 @@ Options:
 
 Examples:
  python lixian_cli.py add url
- python lixian_cli.py add --bt 1.torrent
- python lixian_cli.py add --bt torrent-info-hash
+ python lixian_cli.py add 1.torrent
+ python lixian_cli.py add torrent-info-hash
  python lixian_cli.py add --bt http://xxx/xxx.torrent
 '''
 
