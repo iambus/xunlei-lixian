@@ -264,7 +264,7 @@ class XunleiClient:
 		'''read all pages of completed tasks'''
 		return self.read_all_tasks(2)
 
-	def read_categories(self):
+	def read_categories_old(self):
 		url = 'http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0' % self.id
 		self.set_page_size(1)
 		html = self.urlread(url)
@@ -276,6 +276,17 @@ class XunleiClient:
 		nav = m.group()
 		folders = re.findall(r'''setLxCookie\('class_check',(\d+)\);return false;" title=""><em class="ic_link_new "></em>([^<>]+)</a>''', nav)
 		return dict((name.decode('utf-8'), int(id)) for id, name in folders)
+
+	def read_categories(self):
+#		url = 'http://dynamic.cloud.vip.xunlei.com/interface/menu_get?callback=jsonp%s&interfrom=task' % current_timestamp()
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/menu_get'
+		html = self.urlread(url)
+		m = re.match(r'rebuild\((\{.*\})\)', html)
+		if not m:
+			logger.trace(html)
+			raise RuntimeError('Invalid response')
+		result = json.loads(m.group(1))
+		return dict((x['name'], int(x['id'])) for x in result['info'])
 
 	def get_category_id(self, category):
 		return self.read_categories()[category]
