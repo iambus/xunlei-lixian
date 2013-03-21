@@ -118,7 +118,7 @@ def download_single_task(client, download, task, options):
 			os.makedirs(dirname)
 		for t in skipped:
 			with colors(options.get('colors')).yellow():
-				print 'skip task %s/%s (%s) as the status is %s' % (t['id'], t['index'], t['name'].encode(default_encoding), t['status_text'])
+				print 'skip task %s/%s (%s) as the status is %s' % (str(t['id']), t['index'], t['name'].encode(default_encoding), t['status_text'])
 		if mini_hash and resuming and verify_mini_bt_hash(dirname, files):
 			print task['name'].encode(default_encoding), 'is already done'
 			if delete and 'files' not in task:
