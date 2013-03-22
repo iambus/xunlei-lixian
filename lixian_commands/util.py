@@ -4,7 +4,7 @@ __all__ = ['parse_login', 'parse_colors', 'parse_logging', 'parse_size', 'output
 from lixian_cli_parser import *
 from lixian_config import get_config
 from lixian_config import LIXIAN_DEFAULT_COOKIES
-from lixian_encoding import default_encoding
+from lixian_encoding import default_encoding, to_native
 from lixian_colors import colors
 from getpass import getpass
 import lixian_help
@@ -94,13 +94,9 @@ def output_tasks(tasks, columns, args, top=True):
 					raise NotImplementedError(k)
 			print
 
-def to_str(s):
-	assert type(s) in (str, unicode)
-	return s.encode(default_encoding) if type(s) == unicode else s
-
 def usage(doc=lixian_help.usage, message=None):
 	if hasattr(doc, '__call__'):
 		doc = doc()
 	if message:
-		print to_str(message)
-	print to_str(doc).strip()
+		print to_native(message)
+	print to_native(doc).strip()
