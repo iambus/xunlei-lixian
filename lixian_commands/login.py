@@ -37,4 +37,4 @@ def login(args):
 		print 'Saving login session to', args.cookies
 	else:
 		print 'Testing login without saving session'
-	client = XunleiClient(args.username, args.password, args.cookies)
+	client = create_client(args)

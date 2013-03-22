@@ -1,16 +1,15 @@
 
 from lixian_plugins.api import command
 
-from lixian import XunleiClient
 from lixian_config import *
 from lixian_encoding import default_encoding
 from lixian_cli_parser import command_line_parser
 from lixian_cli_parser import with_parser
 from lixian_cli_parser import command_line_value
-from lixian_commands.util import parse_login
+from lixian_commands.util import parse_login, create_client
 
 def export_aria2_conf(args):
-	client = XunleiClient(args.username, args.password, args.cookies)
+	client = create_client(args)
 	import lixian_query
 	tasks = lixian_query.search_tasks(client, args)
 	files = []

@@ -1,5 +1,5 @@
 
-__all__ = ['parse_login', 'parse_colors', 'parse_logging', 'parse_size', 'output_tasks', 'usage']
+__all__ = ['parse_login', 'parse_colors', 'parse_logging', 'parse_size', 'create_client', 'output_tasks', 'usage']
 
 from lixian_cli_parser import *
 from lixian_config import get_config
@@ -47,6 +47,10 @@ def parse_logging(args):
 @command_line_option('format-size', default=get_config('format-size'))
 def parse_size(args):
 	pass
+
+def create_client(args):
+	from lixian import XunleiClient
+	return XunleiClient(args.username, args.password, args.cookies)
 
 def output_tasks(tasks, columns, args, top=True):
 	for i, t in enumerate(tasks):

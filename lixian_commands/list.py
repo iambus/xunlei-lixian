@@ -1,5 +1,4 @@
 
-from lixian import XunleiClient
 from lixian_commands.util import *
 from lixian_cli_parser import *
 from lixian_config import get_config
@@ -36,7 +35,7 @@ def list_task(args):
 	assert len(parent_ids) <= 1, "sub-tasks listing only supports single task id"
 	ids = [a[:-1] if re.match(r'^#?\d+/$', a) else a for a in args]
 
-	client = XunleiClient(args.username, args.password, args.cookies)
+	client = create_client(args)
 	if parent_ids:
 		args[0] = args[0][:-1]
 		tasks = lixian_query.search_tasks(client, args)

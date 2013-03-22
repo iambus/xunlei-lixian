@@ -1,5 +1,4 @@
 
-from lixian import XunleiClient
 from lixian_commands.util import *
 from lixian_cli_parser import *
 from lixian_encoding import from_native
@@ -14,7 +13,7 @@ def rename_task(args):
 	if len(args) != 2 or not re.match(r'\d+$', args[0]):
 		usage(lixian_help.rename, 'Incorrect arguments')
 		sys.exit(1)
-	client = XunleiClient(args.username, args.password, args.cookies)
+	client = create_client(args)
 	taskid, new_name = args
 	task = client.get_task_by_id(taskid)
 	client.rename_task(task, from_native(new_name))

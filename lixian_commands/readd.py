@@ -1,5 +1,4 @@
 
-from lixian import XunleiClient
 from lixian_commands.util import *
 from lixian_cli_parser import *
 from lixian_encoding import default_encoding
@@ -19,7 +18,7 @@ def readd_task(args):
 		status = 'expired'
 	else:
 		raise NotImplementedError('Please use --expired or --deleted')
-	client = XunleiClient(args.username, args.password, args.cookies)
+	client = create_client(args)
 	if status == 'expired' and args.all:
 		return client.readd_all_expired_tasks()
 	to_readd = lixian_query.search_tasks(client, args)

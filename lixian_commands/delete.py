@@ -1,5 +1,4 @@
 
-from lixian import XunleiClient
 from lixian_commands.util import *
 from lixian_cli_parser import *
 from lixian_encoding import default_encoding
@@ -14,7 +13,7 @@ import lixian_query
 @command_line_option('i')
 @command_line_option('all')
 def delete_task(args):
-	client = XunleiClient(args.username, args.password, args.cookies)
+	client = create_client(args)
 	to_delete = lixian_query.search_tasks(client, args)
 	if not to_delete:
 		print 'Nothing to delete'

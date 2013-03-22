@@ -1,5 +1,4 @@
 
-from lixian import XunleiClient
 from lixian_commands.util import *
 from lixian_cli_parser import *
 from lixian_config import *
@@ -226,7 +225,7 @@ def download_task(args):
 	                 'no_bt_dir': not args.bt_dir,
 	                 'save_torrent_file': args.save_torrent_file,
 	                 'colors': args.colors}
-	client = XunleiClient(args.username, args.password, args.cookies)
+	client = create_client(args)
 	assert len(args) or args.input or args.all or args.category, 'Not enough arguments'
 	query = lixian_query.build_query(client, args)
 	query.query_once()

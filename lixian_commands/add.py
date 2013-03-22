@@ -1,5 +1,4 @@
 
-from lixian import XunleiClient
 from lixian_commands.util import *
 from lixian_cli_parser import *
 from lixian_config import get_config
@@ -15,7 +14,7 @@ import lixian_query
 @command_line_option('torrent', alias='bt')
 def add_task(args):
 	assert len(args) or args.input
-	client = XunleiClient(args.username, args.password, args.cookies)
+	client = create_client(args)
 	tasks = lixian_query.find_tasks_to_download(client, args)
 	print 'All tasks added. Checking status...'
 	columns = ['id', 'status', 'name']

@@ -1,5 +1,4 @@
 
-from lixian import XunleiClient
 from lixian_commands.util import *
 from lixian_cli_parser import *
 from lixian_encoding import default_encoding
@@ -13,7 +12,7 @@ import lixian_query
 @command_line_option('i')
 @command_line_option('all')
 def restart_task(args):
-	client = XunleiClient(args.username, args.password, args.cookies)
+	client = create_client(args)
 	to_restart = lixian_query.search_tasks(client, args)
 	print "Below files are going to be restarted:"
 	for x in to_restart:

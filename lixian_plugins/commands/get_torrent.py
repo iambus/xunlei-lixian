@@ -1,10 +1,10 @@
 
 from lixian_plugins.api import command
 
-from lixian import XunleiClient
 from lixian_cli_parser import command_line_parser
 from lixian_cli_parser import with_parser
 from lixian_cli import parse_login
+from lixian_commands.util import create_client
 
 @command(name='get-torrent', usage='get .torrent by task id or info hash')
 @command_line_parser()
@@ -13,7 +13,7 @@ def get_torrent(args):
 	'''
 	usage: lx get-torrent [info-hash|task-id]...
 	'''
-	client = XunleiClient(args.username, args.password, args.cookies)
+	client = create_client(args)
 	for id in args:
 		id = id.lower()
 		import re
