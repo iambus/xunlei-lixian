@@ -21,7 +21,7 @@ def get_torrent(args):
 			torrent = client.get_torrent_file_by_info_hash(id)
 		elif re.match(r'\d+$', id):
 			import lixian_query
-			task = lixian_query.get_task_by_id(id)
+			task = lixian_query.get_task_by_id(client, id)
 			id = task['bt_hash']
 			id = id.lower()
 			torrent = client.get_torrent_file_by_info_hash(id)
