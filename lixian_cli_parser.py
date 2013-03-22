@@ -33,7 +33,7 @@ def parse_command_line(args, keys=[], bools=[], alias={}, default={}, help=None)
 		if x == '--':
 			left.extend(args)
 			break
-		if x.startswith('-'):
+		if x.startswith('-') and len(x) > 1:
 			k = x.lstrip('-')
 			if k in bools:
 				options[k] = True
