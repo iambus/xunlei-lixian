@@ -416,3 +416,20 @@ def expand_bt_sub_tasks(task):
 	return files, not_ready, single_file
 
 
+##################################################
+# simple helpers
+##################################################
+
+def get_task_by_id(client, id):
+	base = TaskBase(client, client.read_all_tasks)
+	return base.get_task_by_id(id)
+
+def get_task_by_any(client, arg):
+	import lixian_cli_parser
+	tasks = search_tasks(client, lixian_cli_parser.parse_command_line([arg]))
+	if not tasks:
+		raise LookupError(arg)
+	if len(tasks) > 1:
+		raise LookupError('Too many results for ' + arg)
+	return tasks[0]
+

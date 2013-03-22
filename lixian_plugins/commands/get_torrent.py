@@ -20,10 +20,8 @@ def get_torrent(args):
 		if re.match(r'[a-fA-F0-9]{40}$', id):
 			torrent = client.get_torrent_file_by_info_hash(id)
 		elif re.match(r'\d+$', id):
-			tasks = client.read_all_tasks()
 			import lixian_query
-			base = lixian_query.TaskBase(client, client.read_all_tasks)
-			task = base.get_task_by_id(id)
+			task = lixian_query.get_task_by_id(id)
 			id = task['bt_hash']
 			id = id.lower()
 			torrent = client.get_torrent_file_by_info_hash(id)
