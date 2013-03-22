@@ -25,10 +25,9 @@ def link_equals(x1, x2):
 
 
 class TaskBase(object):
-	def __init__(self, client, list_tasks, readonly=False):
+	def __init__(self, client, list_tasks):
 		self.client = client
 		self.fetch_tasks = list_tasks
-		self.readonly = readonly
 
 		self.queries = []
 
@@ -376,12 +375,12 @@ def default_query(options):
 def parse_queries(base, args):
 	return [to_query(base, arg, bt_processors if args.torrent else processors) for arg in args] or [default_query(args)(base)]
 
-def build_query(client, args, readonly=False):
+def build_query(client, args):
 	if args.input:
 		import fileinput
 		args._left.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
 	load_default_queries() # IMPORTANT: init default queries
-	base = TaskBase(client, to_list_tasks(client, args), readonly=readonly)
+	base = TaskBase(client, to_list_tasks(client, args))
 	base.register_queries(parse_queries(base, args))
 	return base
 
