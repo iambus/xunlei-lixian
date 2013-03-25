@@ -22,7 +22,7 @@ def escape_filename(name):
 
 def verify_basic_hash(path, task):
 	if os.path.getsize(path) != task['size']:
-		print 'hash error: incorrect file size'
+		print 'hash error: incorrect file size (%s != %s)' % (os.path.getsize(path), task['size'])
 		return False
 	return lixian_hash.verify_dcid(path, task['dcid'])
 
