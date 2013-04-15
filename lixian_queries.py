@@ -236,7 +236,7 @@ class UrlQuery(ExactQuery):
 
 	def query_once(self):
 		t = self.base.find_task_by_url(self.url)
-		assert t, 'Task not found: bt://' + self.url
+		assert t, 'Task not found: ' + self.url
 		return [t]
 
 	def query_search(self):
