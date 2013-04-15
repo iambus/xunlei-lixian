@@ -39,7 +39,7 @@ class Logger:
 logger = Logger()
 
 class XunleiClient:
-	page_size = 100
+	page_size = 9999
 	bt_page_size = 9999
 	def __init__(self, username=None, password=None, cookie_path=None, login=True):
 		self.username = username
@@ -219,35 +219,40 @@ class XunleiClient:
 
 	def read_task_page_url(self, url):
 		page = self.urlread(url).decode('utf-8', 'ignore')
+		data = parse_json_response(page)
 		if not self.has_gdriveid():
-			gdriveid = re.search(r'id="cok" value="([^"]+)"', page).group(1)
+			gdriveid = data['info']['user']['cookie']
 			self.set_gdriveid(gdriveid)
 			self.save_cookies()
-		tasks = parse_tasks(page)
+		tasks = parse_json_tasks(data)
 		for t in tasks:
 			t['client'] = self
-		pginfo = re.search(r'<div class="pginfo">.*?</div>', page)
-		match_next_page = re.search(r'<li class="next"><a href="([^"]+)">[^<>]*</a></li>', page)
-		return tasks, match_next_page and 'http://dynamic.cloud.vip.xunlei.com'+match_next_page.group(1)
+		# TODO: check next page
+		return tasks, None
 
-	def read_task_page(self, st, pg=None):
-		if pg is None:
-			url = 'http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=%d' % (self.id, st)
-		else:
-			url = 'http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=%d&p=%d' % (self.id, st, pg)
+	def read_task_page(self, type_id, page=1):
+		# type_id: 1 for downloading, 2 for completed, 4 for downloading+completed+expired, 11 for deleted, 13 for expired
+		if type_id == 0:
+			result = self.read_task_page(4, page)
+			return [t for t in result[0] if not t['expired']], result[1]
+		page_size = self.page_size
+		p = 1 # XXX: what is it?
+		# jsonp = 'jsonp%s' % current_timestamp()
+		# url = 'http://dynamic.cloud.vip.xunlei.com/interface/showtask_unfresh?type_id=%s&page=%s&tasknum=%s&p=%s&interfrom=task&callback=%s' % (type_id, page, page_size, p, jsonp)
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/showtask_unfresh?type_id=%s&page=%s&tasknum=%s&p=%s&interfrom=task' % (type_id, page, page_size, p)
 		return self.read_task_page_url(url)
 
-	def read_tasks(self, st=0):
+	def read_tasks(self, type_id=0):
 		'''read one page'''
-		tasks = self.read_task_page(st)[0]
+		tasks = self.read_task_page(type_id)[0]
 		for i, task in enumerate(tasks):
 			task['#'] = i
 		return tasks
 
-	def read_all_tasks(self, st=0):
+	def read_all_tasks(self, type_id=0):
 		'''read all pages'''
 		all_tasks = []
-		tasks, next_link = self.read_task_page(st)
+		tasks, next_link = self.read_task_page(type_id)
 		all_tasks.extend(tasks)
 		while next_link:
 			tasks, next_link = self.read_task_page_url(next_link)
@@ -263,19 +268,6 @@ class XunleiClient:
 	def read_all_completed(self):
 		'''read all pages of completed tasks'''
 		return self.read_all_tasks(2)
-
-	def read_categories_old(self):
-		url = 'http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0' % self.id
-		self.set_page_size(1)
-		html = self.urlread(url)
-		self.set_page_size(self.page_size)
-		m = re.search(r'<div class="lx_ul">.*<div class="tq_play">', html, flags=re.S)
-		if not m:
-			logger.trace(html)
-			raise RuntimeError('Invalid response')
-		nav = m.group()
-		folders = re.findall(r'''setLxCookie\('class_check',(\d+)\);return false;" title=""><em class="ic_link_new "></em>([^<>]+)</a>''', nav)
-		return dict((name.decode('utf-8'), int(id)) for id, name in folders)
 
 	def read_categories(self):
 #		url = 'http://dynamic.cloud.vip.xunlei.com/interface/menu_get?callback=jsonp%s&interfrom=task' % current_timestamp()
@@ -299,25 +291,9 @@ class XunleiClient:
 		response = json.loads(re.match(r'^%s\((.+)\)$' % jsonp, html).group(1))
 		assert response['rtcode'] == '0', response['rtcode']
 		info = response['info']
-		tasks = [
-			{'id': t['id'],
-			 'type': re.match(r'[^:]+', t['url']).group().lower(),
-			 'name': t['taskname'],
-			 'status': int(t['download_status']),
-			 'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed', '5':'pending'}[t['download_status']],
-			 'size': int(t['ysfilesize']),
-			 'original_url': t['url'],
-			 'xunlei_url': t['lixian_url'] or None,
-			 'bt_hash': t['cid'],
-			 'dcid': t['cid'],
-			 'gcid': t['gcid'],
-			 'date': t['dt_committed'][:10].replace('-', '.'),
-			 'progress': '%s%%' % t['progress'],
-			 'speed': '%s' % t['speed'], # TODO: add unit
-			 'client': self,
-			 } for t in info['tasks']
-		]
+		tasks = map(convert_task, info['tasks'])
 		for i, task in enumerate(tasks):
+			task['client'] = self
 			task['#'] = i
 		return tasks
 
@@ -630,6 +606,37 @@ def current_random():
 	from random import randint
 	return '%s%06d.%s' % (current_timestamp(), randint(0, 999999), randint(100000000, 9999999999))
 
+def convert_task(data):
+	expired = {'0':False, '4': True}[data['flag']]
+	task = {'id': data['id'],
+			'type': re.match(r'[^:]+', data['url']).group().lower(),
+			'name': data['taskname'],
+			'status': int(data['download_status']),
+			'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed', '5':'pending'}[data['download_status']],
+			'expired': expired,
+			'size': int(data['ysfilesize']),
+			'original_url': data['url'],
+			'xunlei_url': data['lixian_url'] or None,
+			'bt_hash': data['cid'],
+			'dcid': data['cid'],
+			'gcid': data['gcid'],
+			'date': data['dt_committed'][:10].replace('-', '.'),
+			'progress': '%s%%' % data['progress'],
+			'speed': '%s' % data['speed'],
+			}
+	return task
+
+def parse_json_response(html):
+	m = re.match(r'rebuild\((\{.*\})\)', html)
+	if not m:
+		logger.trace(html)
+		raise RuntimeError('Invalid response')
+	return json.loads(m.group(1))
+
+def parse_json_tasks(result):
+	tasks = result['info']['tasks']
+	return map(convert_task, tasks)
+
 def parse_task(html):
 	inputs = re.findall(r'<input[^<>]+/>', html)
 	def parse_attrs(html):
@@ -646,17 +653,17 @@ def parse_task(html):
 	url = mini_info['f_url']
 	task_type = re.match(r'[^:]+', url).group().lower()
 	task = {'id': taskid,
-			'type': task_type,
-			'name': mini_info['taskname'],
-			'status': int(mini_info['d_status']),
-			'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed', '5':'pending'}[mini_info['d_status']],
-			'size': int(mini_info.get('ysfilesize', 0)),
-			'original_url': mini_info['f_url'],
-			'xunlei_url': mini_info.get('dl_url', None),
-			'bt_hash': mini_info['dcid'],
-			'dcid': mini_info['dcid'],
-			'gcid': parse_gcid(mini_info.get('dl_url', None)),
-			}
+	        'type': task_type,
+	        'name': mini_info['taskname'],
+	        'status': int(mini_info['d_status']),
+	        'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed', '5':'pending'}[mini_info['d_status']],
+	        'size': int(mini_info.get('ysfilesize', 0)),
+	        'original_url': mini_info['f_url'],
+	        'xunlei_url': mini_info.get('dl_url', None),
+	        'bt_hash': mini_info['dcid'],
+	        'dcid': mini_info['dcid'],
+	        'gcid': parse_gcid(mini_info.get('dl_url', None)),
+	        }
 
 	m = re.search(r'<em class="loadnum"[^<>]*>([^<>]*)</em>', html)
 	task['progress'] = m and m.group(1) or ''
@@ -666,11 +673,6 @@ def parse_task(html):
 	task['date'] = m and m.group(1) or ''
 
 	return task
-
-def parse_tasks(html):
-	rwbox = re.search(r'<div class="rwbox".*<!--rwbox-->', html, re.S).group()
-	rw_lists = re.findall(r'<div class="rw_list".*?<!-- rw_list -->', rwbox, re.S)
-	return map(parse_task, rw_lists)
 
 def parse_history(html):
 	rwbox = re.search(r'<div class="rwbox" id="rowbox_list".*?<!--rwbox-->', html, re.S).group()
