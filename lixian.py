@@ -227,8 +227,13 @@ class XunleiClient:
 		tasks = parse_json_tasks(data)
 		for t in tasks:
 			t['client'] = self
-		# TODO: check next page
-		return tasks, None
+		current_page = int(re.search(r'page=(\d+)', url).group(1))
+		total_pages = data['global_new']['page'].count('<li><a')
+		if current_page < total_pages:
+			next = re.sub(r'page=(\d+)', 'page=%d' % (current_page + 1), url)
+		else:
+			next = None
+		return tasks, next
 
 	def read_task_page(self, type_id, page=1):
 		# type_id: 1 for downloading, 2 for completed, 4 for downloading+completed+expired, 11 for deleted, 13 for expired
