@@ -16,7 +16,8 @@ def simplecd_links(url):
 	html = urllib2.urlopen(site + 'download/?' + q).read()
 	table = re.search(r'<table id="showall" .*?</table>', html, flags=re.S).group()
 	links = re.findall(r'ed2k://[^\s<>]+', table)
-	return links
+	import lixian_url
+	return map(lixian_url.normalize_unicode_link, links)
 
 @page_parser(['http://simplecd.*/',
               'http://www.simplecd.*/',
