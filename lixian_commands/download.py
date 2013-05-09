@@ -79,17 +79,27 @@ def download_single_task(client, download, task, options):
 				pass
 			else:
 				raise NotImplementedError()
+	def download1_checked(client, url, path, size):
+		checked = 0
+		while checked < 10:
+			download1(client, url, path, size)
+			assert os.path.getsize(path) <= size, 'existing file bigger than expected, unsafe to continue nor overwrite'
+			if os.path.getsize(path) < size:
+				checked += 1
+			else:
+				break
+		assert os.path.getsize(path) == size, 'incorrect downloaded file size (%s != %s)' % (os.path.getsize(path), size)
 	def download2(client, url, path, task):
 		size = task['size']
 		if mini_hash and resuming and verify_mini_hash(path, task):
 			return
-		download1(client, url, path, size)
+		download1_checked(client, url, path, size)
 		verify = verify_basic_hash if no_hash else verify_hash
 		if not verify(path, task):
 			with colors(options.get('colors')).yellow():
 				print 'hash error, redownloading...'
 			os.remove(path)
-			download1(client, url, path, size)
+			download1_checked(client, url, path, size)
 			if not verify(path, task):
 				raise Exception('hash check failed')
 	download_url = str(task['xunlei_url'])
