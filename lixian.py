@@ -615,7 +615,7 @@ def convert_task(data):
 	expired = {'0':False, '4': True}[data['flag']]
 	task = {'id': data['id'],
 			'type': re.match(r'[^:]+', data['url']).group().lower(),
-			'name': data['taskname'],
+			'name': unescape_html(data['taskname']),
 			'status': int(data['download_status']),
 			'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed', '5':'pending'}[data['download_status']],
 			'expired': expired,
