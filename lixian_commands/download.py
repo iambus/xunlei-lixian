@@ -1,4 +1,5 @@
 
+import lixian_download_tools
 from lixian_commands.util import *
 from lixian_cli_parser import *
 from lixian_config import *
@@ -45,7 +46,9 @@ def verify_mini_bt_hash(dirname, files):
 	return True
 
 
-def download_file(client, download_tool, path, task, options):
+def download_file(client, path, task, options):
+	download_tool = lixian_download_tools.get_tool(options['tool'])
+
 	resuming = options.get('resuming')
 	overwrite = options.get('overwrite')
 	mini_hash = options.get('mini_hash')
@@ -95,7 +98,7 @@ def download_file(client, download_tool, path, task, options):
 	download2(client, url, path, task)
 
 
-def download_single_task(client, download_tool, task, options):
+def download_single_task(client, task, options):
 	output = options.get('output')
 	output = output and os.path.expanduser(output)
 	output_dir = options.get('output_dir')
@@ -165,7 +168,7 @@ def download_single_task(client, download_tool, task, options):
 				subdir = dirname + os.path.sep + subdir # fix issue #82
 				if not os.path.exists(subdir):
 					os.makedirs(subdir)
-			download_file(client, download_tool, path, f, options)
+			download_file(client, path, f, options)
 		if save_torrent_file:
 			info_hash = str(task['bt_hash'])
 			if single_file:
@@ -195,14 +198,14 @@ def download_single_task(client, download_tool, task, options):
 
 		with colors(options.get('colors')).green():
 			print output_name, '...'
-		download_file(client, download_tool, output_path, task, options)
+		download_file(client, output_path, task, options)
 
 	if delete and 'files' not in task:
 		client.delete_task(task)
 
-def download_multiple_tasks(client, download, tasks, options):
+def download_multiple_tasks(client, tasks, options):
 	for task in tasks:
-		download_single_task(client, download, task, options)
+		download_single_task(client, task, options)
 	skipped = filter(lambda t: t['status_text'] != 'completed', tasks)
 	if skipped:
 		with colors(options.get('colors')).yellow():
@@ -232,9 +235,9 @@ def download_multiple_tasks(client, download, tasks, options):
 @command_line_option('watch-present')
 @command_line_value('watch-interval', default=get_config('watch-interval', '3m'))
 def download_task(args):
-	import lixian_download_tools
-	download = lixian_download_tools.get_tool(args.tool)
-	download_args = {'output': args.output,
+	lixian_download_tools.get_tool(args.tool) # check tool
+	download_args = {'tool': args.tool,
+	                 'output': args.output,
 	                 'output_dir': args.output_dir,
 	                 'delete': args.delete,
 	                 'resuming': args._args['continue'],
@@ -262,7 +265,7 @@ def download_task(args):
 		tasks = query.pull_completed()
 		while True:
 			if tasks:
-				download_multiple_tasks(client, download, tasks, download_args)
+				download_multiple_tasks(client, tasks, download_args)
 			if not query.download_jobs:
 				break
 			if not tasks:
@@ -275,7 +278,7 @@ def download_task(args):
 		tasks = query.pull_completed()
 		while True:
 			if tasks:
-				download_multiple_tasks(client, download, tasks, download_args)
+				download_multiple_tasks(client, tasks, download_args)
 			if (not query.download_jobs) and (not query.queries):
 				break
 			if not tasks:
@@ -288,6 +291,6 @@ def download_task(args):
 		tasks = query.peek_download_jobs()
 		if args.output:
 			assert len(tasks) == 1
-			download_single_task(client, download, tasks[0], download_args)
+			download_single_task(client, tasks[0], download_args)
 		else:
-			download_multiple_tasks(client, download, tasks, download_args)
+			download_multiple_tasks(client, tasks, download_args)
