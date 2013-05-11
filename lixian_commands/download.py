@@ -44,7 +44,7 @@ def verify_mini_bt_hash(dirname, files):
 			return False
 	return True
 
-def download_single_task(client, download, task, options):
+def download_single_task(client, download_tool, task, options):
 	output = options.get('output')
 	output = output and os.path.expanduser(output)
 	output_dir = options.get('output_dir')
@@ -63,31 +63,28 @@ def download_single_task(client, download, task, options):
 			with colors(options.get('colors')).yellow():
 				print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
 			return
-	def download1(client, url, path, size):
+	def download1(download, path):
 		if not os.path.exists(path):
-			download(client=client, url=url, path=path)()
+			download()
 		elif not resuming:
 			if overwrite:
-				download(client=client, url=url, path=path)()
+				download()
 			else:
 				raise Exception('%s already exists. Please try --continue or --overwrite' % path)
 		else:
-			assert os.path.getsize(path) <= size, 'existing file bigger than expected, unsafe to continue nor overwrite'
-			if os.path.getsize(path) < size:
-				download(client=client, url=url, path=path, resuming=resuming)()
-			elif os.path.getsize(path) == size:
+			if download.finished():
 				pass
 			else:
-				raise NotImplementedError()
+				download()
 	def download1_checked(client, url, path, size):
+		download = download_tool(client=client, url=url, path=path, size=size, resuming=resuming)
 		checked = 0
 		while checked < 10:
-			download1(client, url, path, size)
-			assert os.path.getsize(path) <= size, 'existing file bigger than expected, unsafe to continue nor overwrite'
-			if os.path.getsize(path) < size:
-				checked += 1
-			else:
+			download1(download, path)
+			if download.finished():
 				break
+			else:
+				checked += 1
 		assert os.path.getsize(path) == size, 'incorrect downloaded file size (%s != %s)' % (os.path.getsize(path), size)
 	def download2(client, url, path, task):
 		size = task['size']
