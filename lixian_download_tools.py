@@ -10,9 +10,29 @@ download_tools = {}
 
 def download_tool(name):
 	def register(tool):
-		download_tools[name] = tool
+		download_tools[name] = tool_adaptor(tool)
 		return tool
 	return register
+
+class DownloadToolAdaptor:
+	def __init__(self, tool, **kwargs):
+		self.tool = tool
+		self.client = kwargs['client']
+		self.url = kwargs['url']
+		self.path = kwargs['path']
+		self.resuming = kwargs.get('resuming')
+	def __call__(self):
+		self.tool(self.client, self.url, self.path, self.resuming)
+
+def tool_adaptor(tool):
+	import types
+	if type(tool) == types.FunctionType:
+		def adaptor(**kwargs):
+			return DownloadToolAdaptor(tool, **kwargs)
+		return adaptor
+	else:
+		return tool
+
 
 def check_bin(bin):
 	import distutils.spawn

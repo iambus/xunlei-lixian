@@ -65,16 +65,16 @@ def download_single_task(client, download, task, options):
 			return
 	def download1(client, url, path, size):
 		if not os.path.exists(path):
-			download(client, url, path)
+			download(client=client, url=url, path=path)()
 		elif not resuming:
 			if overwrite:
-				download(client, url, path)
+				download(client=client, url=url, path=path)()
 			else:
 				raise Exception('%s already exists. Please try --continue or --overwrite' % path)
 		else:
 			assert os.path.getsize(path) <= size, 'existing file bigger than expected, unsafe to continue nor overwrite'
 			if os.path.getsize(path) < size:
-				download(client, url, path, resuming)
+				download(client=client, url=url, path=path, resuming=resuming)()
 			elif os.path.getsize(path) == size:
 				pass
 			else:
