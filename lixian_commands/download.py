@@ -95,7 +95,7 @@ def download_single_task(client, download_tool, task, options):
 		if not verify(path, task):
 			with colors(options.get('colors')).yellow():
 				print 'hash error, redownloading...'
-			os.remove(path)
+			os.rename(path, path + '.error')
 			download1_checked(client, url, path, size)
 			if not verify(path, task):
 				raise Exception('hash check failed')
