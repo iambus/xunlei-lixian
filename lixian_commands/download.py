@@ -44,6 +44,57 @@ def verify_mini_bt_hash(dirname, files):
 			return False
 	return True
 
+
+def download_file(client, download_tool, path, task, options):
+	resuming = options.get('resuming')
+	overwrite = options.get('overwrite')
+	mini_hash = options.get('mini_hash')
+	no_hash = options.get('no_hash')
+
+	url = str(task['xunlei_url'])
+
+	def download1(download, path):
+		if not os.path.exists(path):
+			download()
+		elif not resuming:
+			if overwrite:
+				download()
+			else:
+				raise Exception('%s already exists. Please try --continue or --overwrite' % path)
+		else:
+			if download.finished():
+				pass
+			else:
+				download()
+
+	def download1_checked(client, url, path, size):
+		download = download_tool(client=client, url=url, path=path, size=size, resuming=resuming)
+		checked = 0
+		while checked < 10:
+			download1(download, path)
+			if download.finished():
+				break
+			else:
+				checked += 1
+		assert os.path.getsize(path) == size, 'incorrect downloaded file size (%s != %s)' % (os.path.getsize(path), size)
+
+	def download2(client, url, path, task):
+		size = task['size']
+		if mini_hash and resuming and verify_mini_hash(path, task):
+			return
+		download1_checked(client, url, path, size)
+		verify = verify_basic_hash if no_hash else verify_hash
+		if not verify(path, task):
+			with colors(options.get('colors')).yellow():
+				print 'hash error, redownloading...'
+			os.rename(path, path + '.error')
+			download1_checked(client, url, path, size)
+			if not verify(path, task):
+				raise Exception('hash check failed')
+
+	download2(client, url, path, task)
+
+
 def download_single_task(client, download_tool, task, options):
 	output = options.get('output')
 	output = output and os.path.expanduser(output)
@@ -63,43 +114,7 @@ def download_single_task(client, download_tool, task, options):
 			with colors(options.get('colors')).yellow():
 				print 'skip task %s as the status is %s' % (task['name'].encode(default_encoding), task['status_text'])
 			return
-	def download1(download, path):
-		if not os.path.exists(path):
-			download()
-		elif not resuming:
-			if overwrite:
-				download()
-			else:
-				raise Exception('%s already exists. Please try --continue or --overwrite' % path)
-		else:
-			if download.finished():
-				pass
-			else:
-				download()
-	def download1_checked(client, url, path, size):
-		download = download_tool(client=client, url=url, path=path, size=size, resuming=resuming)
-		checked = 0
-		while checked < 10:
-			download1(download, path)
-			if download.finished():
-				break
-			else:
-				checked += 1
-		assert os.path.getsize(path) == size, 'incorrect downloaded file size (%s != %s)' % (os.path.getsize(path), size)
-	def download2(client, url, path, task):
-		size = task['size']
-		if mini_hash and resuming and verify_mini_hash(path, task):
-			return
-		download1_checked(client, url, path, size)
-		verify = verify_basic_hash if no_hash else verify_hash
-		if not verify(path, task):
-			with colors(options.get('colors')).yellow():
-				print 'hash error, redownloading...'
-			os.rename(path, path + '.error')
-			download1_checked(client, url, path, size)
-			if not verify(path, task):
-				raise Exception('hash check failed')
-	download_url = str(task['xunlei_url'])
+
 	if output:
 		output_path = output
 		output_dir = os.path.dirname(output)
@@ -108,8 +123,6 @@ def download_single_task(client, download_tool, task, options):
 		output_name = escape_filename(task['name']).encode(default_encoding)
 		output_dir = output_dir or '.'
 		output_path = os.path.join(output_dir, output_name)
-	referer = str(client.get_referer())
-	gdriveid = str(client.get_gdriveid())
 
 	if task['type'] == 'bt':
 		files, skipped, single_file = lixian_query.expand_bt_sub_tasks(task)
@@ -152,8 +165,7 @@ def download_single_task(client, download_tool, task, options):
 				subdir = dirname + os.path.sep + subdir # fix issue #82
 				if not os.path.exists(subdir):
 					os.makedirs(subdir)
-			download_url = str(f['xunlei_url'])
-			download2(client, download_url, path, f)
+			download_file(client, download_tool, path, f, options)
 		if save_torrent_file:
 			info_hash = str(task['bt_hash'])
 			if single_file:
@@ -183,7 +195,7 @@ def download_single_task(client, download_tool, task, options):
 
 		with colors(options.get('colors')).green():
 			print output_name, '...'
-		download2(client, download_url, output_path, task)
+		download_file(client, download_tool, output_path, task, options)
 
 	if delete and 'files' not in task:
 		client.delete_task(task)
