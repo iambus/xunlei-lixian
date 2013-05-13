@@ -39,7 +39,7 @@ class Logger:
 logger = Logger()
 
 class XunleiClient:
-	page_size = 9999
+	page_size = 100
 	bt_page_size = 9999
 	def __init__(self, username=None, password=None, cookie_path=None, login=True):
 		self.username = username
