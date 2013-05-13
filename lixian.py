@@ -620,7 +620,7 @@ def convert_task(data):
 			'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed', '5':'pending'}[data['download_status']],
 			'expired': expired,
 			'size': int(data['ysfilesize']),
-			'original_url': data['url'],
+			'original_url': unescape_html(data['url']),
 			'xunlei_url': data['lixian_url'] or None,
 			'bt_hash': data['cid'],
 			'dcid': data['cid'],
