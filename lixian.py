@@ -224,7 +224,8 @@ class XunleiClient:
 			gdriveid = data['info']['user']['cookie']
 			self.set_gdriveid(gdriveid)
 			self.save_cookies()
-		tasks = parse_json_tasks(data)
+		# tasks = parse_json_tasks(data)
+		tasks = [t for t in parse_json_tasks(data) if not t['expired']]
 		for t in tasks:
 			t['client'] = self
 		current_page = int(re.search(r'page=(\d+)', url).group(1))
@@ -238,8 +239,7 @@ class XunleiClient:
 	def read_task_page(self, type_id, page=1):
 		# type_id: 1 for downloading, 2 for completed, 4 for downloading+completed+expired, 11 for deleted, 13 for expired
 		if type_id == 0:
-			result = self.read_task_page(4, page)
-			return [t for t in result[0] if not t['expired']], result[1]
+			type_id = 4
 		page_size = self.page_size
 		p = 1 # XXX: what is it?
 		# jsonp = 'jsonp%s' % current_timestamp()
