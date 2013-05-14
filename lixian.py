@@ -233,6 +233,8 @@ class XunleiClient:
 		total_pages = total_tasks / self.page_size
 		if total_tasks % self.page_size != 0:
 			total_pages += 1
+		if total_pages == 0:
+			total_pages = 1
 		assert total_pages >= data['global_new']['page'].count('<li><a')
 		if current_page < total_pages:
 			next = re.sub(r'page=(\d+)', 'page=%d' % (current_page + 1), url)
