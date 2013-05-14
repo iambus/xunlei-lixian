@@ -469,7 +469,7 @@ class XunleiClient:
 
 		response = self.urlread(upload_url, data=body, headers={'Content-Type': content_type}).decode('utf-8')
 
-		upload_success = re.search(r'<script>document\.domain="xunlei\.com";var btResult =(\{.*\});</script>', response, flags=re.S)
+		upload_success = re.search(r'<script>document\.domain="xunlei\.com";var btResult =(\{.*\});var btRtcode = 0</script>', response, flags=re.S)
 		if upload_success:
 			bt = json.loads(upload_success.group(1))
 			bt_hash = bt['infoid']
@@ -481,7 +481,7 @@ class XunleiClient:
 					'from':'0'}
 			response = self.urlread(commit_url, data=data)
 			#assert_response(response, jsonp)
-			assert re.match(r'%s\({"id":"\d+","progress":1}\)' % jsonp, response), repr(response)
+			assert re.match(r'%s\({"id":"\d+","progress":1,"rtcode":1}\)' % jsonp, response), repr(response)
 			return bt_hash
 		already_exists = re.search(r"parent\.edit_bt_list\((\{.*\}),''\)", response, flags=re.S)
 		if already_exists:
@@ -516,7 +516,7 @@ class XunleiClient:
 			raise NotImplementedError(repr(response))
 		args = success.group(1).decode('utf-8')
 		args = literal_eval(args.replace('new Array', ''))
-		_, cid, tsize, btname, _, names, sizes_, sizes, _, types, findexes, timestamp = args
+		_, cid, tsize, btname, _, names, sizes_, sizes, _, types, findexes, timestamp, _ = args
 		def toList(x):
 			if type(x) in (list, tuple):
 				return x
@@ -533,7 +533,7 @@ class XunleiClient:
 		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit?callback=%s' % jsonp
 		response = self.urlread(commit_url, data=data)
 		#assert_response(response, jsonp)
-		assert re.match(r'%s\({"id":"\d+","progress":1}\)' % jsonp, response), repr(response)
+		assert re.match(r'%s\({"id":"\d+","progress":1,"rtcode":1}\)' % jsonp, response), repr(response)
 		return cid
 
 	def readd_all_expired_tasks(self):
