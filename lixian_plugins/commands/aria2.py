@@ -5,7 +5,7 @@ from lixian_config import *
 from lixian_encoding import default_encoding
 from lixian_cli_parser import command_line_parser
 from lixian_cli_parser import with_parser
-from lixian_cli_parser import command_line_value
+from lixian_cli_parser import command_line_option, command_line_value
 from lixian_commands.util import parse_login, create_client
 
 def export_aria2_conf(args):
@@ -22,7 +22,6 @@ def export_aria2_conf(args):
 				files.append((subs[0]['xunlei_url'], subs[0]['name'], None))
 			else:
 				for f in subs:
-					import os.path
 					files.append((f['xunlei_url'], f['name'], task['name']))
 		else:
 			files.append((task['xunlei_url'], task['name'], None))
@@ -40,6 +39,7 @@ def export_aria2_conf(args):
 @command(usage='export task download urls as aria2 format')
 @command_line_parser()
 @with_parser(parse_login)
+@command_line_option('all')
 def export_aria2(args):
 	'''
 	usage: lx export-aria2 [id|name]...
@@ -76,6 +76,7 @@ def download_aria2_temp(aria2_conf, j):
 @command(usage='concurrently download tasks in aria2')
 @command_line_parser()
 @with_parser(parse_login)
+@command_line_option('all')
 @command_line_value('max-concurrent-downloads', alias='j', default=get_config('aria2-j', '5'))
 def download_aria2(args):
 	'''
