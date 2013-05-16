@@ -235,6 +235,7 @@ def download_multiple_tasks(client, tasks, options):
 @command_line_option('watch-present')
 @command_line_value('watch-interval', default=get_config('watch-interval', '3m'))
 def download_task(args):
+	assert len(args) or args.input or args.all or args.category, 'Not enough arguments'
 	lixian_download_tools.get_tool(args.tool) # check tool
 	download_args = {'tool': args.tool,
 	                 'output': args.output,
@@ -248,7 +249,6 @@ def download_task(args):
 	                 'save_torrent_file': args.save_torrent_file,
 	                 'colors': args.colors}
 	client = create_client(args)
-	assert len(args) or args.input or args.all or args.category, 'Not enough arguments'
 	query = lixian_query.build_query(client, args)
 	query.query_once()
 
