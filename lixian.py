@@ -483,7 +483,8 @@ class XunleiClient:
 					'from':'0'}
 			response = self.urlread(commit_url, data=data)
 			#assert_response(response, jsonp)
-			assert re.match(r'%s\({"id":"\d+","avail_space":"\d+","progress":1}\)' % jsonp, response), repr(response)
+			# skip response check
+			# assert re.match(r'%s\({"id":"\d+","avail_space":"\d+","progress":1}\)' % jsonp, response), repr(response)
 			return bt_hash
 		already_exists = re.search(r"parent\.edit_bt_list\((\{.*\}),''\)", response, flags=re.S)
 		if already_exists:
@@ -535,7 +536,8 @@ class XunleiClient:
 		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit?callback=%s' % jsonp
 		response = self.urlread(commit_url, data=data)
 		#assert_response(response, jsonp)
-		assert re.match(r'%s\({"id":"\d+","avail_space":"\d+","progress":1}\)' % jsonp, response), repr(response)
+		# skip response check
+		# assert re.match(r'%s\({"id":"\d+","avail_space":"\d+","progress":1}\)' % jsonp, response), repr(response)
 		return cid
 
 	def readd_all_expired_tasks(self):
