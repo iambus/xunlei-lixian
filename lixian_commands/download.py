@@ -20,6 +20,8 @@ def escape_filename(name):
 	name = re.sub(r'[\\/:*?"<>|]', '-', name)
 	return name
 
+def safe_encode_native_path(path):
+	return path.encode(default_encoding).decode(default_encoding).replace('?', '-').encode(default_encoding)
 
 def verify_basic_hash(path, task):
 	if os.path.getsize(path) != task['size']:
@@ -123,7 +125,7 @@ def download_single_task(client, task, options):
 		output_dir = os.path.dirname(output)
 		output_name = os.path.basename(output)
 	else:
-		output_name = escape_filename(task['name']).encode(default_encoding)
+		output_name = safe_encode_native_path(escape_filename(task['name']))
 		output_dir = output_dir or '.'
 		output_path = os.path.join(output_dir, output_name)
 
@@ -161,7 +163,7 @@ def download_single_task(client, task, options):
 					print name.encode(default_encoding), '...'
 			# XXX: if file name is escaped, hashing bt won't get correct file
 			splitted_path = map(escape_filename, name.split('\\'))
-			name = os.path.join(*splitted_path).encode(default_encoding)
+			name = safe_encode_native_path(os.path.join(*splitted_path))
 			path = dirname + os.path.sep + name # fix issue #82
 			if splitted_path[:-1]:
 				subdir = os.path.join(*splitted_path[:-1]).encode(default_encoding)
