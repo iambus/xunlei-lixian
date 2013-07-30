@@ -10,21 +10,31 @@ import os.path
 import json
 from ast import literal_eval
 
-def retry(f):
+
+def retry(f_or_arg, *args):
 	#retry_sleeps = [1, 1, 1]
 	retry_sleeps = [1, 2, 3, 5, 10, 20, 30, 60] + [60] * 60
-	def withretry(*args, **kwargs):
-		for second in retry_sleeps:
-			try:
-				return f(*args, **kwargs)
-			except:
-				import traceback
-				import sys
-				print "Exception in user code:"
-				traceback.print_exc(file=sys.stdout)
-				time.sleep(second)
-		raise
-	return withretry
+	def decorator(f):
+		def withretry(*args, **kwargs):
+			for second in retry_sleeps:
+				try:
+					return f(*args, **kwargs)
+				except:
+					import traceback
+					import sys
+					print "Exception in user code:"
+					traceback.print_exc(file=sys.stdout)
+					time.sleep(second)
+			raise
+		return withretry
+	if callable(f_or_arg) and not args:
+		return decorator(f_or_arg)
+	else:
+		a = f_or_arg
+		assert type(a) == int
+		assert not args
+		retry_sleeps = [1] * a
+		return decorator
 
 class Logger:
 	def stdout(self, message):
@@ -227,6 +237,7 @@ class XunleiClient:
 			self.set_cookie('.xunlei.com', k, '')
 		self.save_cookies()
 
+	@retry(3)
 	def read_task_page_url(self, url):
 		page = self.urlread(url).decode('utf-8', 'ignore')
 		data = parse_json_response(page)
@@ -290,15 +301,12 @@ class XunleiClient:
 		'''read all pages of completed tasks'''
 		return self.read_all_tasks(2)
 
+	@retry(3)
 	def read_categories(self):
 #		url = 'http://dynamic.cloud.vip.xunlei.com/interface/menu_get?callback=jsonp%s&interfrom=task' % current_timestamp()
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/menu_get'
 		html = self.urlread(url)
-		m = re.match(r'rebuild\((\{.*\})\)', html)
-		if not m:
-			logger.trace(html)
-			raise RuntimeError('Invalid response')
-		result = json.loads(m.group(1))
+		result = parse_json_response(html)
 		return dict((x['name'], int(x['id'])) for x in result['info'])
 
 	def get_category_id(self, category):
