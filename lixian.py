@@ -41,7 +41,7 @@ logger = Logger()
 class XunleiClient:
 	page_size = 100
 	bt_page_size = 9999
-	def __init__(self, username=None, password=None, cookie_path=None, login=True):
+	def __init__(self, username=None, password=None, cookie_path=None, login=True, verification_code_reader=None):
 		self.username = username
 		self.password = password
 		self.cookie_path = cookie_path
@@ -53,6 +53,7 @@ class XunleiClient:
 			self.cookiejar = cookielib.CookieJar()
 		self.set_page_size(self.page_size)
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
+		self.verification_code_reader = verification_code_reader
 		if login:
 			if not self.has_logged_in():
 				self.login()
@@ -187,11 +188,20 @@ class XunleiClient:
 		cachetime = current_timestamp()
 		check_url = 'http://login.xunlei.com/check?u=%s&cachetime=%d' % (username, cachetime)
 		login_page = self.urlopen(check_url).read()
-		verifycode = self.get_cookie('.xunlei.com', 'check_result')[2:].upper()
-		assert verifycode
+		verification_code = self.get_cookie('.xunlei.com', 'check_result')[2:].upper()
+		if not verification_code:
+			if not self.verification_code_reader:
+				raise NotImplementedError('Verification code required')
+			else:
+				verification_code_url = 'http://verify2.xunlei.com/image?cachetime=%s' % current_timestamp()
+				image = self.urlopen(verification_code_url).read()
+				verification_code = self.verification_code_reader(image)
+				if verification_code:
+					verification_code.upper()
+		assert verification_code
 		password = encypt_password(password)
-		password = md5(password+verifycode)
-		login_page = self.urlopen('http://login.xunlei.com/sec2login/', data={'u': username, 'p': password, 'verifycode': verifycode})
+		password = md5(password+verification_code)
+		login_page = self.urlopen('http://login.xunlei.com/sec2login/', data={'u': username, 'p': password, 'verifycode': verification_code})
 		self.id = self.get_userid()
 		self.set_page_size(1)
 		login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp()).read()
