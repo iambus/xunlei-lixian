@@ -207,7 +207,7 @@ class XunleiClient:
 				image = self.urlopen(verification_code_url).read()
 				verification_code = self.verification_code_reader(image)
 				if verification_code:
-					verification_code.upper()
+					verification_code = verification_code.upper()
 		assert verification_code
 		password = encypt_password(password)
 		password = md5(password+verification_code)
