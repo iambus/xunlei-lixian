@@ -305,7 +305,7 @@ class XunleiClient:
 	def read_categories(self):
 #		url = 'http://dynamic.cloud.vip.xunlei.com/interface/menu_get?callback=jsonp%s&interfrom=task' % current_timestamp()
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/menu_get'
-		html = self.urlread(url)
+		html = self.urlread(url).decode('utf-8', 'ignore')
 		result = parse_json_response(html)
 		return dict((x['name'], int(x['id'])) for x in result['info'])
 
@@ -658,7 +658,7 @@ def convert_task(data):
 	return task
 
 def parse_json_response(html):
-	m = re.match(r'rebuild\((\{.*\})\)', html)
+	m = re.match(ur'^\ufeff?rebuild\((\{.*\})\)$', html)
 	if not m:
 		logger.trace(html)
 		raise RuntimeError('Invalid response')
