@@ -453,10 +453,10 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 
 * [layerssss/lixian-portal](http://micy.in/lixian-portal/): 给iambus/xunlei-lixian做的一个简洁实用的webui
 
-要说的话
+特别感谢
 --------
 
-我自己也一直在用这个脚本。基本上不管白天还是黑夜，都在路由器（RT-N16）上挂着NTFS的移动硬盘下载。所以脚本的可用性和稳定性还是不错的。速度基本上是满速，有时候由于服务器原因不稳定，可以断掉重下，兴许就能分配到一个状态比较好的服务器上了。具体的性能表现请参考issue #18.
+[群晖公司](http://www.synology.com/)在部分产品中绑定了迅雷离线脚本，并且捐赠了作者一台[DS213+](http://www.synology.com/products/product.php?product_name=DS213%2B)作为反馈。再此表示感谢！
 
 许可协议
 --------
