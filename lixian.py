@@ -236,7 +236,7 @@ class XunleiClient:
 			self.set_cookie('.xunlei.com', k, '')
 		self.save_cookies()
 
-	@retry(3)
+	@retry(10)
 	def read_task_page_url(self, url):
 		page = self.urlread(url).decode('utf-8', 'ignore')
 		data = parse_json_response(page)
@@ -300,7 +300,7 @@ class XunleiClient:
 		'''read all pages of completed tasks'''
 		return self.read_all_tasks(2)
 
-	@retry(3)
+	@retry(10)
 	def read_categories(self):
 #		url = 'http://dynamic.cloud.vip.xunlei.com/interface/menu_get?callback=jsonp%s&interfrom=task' % current_timestamp()
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/menu_get'
