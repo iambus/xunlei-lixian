@@ -21,9 +21,8 @@ def retry(f_or_arg, *args):
 					return f(*args, **kwargs)
 				except:
 					import traceback
-					import sys
-					print "Exception in user code:"
-					traceback.print_exc(file=sys.stdout)
+					logger.debug("Exception happened. Retrying...")
+					logger.debug(traceback.format_exc())
 					time.sleep(second)
 			raise
 		return withretry
