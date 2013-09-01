@@ -277,7 +277,16 @@ def bt_url_processor(base, url):
 		return
 	print 'Downloading torrent file from', url
 	import urllib2
-	torrent = urllib2.urlopen(url, timeout=60).read()
+	response = urllib2.urlopen(url, timeout=60)
+	torrent = response.read()
+	if response.info().get('Content-Encoding') == 'gzip':
+		def ungzip(s):
+			from StringIO import StringIO
+			import gzip
+			buffer = StringIO(s)
+			f = gzip.GzipFile(fileobj=buffer)
+			return f.read()
+		torrent = ungzip(torrent)
 	return BtUrlQuery(base, url, torrent)
 
 ##################################################
