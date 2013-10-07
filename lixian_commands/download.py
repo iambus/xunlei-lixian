@@ -1,5 +1,6 @@
 
 import lixian_download_tools
+import lixian_nodes
 from lixian_commands.util import *
 from lixian_cli_parser import *
 from lixian_config import *
@@ -10,6 +11,7 @@ import lixian_query
 import lixian_hash
 import lixian_hash_bt
 import lixian_hash_ed2k
+
 import os
 import os.path
 import re
@@ -47,26 +49,19 @@ def verify_mini_bt_hash(dirname, files):
 			return False
 	return True
 
-def resolve_node_url(client, url):
-	import urllib2
-	request = urllib2.Request(url, headers={'Cookie': 'gdriveid=' + client.get_gdriveid()})
-	response = urllib2.urlopen(request, timeout=60)
-	response.close()
-	return response.geturl()
-
 def switch_node(client, url, node):
 	assert re.match(r'^vod\d+$', node)
 	import lixian_logging
 	logger = lixian_logging.get_logger()
 	logger.debug('Download URL: ' + url)
 	try:
-		url = resolve_node_url(client, url)
+		url = lixian_nodes.resolve_node_url(client, url, timeout=60)
 		logger.debug('Resolved URL: ' + url)
 	except:
 		import traceback
 		logger.debug(traceback.format_exc())
 		return url
-	url = re.sub(r'(http://)(vod\d+)(\.t\d+\.lixian\.vip\.xunlei\.com)', r'\1%s\3' % node, url)
+	url = lixian_nodes.switch_node_in_url(url, node)
 	logger.debug('Switch to node URL: ' + url)
 	return url
 

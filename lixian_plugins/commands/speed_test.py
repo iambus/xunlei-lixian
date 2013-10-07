@@ -10,16 +10,13 @@ from lixian_config import get_config
 from lixian_encoding import default_encoding
 from lixian_colors import colors
 
-import urllib2
-import re
-
-VOD_RANGE = '0-50'
+import lixian_nodes
 
 @command(usage='test download speed from multiple vod nodes')
 @command_line_parser()
 @with_parser(parse_login)
 @with_parser(parse_colors)
-@command_line_value('vod-nodes', default=get_config('vod-nodes', VOD_RANGE))
+@command_line_value('vod-nodes', default=get_config('vod-nodes', lixian_nodes.VOD_RANGE))
 def speed_test(args):
 	'''
 	usage: lx speed_test [--vod-nodes=0-50] [id|name]
@@ -53,42 +50,17 @@ def test_file(client, url, name, options):
 		print name.encode(default_encoding)
 	# print 'File:', name.encode(default_encoding)
 	# print 'Address:', url
-	node_url = resolve_node_url(client, url)
+	node_url = lixian_nodes.resolve_node_url(client, url, timeout=3)
 	# print 'Node:', node_url
 	test_nodes(node_url, client.get_gdriveid(), options)
 
-def get_nodes(vod_nodes):
-	if vod_nodes == 'all' or not vod_nodes:
-		vod_nodes = VOD_RANGE
-	nodes = []
-	# remove duplicate nodes
-	seen = set()
-	def add(node):
-		if node not in seen:
-			nodes.append(node)
-			seen.add(node)
-	for expr in re.split(r'\s*,\s*', vod_nodes):
-		if re.match(r'^\d+-\d+$', expr):
-			start, end = map(int, expr.split('-'))
-			if start <= end:
-				for i in range(start, end + 1):
-					add("vod%d" % i)
-			else:
-				for i in range(start, end -1, - 1):
-					add("vod%d" % i)
-		elif re.match(r'^\d+$', expr):
-			add('vod'+expr)
-		else:
-			raise Exception("Invalid vod expr: " + expr)
-	return nodes
-
 def test_nodes(node_url, gdriveid, options):
-	nodes = get_nodes(options.vod_nodes)
+	nodes = lixian_nodes.parse_vod_nodes(options.vod_nodes)
 	for node in nodes:
 		# print 'Node:', node
-		url = re.sub(r'(http://)(vod\d+)(\.t\d+\.lixian\.vip\.xunlei\.com)', r'\1%s\3' % node, node_url)
+		url = lixian_nodes.switch_node_in_url(node_url, node)
 		try:
-			speed = test_node(url, gdriveid)
+			speed = lixian_nodes.get_node_url_speed(url, gdriveid)
 			kb = int(speed/1000)
 			# print 'Speed: %dKB/s' % kb, '.' * (kb /100)
 			show_node_speed(node, kb, options)
@@ -113,36 +85,3 @@ def show_node_error(node, e, options):
 	with colors(options.colors).red():
 		print "%-5s %s" % (node, e)
 
-def test_node(url, gdriveid):
-	request = urllib2.Request(url, headers={'Cookie': 'gdriveid=' + gdriveid})
-	response = urllib2.urlopen(request, timeout=3)
-	speed, size, duration = test_stream(response, 2*1000*1000, 3)
-	response.close()
-	# print "Duration:", duration
-	# print "Data:", size
-	# print "Speed:", speed
-	return speed
-
-def test_stream(response, max_size, max_duration):
-	import time
-	current_duration = 0
-	current_size = 0
-	start = time.clock()
-	while current_duration < max_duration and current_size < max_size:
-		data = response.read(max_size - current_size)
-		if not data:
-			# print "End of file"
-			break
-		current_size += len(data)
-		end = time.clock()
-		current_duration = end - start
-	if current_size < 1024:
-		raise Exception("Sample too small: %d" % current_size)
-	return current_size / current_duration, current_size, current_duration
-
-# FIXME: duplicate with lixian_commands/download.py
-def resolve_node_url(client, url):
-	request = urllib2.Request(url, headers={'Cookie': 'gdriveid=' + client.get_gdriveid()})
-	response = urllib2.urlopen(request, timeout=3)
-	response.close()
-	return response.geturl()
