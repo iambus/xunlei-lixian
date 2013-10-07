@@ -36,6 +36,7 @@ def speed_test(args):
 		subs, skipped, single_file = lixian_query.expand_bt_sub_tasks(task)
 		if not subs:
 			raise Exception('No files found')
+		subs = [f for f in subs if f['size'] > 1000*1000] or subs # skip files with length < 1M
 		if single_file:
 			urls.append((subs[0]['xunlei_url'], subs[0]['name'], None))
 		else:
