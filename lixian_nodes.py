@@ -110,6 +110,9 @@ def use_fastest_node(url, vod_nodes, gdriveid):
 		import traceback
 		logger.debug(traceback.format_exc())
 		return url
+	default_node = re.match(r'http://(vod\d+)\.', node_url).group(1)
+	if default_node not in nodes:
+		nodes.insert(0, default_node)
 	best = get_best_node_url_from(node_url, nodes, gdriveid)
 	if best:
 		logger.debug('Switch to fastest node URL: ' + best)
