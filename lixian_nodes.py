@@ -1,17 +1,35 @@
 
+import lixian_logging
+
 import urllib2
 import re
 
 VOD_RANGE = '0-50'
 
-def resolve_node_url(client, url, timeout=60):
-	request = urllib2.Request(url, headers={'Cookie': 'gdriveid=' + client.get_gdriveid()})
+def resolve_node_url(url, gdriveid, timeout=60):
+	request = urllib2.Request(url, headers={'Cookie': 'gdriveid=' + gdriveid})
 	response = urllib2.urlopen(request, timeout=timeout)
 	response.close()
 	return response.geturl()
 
 def switch_node_in_url(node_url, node):
 	return re.sub(r'(http://)(vod\d+)(\.t\d+\.lixian\.vip\.xunlei\.com)', r'\1%s\3' % node, node_url)
+
+
+def switch_node(url, node, gdriveid):
+	assert re.match(r'^vod\d+$', node)
+	logger = lixian_logging.get_logger()
+	logger.debug('Download URL: ' + url)
+	try:
+		url = resolve_node_url(url, gdriveid, timeout=60)
+		logger.debug('Resolved URL: ' + url)
+	except:
+		import traceback
+		logger.debug(traceback.format_exc())
+		return url
+	url = switch_node_in_url(url, node)
+	logger.debug('Switch to node URL: ' + url)
+	return url
 
 def test_response_speed(response, max_size, max_duration):
 	import time
@@ -63,3 +81,38 @@ def parse_vod_nodes(vod_nodes):
 		else:
 			raise Exception("Invalid vod expr: " + expr)
 	return nodes
+
+def get_best_node_url_from(node_url, nodes, gdriveid):
+	best = None
+	best_speed = 0
+	logger = lixian_logging.get_logger()
+	for node in nodes:
+		url = switch_node_in_url(node_url, node)
+		try:
+			speed = get_node_url_speed(url, gdriveid)
+			if speed > best_speed:
+				best_speed = speed
+				best = url
+			logger.debug("%s speed: %s" % (node, speed))
+		except Exception, e:
+			logger.debug("%s error: %s" % (node, e))
+	return best
+
+def use_fastest_node(url, vod_nodes, gdriveid):
+	nodes = parse_vod_nodes(vod_nodes)
+	assert nodes
+	logger = lixian_logging.get_logger()
+	logger.debug('Download URL: ' + url)
+	try:
+		node_url = resolve_node_url(url, gdriveid, timeout=60)
+		logger.debug('Resolved URL: ' + node_url)
+	except:
+		import traceback
+		logger.debug(traceback.format_exc())
+		return url
+	best = get_best_node_url_from(node_url, nodes, gdriveid)
+	if best:
+		logger.debug('Switch to fastest node URL: ' + best)
+		return best
+	else:
+		return node_url

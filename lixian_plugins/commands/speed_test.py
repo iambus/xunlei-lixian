@@ -50,22 +50,31 @@ def test_file(client, url, name, options):
 		print name.encode(default_encoding)
 	# print 'File:', name.encode(default_encoding)
 	# print 'Address:', url
-	node_url = lixian_nodes.resolve_node_url(client, url, timeout=3)
+	node_url = lixian_nodes.resolve_node_url(url, client.get_gdriveid(), timeout=3)
 	# print 'Node:', node_url
 	test_nodes(node_url, client.get_gdriveid(), options)
 
 def test_nodes(node_url, gdriveid, options):
 	nodes = lixian_nodes.parse_vod_nodes(options.vod_nodes)
+	best = None
+	best_speed = 0
 	for node in nodes:
 		# print 'Node:', node
 		url = lixian_nodes.switch_node_in_url(node_url, node)
 		try:
 			speed = lixian_nodes.get_node_url_speed(url, gdriveid)
+			if best_speed < speed:
+				best = node
+				best_speed = speed
 			kb = int(speed/1000)
 			# print 'Speed: %dKB/s' % kb, '.' * (kb /100)
 			show_node_speed(node, kb, options)
 		except Exception, e:
 			show_node_error(node, e, options)
+	if best:
+		with colors(options.colors).green():
+			print best,
+		print "is the fastest node!"
 
 def show_node_speed(node, kb, options):
 	node = "%-5s " % node
