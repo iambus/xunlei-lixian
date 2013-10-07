@@ -50,7 +50,8 @@ def speed_test(args):
 
 def test_file(client, url, name, options):
 	with colors(options.colors).cyan():
-		print 'File:', name.encode(default_encoding)
+		print name.encode(default_encoding)
+	# print 'File:', name.encode(default_encoding)
 	# print 'Address:', url
 	node_url = resolve_node_url(client, url)
 	# print 'Node:', node_url
@@ -89,7 +90,7 @@ def test_nodes(node_url, gdriveid, options):
 			show_node_error(node, e, options)
 
 def show_node_speed(node, kb, options):
-	node = "%-5s: " % node
+	node = "%-5s " % node
 	speed = '%dKB/s' % kb
 	bar = '.' * (kb /100)
 	whitespaces = ' ' * (79 - len(node) - len(bar) - len(speed))
@@ -97,14 +98,14 @@ def show_node_speed(node, kb, options):
 		with colors(options.colors).green():
 			# print node + bar + whitespaces + speed
 			with colors(options.colors).bold():
-				print node.strip(),
+				print node[:-1],
 			print bar + whitespaces + speed
 	else:
 		print node + bar + whitespaces + speed
 
 def show_node_error(node, e, options):
 	with colors(options.colors).red():
-		print "%-5s: %s" % (node, e)
+		print "%-5s %s" % (node, e)
 
 def test_node(url, gdriveid):
 	request = urllib2.Request(url, headers={'Cookie': 'gdriveid=' + gdriveid})
