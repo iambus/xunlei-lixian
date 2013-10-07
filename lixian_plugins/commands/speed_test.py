@@ -61,17 +61,23 @@ def get_nodes(vod_nodes):
 	if vod_nodes == 'all' or not vod_nodes:
 		vod_nodes = VOD_RANGE
 	nodes = []
+	# remove duplicate nodes
+	seen = set()
+	def add(node):
+		if node not in seen:
+			nodes.append(node)
+			seen.add(node)
 	for expr in re.split(r'\s*,\s*', vod_nodes):
 		if re.match(r'^\d+-\d+$', expr):
 			start, end = map(int, expr.split('-'))
 			if start <= end:
 				for i in range(start, end + 1):
-					nodes.append("vod%d" % i)
+					add("vod%d" % i)
 			else:
 				for i in range(start, end -1, - 1):
-					nodes.append("vod%d" % i)
+					add("vod%d" % i)
 		elif re.match(r'^\d+$', expr):
-			nodes.append('vod'+expr)
+			add('vod'+expr)
 		else:
 			raise Exception("Invalid vod expr: " + expr)
 	return nodes
