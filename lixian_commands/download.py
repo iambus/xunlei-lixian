@@ -63,6 +63,10 @@ def download_file(client, path, task, options):
 			from lixian_util import parse_size
 			if task['size'] >= parse_size(options['node_detection_threshold']):
 				url = lixian_nodes.use_fastest_node(url, options['vod_nodes'], client.get_gdriveid())
+		elif options['node'] == 'fast':
+			from lixian_util import parse_size
+			if task['size'] >= parse_size(options['node_detection_threshold']):
+				url = lixian_nodes.use_fast_node(url, options['vod_nodes'], parse_size(options['node_detection_acceptable']), client.get_gdriveid())
 		else:
 			url = lixian_nodes.switch_node(url, options['node'], client.get_gdriveid())
 
@@ -246,6 +250,7 @@ def download_multiple_tasks(client, tasks, options):
 @command_line_value('watch-interval', default=get_config('watch-interval', '3m'))
 @command_line_value('node', default=get_config('node'))
 @command_line_value('node-detection-threshold', default=get_config('node-detection-threshold', '100M'))
+@command_line_value('node-detection-acceptable', default=get_config('node-detection-acceptable', '1M'))
 @command_line_value('vod-nodes', default=get_config('vod-nodes', lixian_nodes.VOD_RANGE))
 def download_task(args):
 	assert len(args) or args.input or args.all or args.category, 'Not enough arguments'
@@ -262,6 +267,7 @@ def download_task(args):
 	                 'save_torrent_file': args.save_torrent_file,
 	                 'node': args.node,
 	                 'node_detection_threshold': args.node_detection_threshold,
+	                 'node_detection_acceptable': args.node_detection_acceptable,
 	                 'vod_nodes': args.vod_nodes,
 	                 'colors': args.colors}
 	client = create_client(args)

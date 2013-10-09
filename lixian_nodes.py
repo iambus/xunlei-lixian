@@ -74,7 +74,7 @@ def parse_vod_nodes(vod_nodes):
 				for i in range(start, end + 1):
 					add("vod%d" % i)
 			else:
-				for i in range(start, end -1, - 1):
+				for i in range(start, end - 1, -1):
 					add("vod%d" % i)
 		elif re.match(r'^\d+$', expr):
 			add('vod'+expr)
@@ -90,15 +90,28 @@ def get_best_node_url_from(node_url, nodes, gdriveid):
 		url = switch_node_in_url(node_url, node)
 		try:
 			speed = get_node_url_speed(url, gdriveid)
+			logger.debug("%s speed: %s" % (node, speed))
 			if speed > best_speed:
 				best_speed = speed
 				best = url
-			logger.debug("%s speed: %s" % (node, speed))
 		except Exception, e:
 			logger.debug("%s error: %s" % (node, e))
 	return best
 
-def use_fastest_node(url, vod_nodes, gdriveid):
+def get_good_node_url_from(node_url, nodes, acceptable_speed, gdriveid):
+	logger = lixian_logging.get_logger()
+	for node in nodes:
+		url = switch_node_in_url(node_url, node)
+		try:
+			speed = get_node_url_speed(url, gdriveid)
+			logger.debug("%s speed: %s" % (node, speed))
+			if speed > acceptable_speed:
+				return url
+		except Exception, e:
+			logger.debug("%s error: %s" % (node, e))
+	return
+
+def use_node_by_policy(url, vod_nodes, gdriveid, policy):
 	nodes = parse_vod_nodes(vod_nodes)
 	assert nodes
 	logger = lixian_logging.get_logger()
@@ -113,9 +126,19 @@ def use_fastest_node(url, vod_nodes, gdriveid):
 	default_node = re.match(r'http://(vod\d+)\.', node_url).group(1)
 	if default_node not in nodes:
 		nodes.insert(0, default_node)
-	best = get_best_node_url_from(node_url, nodes, gdriveid)
-	if best:
-		logger.debug('Switch to fastest node URL: ' + best)
-		return best
+	chosen = policy(node_url, nodes, gdriveid)
+	if chosen:
+		logger.debug('Switch to URL: ' + chosen)
+		return chosen
 	else:
 		return node_url
+
+
+def use_fastest_node(url, vod_nodes, gdriveid):
+	return use_node_by_policy(url, vod_nodes, gdriveid, get_best_node_url_from)
+
+def use_fast_node(url, vod_nodes, acceptable_speed, gdriveid):
+	def policy(url, vod_nodes, gdriveid):
+		return get_good_node_url_from(url, vod_nodes, acceptable_speed, gdriveid)
+	return use_node_by_policy(url, vod_nodes, gdriveid, policy)
+
