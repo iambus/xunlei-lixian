@@ -99,6 +99,8 @@ def get_best_node_url_from(node_url, nodes, gdriveid):
 	return best
 
 def get_good_node_url_from(node_url, nodes, acceptable_speed, gdriveid):
+	best = None
+	best_speed = 0
 	logger = lixian_logging.get_logger()
 	for node in nodes:
 		url = switch_node_in_url(node_url, node)
@@ -107,9 +109,12 @@ def get_good_node_url_from(node_url, nodes, acceptable_speed, gdriveid):
 			logger.debug("%s speed: %s" % (node, speed))
 			if speed > acceptable_speed:
 				return url
+			elif speed > best_speed:
+				best_speed = speed
+				best = url
 		except Exception, e:
 			logger.debug("%s error: %s" % (node, e))
-	return
+	return best
 
 def use_node_by_policy(url, vod_nodes, gdriveid, policy):
 	nodes = parse_vod_nodes(vod_nodes)
