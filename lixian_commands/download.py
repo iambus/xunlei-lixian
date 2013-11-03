@@ -178,7 +178,7 @@ def download_single_task(client, task, options):
 			name = safe_encode_native_path(os.path.join(*splitted_path))
 			path = dirname + os.path.sep + name # fix issue #82
 			if splitted_path[:-1]:
-				subdir = os.path.join(*splitted_path[:-1]).encode(default_encoding)
+				subdir = safe_encode_native_path(os.path.join(*splitted_path[:-1]))
 				subdir = dirname + os.path.sep + subdir # fix issue #82
 				if not os.path.exists(subdir):
 					os.makedirs(subdir)
