@@ -11,6 +11,9 @@ Quick start
 	python lixian_cli.py login "Your Xunlei account" "Your password"
 	python lixian_cli.py login "Your password"
 	python lixian_cli.py login
+	python lixian_cli.py login --verification-code-path=[file]
+	python lixian_cli.py login --verification-code-path=[file] --verification-code-input-later
+	python lixian_cli.py login --verification-code-input=[code]
 
 	python lixian_cli.py config username "Your Xunlei account"
 	python lixian_cli.py config password "Your password"
@@ -172,6 +175,10 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
     lx login username password --cookies -
 
 注意，除了lx login外，大多数lx命令，比如lx download，都需要先执行登录。这些命令大多支持--username和--password，以及--cookies参数，根据传递进来的参数，检查用户是否已经登录，如果尚未登录则尝试登录。一般来说不建议在其他命令里使用这些参数（因为麻烦），除非你不希望保存session信息到硬盘。
+
+有时候因为帐号异常，登录需要验证码。可以使用 lx login --verification-code-path=code.jpg 下载验证码图片，再在命令行中输入验证码中的内容。
+
+也可以使用 lx login --verification-code-path=code.jpg --verification-code-input-later 来让 lx login 仅下载验证码，然后再运行一次 lx login --verification-code-input=xxx 来加入验证码后继续登录。
 
 ### lx download
 下载。目前支持普通的http下载，ed2k下载，和bt下载。可以使用thunder/flashget/qq旋风的连接（bt任务除外）。在信息足够的情况下（见“一些提示”一节的第3条），下载的文件会自动验证hash，出错了会重新下载（我个人目前还没遇到过下载文件损坏的情况）。见“一些提示”一节的第3条。
@@ -441,7 +448,6 @@ lx login接受两个参数，用户名和密码。第二次登录可以只填密
 1. --tool=asyn的性能不是很好。见“支持的下载工具”一节里的说明。
 2. 有些时候任务添加到服务器上，但是马上刷新拿不到这个数据。这应该是服务器同步的问题。技术上可以自动重刷一遍，但是暂时没有做。用户可以自己重试下。
 3. bt下载的校验如果失败，可能需要重新下载所有文件。从技术上来讲这是没有必要的。但是一来重下出错的片段有些繁琐，二来我自己都从来没遇到过bt校验失败需要重下的情况，所以暂时不考虑支持片段修复。更新：bt校验失败不会重下。
-4. 有时候因为帐号异常，登录需要验证码。目前还不支持验证码。
 
 以后
 ----
