@@ -7,23 +7,35 @@ from lixian_config import get_config
 import lixian_help
 from getpass import getpass
 
-def file_path_verification_code_reader(path):
+def file_path_verification_code_reader(args):
 	def reader(image):
-		with open(path, 'wb') as output:
-			output.write(image)
-		print 'Verification code picture is saved to %s, please open it manually and enter what you see.' % path
-		code = raw_input('Verification code: ')
+		if image:
+			with open(args.verification_code_path, 'wb') as output:
+				output.write(image)
+			if args.verification_code_input_later:
+				print 'Verification code picture is saved to %s, please open it manually and run login with --verification-code-input.' % args.verification_code_path
+				return exit(1)
+			else:
+				print 'Verification code picture is saved to %s, please open it manually and enter what you see.' % args.verification_code_path
+		code = args.verification_code_input
+		if not code:
+			code = raw_input('Verification code: ')
+
+
 		return code
 	return reader
 
 def verification_code_reader(args):
-	if args.verification_code_path:
-		return file_path_verification_code_reader(args.verification_code_path)
+	if args.verification_code_path or args.verification_code_input:
+		return file_path_verification_code_reader(args)
+
 
 @command_line_parser(help=lixian_help.login)
 @with_parser(parse_login)
 @with_parser(parse_logging)
 @command_line_value('verification-code-path')
+@command_line_option('verification-code-input-later')
+@command_line_value('verification-code-input')
 def login(args):
 	if args.cookies == '-':
 		args._args['cookies'] = None
@@ -52,4 +64,4 @@ def login(args):
 	else:
 		print 'Testing login without saving session'
 	args.verification_code_reader = verification_code_reader(args)
-	XunleiClient(args.username, args.password, args.cookies, login=True, verification_code_reader=args.verification_code_reader)
+	XunleiClient(args.username, args.password, args.cookies, login=True, verification_code_reader=args.verification_code_reader, verification_code_fetch=not args.verification_code_input)

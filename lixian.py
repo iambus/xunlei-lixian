@@ -50,7 +50,7 @@ logger = Logger()
 class XunleiClient:
 	page_size = 100
 	bt_page_size = 9999
-	def __init__(self, username=None, password=None, cookie_path=None, login=True, verification_code_reader=None):
+	def __init__(self, username=None, password=None, cookie_path=None, login=True, verification_code_reader=None, verification_code_fetch=False):
 		self.username = username
 		self.password = password
 		self.cookie_path = cookie_path
@@ -63,6 +63,7 @@ class XunleiClient:
 		self.set_page_size(self.page_size)
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
 		self.verification_code_reader = verification_code_reader
+		self.verification_code_fetch = verification_code_fetch
 		if login:
 			if not self.has_logged_in():
 				self.login()
@@ -194,16 +195,21 @@ class XunleiClient:
 			raise NotImplementedError('user is not logged in')
 
 		logger.debug('login')
-		cachetime = current_timestamp()
-		check_url = 'http://login.xunlei.com/check?u=%s&cachetime=%d' % (username, cachetime)
-		login_page = self.urlopen(check_url).read()
-		verification_code = self.get_cookie('.xunlei.com', 'check_result')[2:].upper()
+
+		verification_code = None
+		if self.verification_code_fetch:
+			check_url = 'http://login.xunlei.com/check?u=%s&cachetime=%d' % (username,  current_timestamp())
+			login_page = self.urlopen(check_url).read()
+			verification_code = self.get_cookie('.xunlei.com', 'check_result')[2:].upper()
 		if not verification_code:
 			if not self.verification_code_reader:
 				raise NotImplementedError('Verification code required')
 			else:
-				verification_code_url = 'http://verify2.xunlei.com/image?cachetime=%s' % current_timestamp()
-				image = self.urlopen(verification_code_url).read()
+				image = None
+				if self.verification_code_fetch:
+					verification_code_url = 'http://verify2.xunlei.com/image?cachetime=%s' % current_timestamp()
+					image = self.urlopen(verification_code_url).read()
+					self.save_cookies()
 				verification_code = self.verification_code_reader(image)
 				if verification_code:
 					verification_code = verification_code.upper()
