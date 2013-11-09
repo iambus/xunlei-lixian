@@ -488,7 +488,7 @@ class XunleiClient:
 
 		response = self.urlread(upload_url, data=body, headers={'Content-Type': content_type}).decode('utf-8')
 
-		upload_success = re.search(r'<script>document\.domain="xunlei\.com";var btResult =(\{.*\});var btRtcode = 0</script>', response, flags=re.S)
+		upload_success = re.search(r'<script>document\.domain="xunlei\.com";var btResult =(\{.*\});</script>', response, flags=re.S)
 		if upload_success:
 			bt = json.loads(upload_success.group(1))
 			bt_hash = bt['infoid']
@@ -503,12 +503,12 @@ class XunleiClient:
 			# skip response check
 			# assert re.match(r'%s\({"id":"\d+","avail_space":"\d+","progress":1}\)' % jsonp, response), repr(response)
 			return bt_hash
-		already_exists = re.search(r"parent\.edit_bt_list\((\{.*\}),''\)", response, flags=re.S)
+		already_exists = re.search(r"parent\.edit_bt_list\((\{.*\}),'','0'\)", response, flags=re.S)
 		if already_exists:
 			bt = json.loads(already_exists.group(1))
 			bt_hash = bt['infoid']
 			return bt_hash
-		raise NotImplementedError()
+		raise NotImplementedError(response)
 
 	def add_torrent_task_by_info_hash(self, sha1):
 		return self.add_torrent_task_by_content(self.get_torrent_file_by_info_hash(sha1), sha1.upper()+'.torrent')
