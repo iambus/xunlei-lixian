@@ -121,11 +121,6 @@ def readme():
 
 
 login    = '''python lixian_cli.py login <username> <password>
-Options:
- --verification-code-path=[file]      Save verification code image(JPEG format) to a file
- --verification-code-input-later      Do not ask for verification code interactively, but use --verification-code-input to enter it later.
- --verification-code-input=[code]     Enter verification code.
-
 
 login Xunlei cloud
 
