@@ -47,10 +47,40 @@ class Logger:
 
 logger = Logger()
 
-class XunleiClient:
-	page_size = 100
-	bt_page_size = 9999
+class WithAttrSnapshot:
+	def __init__(self, object, **attrs):
+		self.object = object
+		self.attrs = attrs
+	def __enter__(self):
+		self.old_attrs = []
+		for k in self.attrs:
+			if hasattr(self.object, k):
+				self.old_attrs.append((k, True, getattr(self.object, k)))
+			else:
+				self.old_attrs.append((k, False, None))
+		for k in self.attrs:
+			setattr(self.object, k, self.attrs[k])
+	def __exit__(self, exc_type, exc_val, exc_tb):
+		for k, has_old_attr, v in self.old_attrs:
+			if has_old_attr:
+				setattr(self.object, k, v)
+			else:
+				delattr(self.object, k)
+
+class WithAttr:
+	def __init__(self, object):
+		self.object = object
+	def __call__(self, **kwargs):
+		return WithAttrSnapshot(self.object, **kwargs)
+	def __getattr__(self, k):
+		return lambda (v): WithAttrSnapshot(self.object, **{k:v})
+
+class XunleiClient(object):
+	default_page_size = 100
+	default_bt_page_size = 9999
 	def __init__(self, username=None, password=None, cookie_path=None, login=True, verification_code_reader=None):
+		self.attr = WithAttr(self)
+
 		self.username = username
 		self.password = password
 		self.cookie_path = cookie_path
@@ -60,7 +90,10 @@ class XunleiClient:
 				self.load_cookies()
 		else:
 			self.cookiejar = cookielib.CookieJar()
-		self.set_page_size(self.page_size)
+
+		self.page_size = self.default_page_size
+		self.bt_page_size = self.default_bt_page_size
+
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
 		self.verification_code_reader = verification_code_reader
 		if login:
@@ -68,6 +101,14 @@ class XunleiClient:
 				self.login()
 			else:
 				self.id = self.get_userid()
+
+	@property
+	def page_size(self):
+		return self._page_size
+	@page_size.setter
+	def page_size(self, size):
+		self._page_size = size
+		self.set_page_size(size)
 
 	@retry
 	def urlopen(self, url, **args):
@@ -166,12 +207,11 @@ class XunleiClient:
 		if not id:
 			return False
 		#print self.urlopen('http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0' % id).read().decode('utf-8')
-		self.set_page_size(1)
-		url = 'http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0' % id
-		#url = 'http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d' % current_timestamp()
-		r = self.is_login_ok(self.urlread(url))
-		self.set_page_size(self.page_size)
-		return r
+		with self.attr(page_size=1):
+			url = 'http://dynamic.cloud.vip.xunlei.com/user_task?userid=%s&st=0' % id
+			#url = 'http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d' % current_timestamp()
+			r = self.is_login_ok(self.urlread(url))
+			return r
 
 	def is_session_timeout(self, html):
 		is_timeout = html == '''<script>document.cookie ="sessionid=; path=/; domain=xunlei.com"; document.cookie ="lx_sessionid=; path=/; domain=vip.xunlei.com";top.location='http://cloud.vip.xunlei.com/task.html?error=1'</script>''' or html == '''<script>document.cookie ="sessionid=; path=/; domain=xunlei.com"; document.cookie ="lsessionid=; path=/; domain=xunlei.com"; document.cookie ="lx_sessionid=; path=/; domain=vip.xunlei.com";top.location='http://cloud.vip.xunlei.com/task.html?error=2'</script>'''
@@ -212,9 +252,8 @@ class XunleiClient:
 		password = md5(password+verification_code)
 		login_page = self.urlopen('http://login.xunlei.com/sec2login/', data={'u': username, 'p': password, 'verifycode': verification_code})
 		self.id = self.get_userid()
-		self.set_page_size(1)
-		login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp()).read()
-		self.set_page_size(self.page_size)
+		with self.attr(page_size=1):
+			login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp()).read()
 		if not self.is_login_ok(login_page):
 			logger.trace(login_page)
 			raise RuntimeError('login failed')
@@ -380,9 +419,8 @@ class XunleiClient:
 	def list_bt(self, task):
 		assert task['type'] == 'bt'
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/fill_bt_list?callback=fill_bt_list&tid=%s&infoid=%s&g_net=1&p=1&uid=%s&noCacheIE=%s' % (task['id'], task['bt_hash'], self.id, current_timestamp())
-		self.set_page_size(self.bt_page_size)
-		html = remove_bom(self.urlread(url)).decode('utf-8')
-		self.set_page_size(self.page_size)
+		with self.attr(page_size=self.bt_page_size):
+			html = remove_bom(self.urlread(url)).decode('utf-8')
 		sub_tasks = parse_bt_list(html)
 		for t in sub_tasks:
 			t['date'] = task['date']
