@@ -94,6 +94,8 @@ class XunleiClient(object):
 		self.page_size = self.default_page_size
 		self.bt_page_size = self.default_bt_page_size
 
+		self.limit = None
+
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
 		self.verification_code_reader = verification_code_reader
 		if login:
@@ -306,6 +308,8 @@ class XunleiClient(object):
 		if type_id == 0:
 			type_id = 4
 		page_size = self.page_size
+		if self.limit and self.limit < page_size:
+			page_size = self.limit
 		p = 1 # XXX: what is it?
 		# jsonp = 'jsonp%s' % current_timestamp()
 		# url = 'http://dynamic.cloud.vip.xunlei.com/interface/showtask_unfresh?type_id=%s&page=%s&tasknum=%s&p=%s&interfrom=task&callback=%s' % (type_id, page, page_size, p, jsonp)
@@ -325,8 +329,12 @@ class XunleiClient(object):
 		tasks, next_link = self.read_task_page(type_id)
 		all_tasks.extend(tasks)
 		while next_link:
+			if self.limit and len(all_tasks) > self.limit:
+				break
 			tasks, next_link = self.read_task_page_url(next_link)
 			all_tasks.extend(tasks)
+		if self.limit:
+			all_tasks = all_tasks[0:self.limit]
 		for i, task in enumerate(all_tasks):
 			task['#'] = i
 		return all_tasks
@@ -398,8 +406,12 @@ class XunleiClient(object):
 		tasks, next_link = self.read_history_page(type)
 		all_tasks.extend(tasks)
 		while next_link:
+			if self.limit and len(all_tasks) > self.limit:
+				break
 			tasks, next_link = self.read_history_page_url(next_link)
 			all_tasks.extend(tasks)
+		if self.limit:
+			all_tasks = all_tasks[0:self.limit]
 		for i, task in enumerate(all_tasks):
 			task['#'] = i
 		return all_tasks

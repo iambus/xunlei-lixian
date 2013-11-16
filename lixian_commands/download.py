@@ -238,6 +238,7 @@ def download_multiple_tasks(client, tasks, options):
 @command_line_option('torrent', alias='bt')
 @command_line_option('all')
 @command_line_value('category')
+@command_line_value('limit', default=get_config('limit'))
 @command_line_option('delete', default=get_config('delete'))
 @command_line_option('continue', alias='c', default=get_config('continue'))
 @command_line_option('overwrite')

@@ -1,6 +1,7 @@
 
 from lixian_commands.util import *
 from lixian_cli_parser import *
+from lixian_config import get_config
 from lixian_encoding import default_encoding
 import lixian_help
 import lixian_query
@@ -11,6 +12,7 @@ import lixian_query
 @with_parser(parse_logging)
 @command_line_option('i')
 @command_line_option('all')
+@command_line_value('limit', default=get_config('limit'))
 def pause_task(args):
 	client = create_client(args)
 	to_pause = lixian_query.search_tasks(client, args)
