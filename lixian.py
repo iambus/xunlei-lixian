@@ -75,6 +75,87 @@ class WithAttr:
 	def __getattr__(self, k):
 		return lambda (v): WithAttrSnapshot(self.object, **{k:v})
 
+class OnDemandTaskList:
+	def __init__(self, fetch_page, page_size, limit):
+		self.fetch_page = fetch_page
+		if limit and page_size > limit:
+			page_size = limit
+		self.page_size = page_size
+		self.limit = limit
+		self.pages = {}
+		self.chunk = []
+		self.completed = False
+		self.total_task_number = None
+		self.real_total_task_number = None
+
+	def get_nth_task(self, n):
+		if self.completed:
+			return self.chunk[n]
+		if n < len(self.chunk):
+			return self.chunk[n]
+		page = n / self.page_size
+		n_in_page = n - page * self.page_size
+		if page not in self.pages:
+			self.hit_page(page)
+		return self.pages[page][n_in_page]
+
+	def hit_page(self, page):
+		if page in self.pages:
+			return self.pages[page]
+		info = self.fetch_page(page, self.page_size)
+		if self.total_task_number is None:
+			self.total_task_number = info['total_task_number']
+		tasks = info['tasks']
+		for i, t in enumerate(tasks):
+			t['#'] = self.page_size * page + i
+		if len(self.chunk) == self.page_size * page:
+			self.chunk.extend(tasks)
+		# if 0 < len(tasks) < self.page_size or len(self.chunk) == self.page_size * page:
+		if 0 < len(tasks) < self.page_size or (len(tasks) == 0 and (page == 0 or len(self.pages.get(page - 1, [])) == self.page_size)):
+			# end of the page
+			assert self.real_total_task_number is None
+			self.real_total_task_number = self.page_size * page + len(tasks)
+			assert self.real_total_task_number <= self.total_task_number, "unexpected task number: %s > %s" % (self.real_total_task_number, self.total_task_number)
+		self.pages[page] = tasks
+		return tasks
+
+	def __getitem__(self, n):
+		return self.get_nth_task(n)
+
+	def __iter__(self):
+		class Iterator:
+			def __init__(self, container):
+				self.container = container
+				self.current = 0
+			def next(self):
+				if self.container.total_task_number is None:
+					self.container.hit_page(0)
+				assert type(self.container.total_task_number) == int
+				if self.container.real_total_task_number is None:
+					if self.current < self.container.total_task_number:
+						try:
+							task = self.container[self.current]
+						except IndexError:
+							raise StopIteration()
+					else:
+						raise StopIteration()
+				else:
+					if self.current < self.container.real_total_task_number:
+						task = self.container[self.current]
+					else:
+						raise StopIteration()
+				self.current += 1
+				return task
+		return Iterator(self)
+
+	def __len__(self):
+		if self.real_total_task_number:
+			return self.real_total_task_number
+		count = 0
+		for t in self:
+			count += 1
+		return count
+
 class XunleiClient(object):
 	default_page_size = 100
 	default_bt_page_size = 9999
@@ -320,7 +401,7 @@ class XunleiClient(object):
 			task['#'] = i
 		return tasks
 
-	def read_all_tasks(self, type_id=0):
+	def read_all_tasks_immediately(self, type_id):
 		'''read all pages'''
 		all_tasks = []
 		page_size = self.page_size
@@ -345,6 +426,15 @@ class XunleiClient(object):
 		for i, task in enumerate(all_tasks):
 			task['#'] = i
 		return all_tasks
+
+	def read_all_tasks_on_demand(self, type_id):
+		'''read all pages, lazily'''
+		fetch_page = lambda page_index, page_size: self.read_task_page_info_by_page_index(type_id, page_index, page_size)
+		return OnDemandTaskList(fetch_page, self.page_size, self.limit)
+
+	def read_all_tasks(self, type_id=0):
+		'''read all pages'''
+		return self.read_all_tasks_on_demand(type_id)
 
 	def read_completed(self):
 		'''read first page of completed tasks'''
