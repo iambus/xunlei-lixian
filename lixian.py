@@ -75,6 +75,7 @@ class WithAttr:
 	def __getattr__(self, k):
 		return lambda (v): WithAttrSnapshot(self.object, **{k:v})
 
+# TODO: write unit test
 class OnDemandTaskList:
 	def __init__(self, fetch_page, page_size, limit):
 		self.fetch_page = fetch_page
@@ -83,39 +84,77 @@ class OnDemandTaskList:
 		self.page_size = page_size
 		self.limit = limit
 		self.pages = {}
-		self.chunk = []
-		self.completed = False
-		self.total_task_number = None
+		self.max_task_number = None
 		self.real_total_task_number = None
+		self.total_pages = None
+
+	def is_out_of_range(self, n):
+		if self.limit:
+			if n >= self.limit:
+				return True
+		if self.max_task_number:
+			if n >= self.max_task_number:
+				return True
+		if self.real_total_task_number:
+			if n >= self.real_total_task_number:
+				return True
+
+	def check_out_of_range(self, n):
+		if self.is_out_of_range(n):
+			raise IndexError('task index out of range')
+
+	def is_out_of_page(self, page):
+		raise NotImplementedError()
 
 	def get_nth_task(self, n):
-		if self.completed:
-			return self.chunk[n]
-		if n < len(self.chunk):
-			return self.chunk[n]
+		self.check_out_of_range(n)
 		page = n / self.page_size
 		n_in_page = n - page * self.page_size
-		if page not in self.pages:
-			self.hit_page(page)
-		return self.pages[page][n_in_page]
+		return self.hit_page(page)[n_in_page]
+
+	def touch(self):
+		self.hit_page(0)
 
 	def hit_page(self, page):
 		if page in self.pages:
 			return self.pages[page]
 		info = self.fetch_page(page, self.page_size)
-		if self.total_task_number is None:
-			self.total_task_number = info['total_task_number']
 		tasks = info['tasks']
+		if self.max_task_number is None:
+			self.max_task_number = info['total_task_number']
+			if self.limit and self.max_task_number > self.limit:
+				self.max_task_number = self.limit
+			self.total_pages = self.max_task_number / self.page_size
+			if self.max_task_number % self.page_size != 0:
+				self.total_pages += 1
+			if self.max_task_number == 0:
+				self.real_total_task_number = 0
+		if page >= self.total_pages:
+			tasks = []
+		elif page == self.total_pages - 1:
+			if self.page_size * page + len(tasks) > self.max_task_number:
+				tasks = tasks[0:self.max_task_number - self.page_size * page]
+			if len(tasks) > 0:
+				self.real_total_task_number = self.page_size * page + len(tasks)
+			else:
+				self.max_task_number -= self.page_size
+				self.total_pages -= 1
+				if len(self.pages.get(page-1, [])) == self.page_size:
+					self.real_total_task_number = self.max_task_number
+		else:
+			if len(tasks) == 0:
+				self.max_task_number = self.page_size * page
+				self.total_pages = page
+				if len(self.pages.get(page-1, [])) == self.page_size:
+					self.real_total_task_number = self.max_task_number
+			elif len(tasks) < self.page_size:
+				self.real_total_task_number = self.page_size * page + len(tasks)
+				self.max_task_number = self.real_total_task_number
+				self.total_pages = page
+			else:
+				pass
 		for i, t in enumerate(tasks):
 			t['#'] = self.page_size * page + i
-		if len(self.chunk) == self.page_size * page:
-			self.chunk.extend(tasks)
-		# if 0 < len(tasks) < self.page_size or len(self.chunk) == self.page_size * page:
-		if 0 < len(tasks) < self.page_size or (len(tasks) == 0 and (page == 0 or len(self.pages.get(page - 1, [])) == self.page_size)):
-			# end of the page
-			assert self.real_total_task_number is None
-			self.real_total_task_number = self.page_size * page + len(tasks)
-			assert self.real_total_task_number <= self.total_task_number, "unexpected task number: %s > %s" % (self.real_total_task_number, self.total_task_number)
 		self.pages[page] = tasks
 		return tasks
 
@@ -128,11 +167,10 @@ class OnDemandTaskList:
 				self.container = container
 				self.current = 0
 			def next(self):
-				if self.container.total_task_number is None:
-					self.container.hit_page(0)
-				assert type(self.container.total_task_number) == int
+				self.container.touch()
+				assert type(self.container.max_task_number) == int
 				if self.container.real_total_task_number is None:
-					if self.current < self.container.total_task_number:
+					if self.current < self.container.max_task_number:
 						try:
 							task = self.container[self.current]
 						except IndexError:
@@ -149,6 +187,10 @@ class OnDemandTaskList:
 		return Iterator(self)
 
 	def __len__(self):
+		if self.real_total_task_number:
+			return self.real_total_task_number
+		self.touch()
+		self.hit_page(self.total_pages-1)
 		if self.real_total_task_number:
 			return self.real_total_task_number
 		count = 0
