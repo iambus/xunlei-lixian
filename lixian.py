@@ -222,10 +222,10 @@ class XunleiClient(object):
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
 		self.verification_code_reader = verification_code_reader
 		if login:
-			if not self.has_logged_in():
+			self.id = self.get_userid_or_none()
+			if not self.id:
 				self.login()
-			else:
-				self.id = self.get_userid()
+			self.id = self.get_userid()
 
 	@property
 	def page_size(self):
