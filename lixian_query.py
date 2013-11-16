@@ -383,14 +383,34 @@ def default_query(options):
 def parse_queries(base, args):
 	return [to_query(base, arg, bt_processors if args.torrent else processors) for arg in args] or [default_query(args)(base)]
 
+def parse_limit(args):
+	limit = args.limit
+	if limit:
+		limit = int(limit)
+	ids = []
+	for x in args:
+		import re
+		if re.match(r'^\d+$', x):
+			ids.append(int(x))
+		elif re.match(r'^(\d+)/', x):
+			ids.append(int(x.split('/')[0]))
+		elif re.match(r'^(\d+)-(\d+)$', x):
+			ids.extend(map(int, x.split('-')))
+		else:
+			return limit
+	if ids and limit:
+		return min(max(ids)+1, limit)
+	elif ids:
+		return max(ids)+1
+	else:
+		return limit
+
 def build_query(client, args):
 	if args.input:
 		import fileinput
 		args._left.extend(line.strip() for line in fileinput.input(args.input) if line.strip())
 	load_default_queries() # IMPORTANT: init default queries
-	limit = args.limit
-	if limit:
-		limit = int(limit)
+	limit = parse_limit(args)
 	base = TaskBase(client, to_list_tasks(client, args), limit)
 	base.register_queries(parse_queries(base, args))
 	return base
