@@ -277,8 +277,19 @@ class XunleiClient(object):
 			self.set_cookie('.xunlei.com', k, '')
 		self.save_cookies()
 
+	def to_page_url(self, type_id, page_index, page_size):
+		# type_id: 1 for downloading, 2 for completed, 4 for downloading+completed+expired, 11 for deleted, 13 for expired
+		if type_id == 0:
+			type_id = 4
+		page = page_index + 1
+		p = 1 # XXX: what is it?
+		# jsonp = 'jsonp%s' % current_timestamp()
+		# url = 'http://dynamic.cloud.vip.xunlei.com/interface/showtask_unfresh?type_id=%s&page=%s&tasknum=%s&p=%s&interfrom=task&callback=%s' % (type_id, page, page_size, p, jsonp)
+		url = 'http://dynamic.cloud.vip.xunlei.com/interface/showtask_unfresh?type_id=%s&page=%s&tasknum=%s&p=%s&interfrom=task' % (type_id, page, page_size, p)
+		return url
+
 	@retry(10)
-	def read_task_page_url(self, url):
+	def read_task_page_info_by_url(self, url):
 		page = self.urlread(url).decode('utf-8', 'ignore')
 		data = parse_json_response(page)
 		if not self.has_gdriveid():
@@ -289,36 +300,22 @@ class XunleiClient(object):
 		tasks = [t for t in parse_json_tasks(data) if not t['expired']]
 		for t in tasks:
 			t['client'] = self
-		current_page = int(re.search(r'page=(\d+)', url).group(1))
+		# current_page = int(re.search(r'page=(\d+)', url).group(1))
 		total_tasks = int(data['info']['total_num'])
-		total_pages = total_tasks / self.page_size
-		if total_tasks % self.page_size != 0:
-			total_pages += 1
-		if total_pages == 0:
-			total_pages = 1
-		assert total_pages >= data['global_new']['page'].count('<li><a')
-		if current_page < total_pages:
-			next = re.sub(r'page=(\d+)', 'page=%d' % (current_page + 1), url)
-		else:
-			next = None
-		return tasks, next
+		# assert total_pages >= data['global_new']['page'].count('<li><a')
+		return {'tasks': tasks, 'total_task_number': total_tasks}
 
-	def read_task_page(self, type_id, page=1):
-		# type_id: 1 for downloading, 2 for completed, 4 for downloading+completed+expired, 11 for deleted, 13 for expired
-		if type_id == 0:
-			type_id = 4
-		page_size = self.page_size
-		if self.limit and self.limit < page_size:
-			page_size = self.limit
-		p = 1 # XXX: what is it?
-		# jsonp = 'jsonp%s' % current_timestamp()
-		# url = 'http://dynamic.cloud.vip.xunlei.com/interface/showtask_unfresh?type_id=%s&page=%s&tasknum=%s&p=%s&interfrom=task&callback=%s' % (type_id, page, page_size, p, jsonp)
-		url = 'http://dynamic.cloud.vip.xunlei.com/interface/showtask_unfresh?type_id=%s&page=%s&tasknum=%s&p=%s&interfrom=task' % (type_id, page, page_size, p)
-		return self.read_task_page_url(url)
+	def read_task_page_info_by_page_index(self, type_id, page_index, page_size):
+		return self.read_task_page_info_by_url(self.to_page_url(type_id, page_index, page_size))
 
 	def read_tasks(self, type_id=0):
 		'''read one page'''
-		tasks = self.read_task_page(type_id)[0]
+		page_size = self.page_size
+		limit = self.limit
+		if limit and limit < page_size:
+			page_size = limit
+		first_page = self.read_task_page_info_by_page_index(type_id, 0, page_size)
+		tasks = first_page['tasks']
 		for i, task in enumerate(tasks):
 			task['#'] = i
 		return tasks
@@ -326,15 +323,25 @@ class XunleiClient(object):
 	def read_all_tasks(self, type_id=0):
 		'''read all pages'''
 		all_tasks = []
-		tasks, next_link = self.read_task_page(type_id)
-		all_tasks.extend(tasks)
-		while next_link:
-			if self.limit and len(all_tasks) > self.limit:
-				break
-			tasks, next_link = self.read_task_page_url(next_link)
-			all_tasks.extend(tasks)
-		if self.limit:
-			all_tasks = all_tasks[0:self.limit]
+		page_size = self.page_size
+		limit = self.limit
+		if limit and limit < page_size:
+			page_size = limit
+		first_page = self.read_task_page_info_by_page_index(type_id, 0, page_size)
+		all_tasks.extend(first_page['tasks'])
+		total_tasks = first_page['total_task_number']
+		if limit and limit < total_tasks:
+			total_tasks = limit
+		total_pages = total_tasks / page_size
+		if total_tasks % page_size != 0:
+			total_pages += 1
+		if total_pages == 0:
+			total_pages = 1
+		for page_index in range(1, total_pages):
+			current_page = self.read_task_page_info_by_page_index(type_id, 0, page_size)
+			all_tasks.extend(current_page['tasks'])
+		if limit:
+			all_tasks = all_tasks[0:limit]
 		for i, task in enumerate(all_tasks):
 			task['#'] = i
 		return all_tasks
