@@ -17,6 +17,7 @@ import re
 @command_line_option('expired')
 @command_line_value('category')
 @command_line_value('limit', default=get_config('limit'))
+@command_line_value('page-size', default=get_config('page-size'))
 @command_line_option('id', default=get_config('id', True))
 @command_line_option('name', default=True)
 @command_line_option('status', default=True)

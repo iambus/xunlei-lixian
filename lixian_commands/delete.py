@@ -14,6 +14,7 @@ import lixian_query
 @command_line_option('i')
 @command_line_option('all')
 @command_line_value('limit', default=get_config('limit'))
+@command_line_value('page-size', default=get_config('page-size'))
 def delete_task(args):
 	client = create_client(args)
 	to_delete = lixian_query.search_tasks(client, args)

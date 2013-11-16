@@ -50,7 +50,10 @@ def parse_size(args):
 
 def create_client(args):
 	from lixian import XunleiClient
-	return XunleiClient(args.username, args.password, args.cookies)
+	client = XunleiClient(args.username, args.password, args.cookies)
+	if args.page_size:
+		client.page_size = int(args.page_size)
+	return client
 
 def output_tasks(tasks, columns, args, top=True):
 	for i, t in enumerate(tasks):

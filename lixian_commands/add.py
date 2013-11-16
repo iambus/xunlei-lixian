@@ -11,6 +11,7 @@ import lixian_query
 @with_parser(parse_logging)
 @with_parser(parse_size)
 @command_line_value('limit', default=get_config('limit'))
+@command_line_value('page-size', default=get_config('page-size'))
 @command_line_value('input', alias='i')
 @command_line_option('torrent', alias='bt')
 def add_task(args):
