@@ -221,6 +221,7 @@ class XunleiClient(object):
 
 		self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cookiejar))
 		self.verification_code_reader = verification_code_reader
+		self.login_time = None
 		if login:
 			self.id = self.get_userid_or_none()
 			if not self.id:
@@ -342,6 +343,14 @@ class XunleiClient(object):
 		is_timeout = html == '''<script>document.cookie ="sessionid=; path=/; domain=xunlei.com"; document.cookie ="lx_sessionid=; path=/; domain=vip.xunlei.com";top.location='http://cloud.vip.xunlei.com/task.html?error=1'</script>''' or html == '''<script>document.cookie ="sessionid=; path=/; domain=xunlei.com"; document.cookie ="lsessionid=; path=/; domain=xunlei.com"; document.cookie ="lx_sessionid=; path=/; domain=vip.xunlei.com";top.location='http://cloud.vip.xunlei.com/task.html?error=2'</script>'''
 		if is_timeout:
 			logger.trace(html)
+			return True
+		maybe_timeout = html == '''rebuild({"rtcode":-1,"list":[]})'''
+		if maybe_timeout:
+			if self.login_time and time.time() - self.login_time < 60 * 10: # 10 minutes
+				return False
+			else:
+				logger.trace(html)
+				return True
 		return is_timeout
 
 	def login(self, username=None, password=None):
@@ -383,6 +392,7 @@ class XunleiClient(object):
 			logger.trace(login_page)
 			raise RuntimeError('login failed')
 		self.save_cookies()
+		self.login_time = time.time()
 
 	def logout(self):
 		logger.debug('logout')
@@ -399,6 +409,7 @@ class XunleiClient(object):
 		for k in ckeys1:
 			self.set_cookie('.xunlei.com', k, '')
 		self.save_cookies()
+		self.login_time = None
 
 	def to_page_url(self, type_id, page_index, page_size):
 		# type_id: 1 for downloading, 2 for completed, 4 for downloading+completed+expired, 11 for deleted, 13 for expired
