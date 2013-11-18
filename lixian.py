@@ -340,7 +340,7 @@ class XunleiClient(object):
 			return r
 
 	def is_session_timeout(self, html):
-		is_timeout = html == '''<script>document.cookie ="sessionid=; path=/; domain=xunlei.com"; document.cookie ="lx_sessionid=; path=/; domain=vip.xunlei.com";top.location='http://cloud.vip.xunlei.com/task.html?error=1'</script>''' or html == '''<script>document.cookie ="sessionid=; path=/; domain=xunlei.com"; document.cookie ="lsessionid=; path=/; domain=xunlei.com"; document.cookie ="lx_sessionid=; path=/; domain=vip.xunlei.com";top.location='http://cloud.vip.xunlei.com/task.html?error=2'</script>'''
+		is_timeout = html == '''<script>document.cookie ="sessionid=; path=/; domain=xunlei.com"; document.cookie ="lx_sessionid=; path=/; domain=vip.xunlei.com";top.location='http://cloud.vip.xunlei.com/task.html?error=1'</script>''' or html == '''<script>document.cookie ="sessionid=; path=/; domain=xunlei.com"; document.cookie ="lsessionid=; path=/; domain=xunlei.com"; document.cookie ="lx_sessionid=; path=/; domain=vip.xunlei.com";top.location='http://cloud.vip.xunlei.com/task.html?error=2'</script>''' or html == '''<script>document.cookie ="sessionid=; path=/; domain=xunlei.com"; document.cookie ="lsessionid=; path=/; domain=xunlei.com"; document.cookie ="lx_sessionid=; path=/; domain=vip.xunlei.com";document.cookie ="lx_login=; path=/; domain=vip.xunlei.com";top.location='http://cloud.vip.xunlei.com/task.html?error=1'</script>'''
 		if is_timeout:
 			logger.trace(html)
 			return True
