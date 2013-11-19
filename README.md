@@ -1,6 +1,6 @@
 xunlei-lixian
 =============
-迅雷离线下载脚本。
+迅雷离线下载脚本。欢迎继续关注[浏览器端的迅雷离线应用](https://github.com/iambus/xunlei-lixian-web)。
 
 ### 声明
 迅雷离线下载为会员功能。非会员无法使用。
