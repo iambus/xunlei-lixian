@@ -103,7 +103,7 @@ def info_hash_from_content(content):
 def info_hash(path):
 	if not path.lower().endswith('.torrent'):
 		print '[WARN] Is it really a .torrent file? '+path
-	if os.path.getsize(path) > 2*1000*1000:
+	if os.path.getsize(path) > 3*1000*1000:
 		raise NotImplementedError('Torrent file too big')
 	with open(path, 'rb') as stream:
 		return info_hash_from_content(stream.read())
