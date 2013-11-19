@@ -719,7 +719,7 @@ class XunleiClient(object):
 
 	def add_torrent_task_by_info_hash2(self, sha1, old_task_id=None):
 		'''similar to add_torrent_task_by_info_hash, but faster. I may delete current add_torrent_task_by_info_hash completely in future'''
-		link = 'http://dynamic.cloud.vip.xunlei.com/interface/get_torrent?userid=%s&infoid=%s' % (self.id, sha1)
+		link = 'http://dynamic.cloud.vip.xunlei.com/interface/get_torrent?userid=%s&infoid=%s' % (self.id, sha1.upper())
 		return self.add_torrent_task_by_link(link, old_task_id=old_task_id)
 
 	def add_magnet_task(self, link):
