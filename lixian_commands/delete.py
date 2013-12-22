@@ -13,6 +13,7 @@ import lixian_query
 @with_parser(parse_logging)
 @command_line_option('i')
 @command_line_option('all')
+@command_line_option('failed')
 @command_line_value('limit', default=get_config('limit'))
 @command_line_value('page-size', default=get_config('page-size'))
 def delete_task(args):
@@ -26,11 +27,12 @@ def delete_task(args):
 		for x in to_delete:
 			print x['name'].encode(default_encoding)
 	if args.i:
-		yes_or_no = raw_input('Are your sure to delete below files from Xunlei cloud? ')
+		yes_or_no = raw_input('Are your sure to delete them from Xunlei cloud? (y/n) ')
 		while yes_or_no.lower() not in ('y', 'yes', 'n', 'no'):
 			yes_or_no = raw_input('yes or no? ')
 		if yes_or_no.lower() in ('y', 'yes'):
 			pass
 		elif yes_or_no.lower() in ('n', 'no'):
-			raise RuntimeError('Deletion abort per user request.')
+			print 'Deletion abort per user request.'
+			return
 	client.delete_tasks(to_delete)

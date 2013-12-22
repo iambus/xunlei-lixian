@@ -307,6 +307,8 @@ def to_list_tasks(client, args):
 		return client.read_all_expired
 	elif args.completed:
 		return client.read_all_tasks
+	elif args.failed:
+		return client.read_all_tasks
 	elif args.all:
 		return client.read_all_tasks
 	else:
@@ -360,6 +362,12 @@ class CompletedQuery(SearchQuery):
 	def query_search(self):
 		return filter(lambda x: x['status_text'] == 'completed', self.base.get_tasks())
 
+class FailedQuery(SearchQuery):
+	def __init__(self, base):
+		super(FailedQuery, self).__init__(base)
+	def query_search(self):
+		return filter(lambda x: x['status_text'] == 'failed', self.base.get_tasks())
+
 class NoneQuery(SearchQuery):
 	def __init__(self, base):
 		super(NoneQuery, self).__init__(base)
@@ -375,6 +383,8 @@ def default_query(options):
 		return AllQuery
 	elif options.completed:
 		return CompletedQuery
+	elif options.failed:
+		return FailedQuery
 	elif options.all:
 		return AllQuery
 	else:

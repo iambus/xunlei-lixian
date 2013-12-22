@@ -13,6 +13,7 @@ import re
 @with_parser(parse_size)
 @command_line_option('all', default=True)
 @command_line_option('completed')
+@command_line_option('failed')
 @command_line_option('deleted')
 @command_line_option('expired')
 @command_line_value('category')
