@@ -12,7 +12,7 @@ import lixian_help
 @command_line_value('username', default=get_config('username'))
 @command_line_value('password', default=get_config('password'))
 @command_line_value('cookies', default=LIXIAN_DEFAULT_COOKIES)
-@command_line_value('verification-code-path')
+@command_line_value('verification-code-path', default=get_config('verification-code-path'))
 def parse_login(args):
 	if args.password == '-':
 		args.password = getpass('Password: ')
