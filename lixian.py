@@ -681,11 +681,7 @@ class XunleiClient(object):
 	def add_torrent_task_by_content(self, content, path='attachment.torrent'):
 		assert re.match(r'd\d+:', content), 'Probably not a valid content file [%s...]' % repr(content[:17])
 		upload_url = 'http://dynamic.cloud.vip.xunlei.com/interface/torrent_upload'
-		jsonp = 'jsonp%s' % current_timestamp()
-		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit?callback=%s' % jsonp
-
 		content_type, body = encode_multipart_formdata([], [('filepath', path, content)])
-
 		response = self.urlread(upload_url, data=body, headers={'Content-Type': content_type}).decode('utf-8')
 
 		upload_success = re.search(r'<script>document\.domain="xunlei\.com";var btResult =(\{.*\});</script>', response, flags=re.S)
@@ -698,6 +694,8 @@ class XunleiClient(object):
 					'findex':''.join(f['id']+'_' for f in bt['filelist']),
 					'size':''.join(f['subsize']+'_' for f in bt['filelist']),
 					'from':'0'}
+			jsonp = 'jsonp%s' % current_timestamp()
+			commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit?callback=%s' % jsonp
 			response = self.urlread(commit_url, data=data)
 			#assert_response(response, jsonp)
 			# skip response check
@@ -728,7 +726,7 @@ class XunleiClient(object):
 	def add_torrent_task_by_link(self, link, old_task_id=None):
 		url = 'http://dynamic.cloud.vip.xunlei.com/interface/url_query?callback=queryUrl&u=%s&random=%s' % (urllib.quote(link), current_timestamp())
 		response = self.urlread(url)
-		success = re.search(r'queryUrl(\(1,.*\))\s*$', response, flags=re.S)
+		success = re.search(r'queryUrl(\(1,.*\))\s*$', response, flags=re.S) # XXX: sometimes it returns queryUrl(0,...)?
 		if not success:
 			already_exists = re.search(r"queryUrl\(-1,'([^']{40})", response, flags=re.S)
 			if already_exists:
