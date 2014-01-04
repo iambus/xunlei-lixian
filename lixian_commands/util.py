@@ -12,6 +12,7 @@ import lixian_help
 @command_line_value('username', default=get_config('username'))
 @command_line_value('password', default=get_config('password'))
 @command_line_value('cookies', default=LIXIAN_DEFAULT_COOKIES)
+@command_line_value('verification-code-path')
 def parse_login(args):
 	if args.password == '-':
 		args.password = getpass('Password: ')
@@ -50,7 +51,9 @@ def parse_size(args):
 
 def create_client(args):
 	from lixian import XunleiClient
-	client = XunleiClient(args.username, args.password, args.cookies)
+	import lixian_verification_code
+	verification_code_reader = lixian_verification_code.default_verification_code_reader(args)
+	client = XunleiClient(args.username, args.password, args.cookies, verification_code_reader=verification_code_reader)
 	if args.page_size:
 		client.page_size = int(args.page_size)
 	return client

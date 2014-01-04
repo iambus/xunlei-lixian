@@ -675,8 +675,25 @@ class XunleiClient(object):
 			data['cid[%d]' % i] = ''
 			data['url[%d]' % i] = urllib.quote(to_utf_8(urls[i])) # fix per request #98
 		data['batch_old_taskid'] = batch_old_taskid
+		data['verify_code'] = ''
 		response = self.urlread(url, data=data)
-		assert_response(response, jsonp, len(urls))
+
+		code = get_response_code(response, jsonp)
+		while code == -12 or code == -11:
+			if not self.verification_code_reader:
+				raise NotImplementedError('Verification code required')
+			else:
+				verification_code_url = 'http://verify2.xunlei.com/image?cachetime=%s' % current_timestamp()
+				image = self.urlopen(verification_code_url).read()
+				verification_code = self.verification_code_reader(image)
+				assert verification_code
+				data['verify_code'] = verification_code
+				response = self.urlread(url, data=data)
+				code = get_response_code(response, jsonp)
+		if code == len(urls):
+			return
+		else:
+			assert code == len(urls), 'invalid response code: %s' % code
 
 	def add_torrent_task_by_content(self, content, path='attachment.torrent'):
 		assert re.match(r'd\d+:', content), 'Probably not a valid content file [%s...]' % repr(content[:17])
@@ -987,6 +1004,12 @@ def remove_bom(response):
 def assert_response(response, jsonp, value=1):
 	response = remove_bom(response)
 	assert response == '%s(%s)' % (jsonp, value), repr(response)
+
+def get_response_code(response, jsonp):
+	response = remove_bom(response)
+	m = re.match(r'^%s\((-?\d+)\)$' % jsonp, response)
+	assert m, 'invalid jsonp response'
+	return int(m.group(1))
 
 def parse_url_protocol(url):
 	m = re.match(r'([^:]+)://', url)
