@@ -16,6 +16,14 @@ import os
 import os.path
 import re
 
+def ensure_dir_exists(dirname):
+	if dirname and not os.path.exists(dirname):
+		try:
+			os.makedirs(dirname)
+		except os.error:
+			if not os.path.exists(dirname):
+				raise
+
 def escape_filename(name):
 	amp = re.compile(r'&(amp;)+', flags=re.I)
 	name = re.sub(amp, '&', name)
@@ -150,8 +158,7 @@ def download_single_task(client, task, options):
 				output_path = os.path.dirname(output_path)
 			dirname = output_path
 		assert dirname # dirname must be non-empty, otherwise dirname + os.path.sep + ... might be dangerous
-		if dirname and not os.path.exists(dirname):
-			os.makedirs(dirname)
+		ensure_dir_exists(dirname)
 		for t in skipped:
 			with colors(options.get('colors')).yellow():
 				print 'skip task %s/%s (%s) as the status is %s' % (str(t['id']), t['index'], t['name'].encode(default_encoding), t['status_text'])
@@ -180,8 +187,7 @@ def download_single_task(client, task, options):
 			if splitted_path[:-1]:
 				subdir = safe_encode_native_path(os.path.join(*splitted_path[:-1]))
 				subdir = dirname + os.path.sep + subdir # fix issue #82
-				if not os.path.exists(subdir):
-					os.makedirs(subdir)
+				ensure_dir_exists(subdir)
 			download_file(client, path, f, options)
 		if save_torrent_file:
 			info_hash = str(task['bt_hash'])
@@ -207,8 +213,7 @@ def download_single_task(client, task, options):
 				# note that we don't delete bt download folder if hash failed
 				raise Exception('bt hash check failed')
 	else:
-		if output_dir and not os.path.exists(output_dir):
-			os.makedirs(output_dir)
+		ensure_dir_exists(output_dir)
 
 		with colors(options.get('colors')).green():
 			print output_name, '...'
