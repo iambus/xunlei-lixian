@@ -853,6 +853,7 @@ def current_random():
 
 def convert_task(data):
 	expired = {'0':False, '4': True}[data['flag']]
+	assert re.match(r'[^:]+', data['url']), 'Invalid URL in: ' + repr(data)
 	task = {'id': data['id'],
 			'type': re.match(r'[^:]+', data['url']).group().lower(),
 			'name': unescape_html(data['taskname']),
