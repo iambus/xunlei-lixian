@@ -681,7 +681,7 @@ class XunleiClient(object):
 		data['verify_code'] = ''
 		response = self.urlread(url, data=data)
 
-		code = get_response_code(response, jsonp)
+		code = get_response_code(response, jsonp)['process']
 		while code == -12 or code == -11:
 			verification_code = self.read_verification_code()
 			assert verification_code
@@ -1010,7 +1010,13 @@ def get_response_code(response, jsonp):
 	response = remove_bom(response)
 	m = re.match(r'^%s\((.+)\)$' % jsonp, response)
 	assert m, 'invalid jsonp response: %s' % response
-	return json.loads(m.group(1))
+	logger.trace('get_response_code')
+	logger.trace(response)
+	parameter = m.group(1)
+	m = re.match(r"^\{process:(-?\d+),msg:'(.*)'\}$", parameter)
+	if m:
+		return {'process': int(m.group(1)), 'msg': m.group(2)}
+	return json.loads(parameter)
 
 def parse_url_protocol(url):
 	m = re.match(r'([^:]+)://', url)
