@@ -357,7 +357,7 @@ class XunleiClient(object):
 		if not self.verification_code_reader:
 			raise NotImplementedError('Verification code required')
 		else:
-			verification_code_url = 'http://verify2.xunlei.com/image?t=MVA&cachetime=%s' % current_timestamp()
+			verification_code_url = 'http://verify.xunlei.com/image?cachetime=%s' % current_timestamp()
 			image = self.urlopen(verification_code_url).read()
 			return self.verification_code_reader(image)
 
