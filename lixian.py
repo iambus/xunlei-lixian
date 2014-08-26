@@ -704,6 +704,8 @@ class XunleiClient(object):
 			data['verify_code'] = verification_code
 			response = self.urlread(commit_url, data=data)
 			code = get_response_code(response, jsonp)['progress']
+		msg = get_response_code(response, jsonp).get('msg')
+		assert not msg, repr(msg)
 
 	def add_torrent_task_by_content(self, content, path='attachment.torrent'):
 		assert re.match(r'd\d+:', content), 'Probably not a valid content file [%s...]' % repr(content[:17])
