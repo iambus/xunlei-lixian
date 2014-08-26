@@ -687,7 +687,7 @@ class XunleiClient(object):
 			assert verification_code
 			data['verify_code'] = verification_code
 			response = self.urlread(url, data=data)
-			code = get_response_code(response, jsonp)
+			code = get_response_code(response, jsonp)['process']
 		if code == len(urls):
 			return
 		else:
