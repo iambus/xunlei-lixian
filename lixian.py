@@ -1073,7 +1073,7 @@ def is_dirty_resource(response_info):
 def encode_dirty_name(x):
 	import base64
 	try:
-		return unicode('[base64]' + base64.encodestring(x.encode('utf-8')))
+		return unicode('[base64]' + base64.encodestring(x.encode('utf-8')).replace('\n', ''))
 	except:
 		return x
 
