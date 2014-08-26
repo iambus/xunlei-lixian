@@ -696,15 +696,23 @@ class XunleiClient(object):
 	def commit_torrent_task(self, data):
 		jsonp = 'jsonp%s' % current_timestamp()
 		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit?callback=%s' % jsonp
-		response = self.urlread(commit_url, data=data)
-		code = get_response_code(response, jsonp)['progress']
-		while code == -12 or code == -11:
-			verification_code = self.read_verification_code()
-			assert verification_code
-			data['verify_code'] = verification_code
+		def commit():
 			response = self.urlread(commit_url, data=data)
-			code = get_response_code(response, jsonp)['progress']
-		msg = get_response_code(response, jsonp).get('msg')
+			response_info = get_response_code(response, jsonp)
+			code = response_info['progress']
+			while code == -12 or code == -11:
+				verification_code = self.read_verification_code()
+				assert verification_code
+				data['verify_code'] = verification_code
+				response = self.urlread(commit_url, data=data)
+				response_info = get_response_code(response, jsonp)
+				code = response_info['progress']
+			return response_info
+		response_info = commit()
+		if is_dirty_resource(response_info):
+			data['btname'] = encode_dirty_name(data['btname'])
+			response_info = commit()
+		msg = response_info.get('msg')
 		assert not msg, repr(msg)
 
 	def add_torrent_task_by_content(self, content, path='attachment.torrent'):
@@ -858,7 +866,7 @@ def convert_task(data):
 	assert re.match(r'[^:]+', data['url']), 'Invalid URL in: ' + repr(data)
 	task = {'id': data['id'],
 			'type': re.match(r'[^:]+', data['url']).group().lower(),
-			'name': unescape_html(data['taskname']),
+			'name': decode_dirty_name(unescape_html(data['taskname'])),
 			'status': int(data['download_status']),
 			'status_text': {'0':'waiting', '1':'downloading', '2':'completed', '3':'failed', '5':'pending'}[data['download_status']],
 			'expired': expired,
@@ -1059,4 +1067,23 @@ def undeflate(s):
 	import zlib
 	return zlib.decompress(s, -zlib.MAX_WBITS)
 
+def is_dirty_resource(response_info):
+	return response_info['progress'] == 2 and response_info.get('rtcode') == '76' and response_info.get('msg') == u"\u6587\u4ef6\u540d\u4e2d\u5305\u542b\u8fdd\u89c4\u5185\u5bb9\uff0c\u65e0\u6cd5\u6dfb\u52a0\u5230\u79bb\u7ebf\u7a7a\u95f4[0976]"
+
+def encode_dirty_name(x):
+	import base64
+	try:
+		return unicode('[base64]' + base64.encodestring(x.encode('utf-8')))
+	except:
+		return x
+
+def decode_dirty_name(x):
+	import base64
+	try:
+		if x.startswith('[base64]'):
+			return base64.decodestring(x[len('[base64]'):]).decode('utf-8')
+		else:
+			return x
+	except:
+		return x
 
