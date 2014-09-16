@@ -9,12 +9,8 @@ def file_path_verification_code_reader(path):
     return reader
 
 def ascii_verification_code_reader(image_data):
-    import tempfile
-    _, tmp_file_path = tempfile.mkstemp(suffix='.jpg')
-    with open(tmp_file_path, 'wb') as fp:
-        fp.write(image_data)
     import ascii_verification_code
-    print ascii_verification_code.convert_to_ascii(tmp_file_path)
+    print ascii_verification_code.convert_to_ascii(image_data)
     code = raw_input('Verification code: ')
     return code
 

@@ -1,14 +1,20 @@
 # -*- coding: utf-8 -*-
 
 from PIL import Image
+from StringIO import StringIO
 
 __author__ = 'deadblue'
 
-def convert_to_ascii(img_file):
-    img = Image.open(img_file, 'r')
-    img = img.convert('L')
+def convert_to_ascii(img_data):
+    return _martix_to_ascii(
+        _crop_and_border(
+            _image_to_martix(img_data)
+        )
+    )
+
+def _image_to_martix(img_data):
+    img = Image.open(StringIO(img_data)).convert('L')
     w,h = img.size
-    # 生成矩阵
     martix = []
     for y in xrange(h / 2):
         row = []
@@ -23,12 +29,11 @@ def convert_to_ascii(img_file):
                 row.append(2)
             else:
                 row.append(3)
-            #row.append(0 if p > 192 else 1)
         martix.append(row)
-    return _martix_to_ascii(_crop_and_border(martix))
+    return martix
 
 def _crop_and_border(martix):
-    # 统计四周空白大小
+    # 测量四周空白大小
     t,b,l,r = 0,0,0,0
     for y in xrange(len(martix)):
         if sum(martix[y]) == 0:
