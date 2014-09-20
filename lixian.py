@@ -770,7 +770,7 @@ class XunleiClient(object):
 			raise NotImplementedError(repr(response))
 		args = success.group(1).decode('utf-8')
 		args = literal_eval(args.replace('new Array', ''))
-		_, cid, tsize, btname, _, names, sizes_, sizes, _, types, findexes, timestamp, _ = args
+		_, cid, tsize, btname, _, names, sizes_, sizes, _, types, findexes, _, timestamp, _ = args
 		def toList(x):
 			if type(x) in (list, tuple):
 				return x
