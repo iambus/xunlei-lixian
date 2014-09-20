@@ -681,16 +681,20 @@ class XunleiClient(object):
 		data['verify_code'] = ''
 		response = self.urlread(url, data=data)
 
-		code = get_response_code(response, jsonp)['process']
+		response_info = get_response_info(response, jsonp)
+		code = response_info['process']
 		while code == -12 or code == -11:
 			verification_code = self.read_verification_code()
 			assert verification_code
 			data['verify_code'] = verification_code
 			response = self.urlread(url, data=data)
-			code = get_response_code(response, jsonp)['process']
+			response_info = get_response_info(response, jsonp)
+			code = response_info['process']
 		if code == len(urls):
 			return
 		else:
+			msg = response_info.get('msg')
+			assert not msg, repr(msg.decode('utf-8'))
 			assert code == len(urls), 'invalid response code: %s' % code
 
 	def commit_torrent_task(self, data):
@@ -698,14 +702,14 @@ class XunleiClient(object):
 		commit_url = 'http://dynamic.cloud.vip.xunlei.com/interface/bt_task_commit?callback=%s' % jsonp
 		def commit():
 			response = self.urlread(commit_url, data=data)
-			response_info = get_response_code(response, jsonp)
+			response_info = get_response_info(response, jsonp)
 			code = response_info['progress']
 			while code == -12 or code == -11:
 				verification_code = self.read_verification_code()
 				assert verification_code
 				data['verify_code'] = verification_code
 				response = self.urlread(commit_url, data=data)
-				response_info = get_response_code(response, jsonp)
+				response_info = get_response_info(response, jsonp)
 				code = response_info['progress']
 			return response_info
 		response_info = commit()
@@ -1016,11 +1020,11 @@ def assert_response(response, jsonp, value=1):
 	response = remove_bom(response)
 	assert response == '%s(%s)' % (jsonp, value), repr(response)
 
-def get_response_code(response, jsonp):
+def get_response_info(response, jsonp):
 	response = remove_bom(response)
 	m = re.match(r'^%s\((.+)\)$' % jsonp, response)
 	assert m, 'invalid jsonp response: %s' % response
-	logger.trace('get_response_code')
+	logger.trace('get_response_info')
 	logger.trace(response)
 	parameter = m.group(1)
 	m = re.match(r"^\{process:(-?\d+),msg:'(.*)'\}$", parameter)
