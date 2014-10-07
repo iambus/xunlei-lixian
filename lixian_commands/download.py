@@ -189,29 +189,29 @@ def download_single_task(client, task, options):
 				subdir = dirname + os.path.sep + subdir # fix issue #82
 				ensure_dir_exists(subdir)
 			download_file(client, path, f, options)
-		if save_torrent_file:
-			info_hash = str(task['bt_hash'])
-			if single_file:
-				torrent = os.path.join(dirname, escape_filename(task['name']).encode(default_encoding) + '.torrent')
-			else:
-				torrent = os.path.join(dirname, info_hash + '.torrent')
-			if os.path.exists(torrent):
-				pass
-			else:
-				content = client.get_torrent_file_by_info_hash(info_hash)
-				with open(torrent, 'wb') as ouput_stream:
-					ouput_stream.write(content)
-		if not no_hash:
-			torrent_file = client.get_torrent_file(task)
-			print 'Hashing bt ...'
-			from lixian_progress import SimpleProgressBar
-			bar = SimpleProgressBar()
-			file_set = [f['name'].encode('utf-8').split('\\') for f in files] if 'files' in task else None
-			verified = lixian_hash_bt.verify_bt(output_path, lixian_hash_bt.bdecode(torrent_file)['info'], file_set=file_set, progress_callback=bar.update)
-			bar.done()
-			if not verified:
-				# note that we don't delete bt download folder if hash failed
-				raise Exception('bt hash check failed')
+#		if save_torrent_file:
+#			info_hash = str(task['bt_hash'])
+#			if single_file:
+#				torrent = os.path.join(dirname, escape_filename(task['name']).encode(default_encoding) + '.torrent')
+#			else:
+#				torrent = os.path.join(dirname, info_hash + '.torrent')
+#			if os.path.exists(torrent):
+#				pass
+#			else:
+#				content = client.get_torrent_file_by_info_hash(info_hash)
+#				with open(torrent, 'wb') as ouput_stream:
+#					ouput_stream.write(content)
+#		if not no_hash:
+#			torrent_file = client.get_torrent_file(task)
+#			print 'Hashing bt ...'
+#			from lixian_progress import SimpleProgressBar
+#			bar = SimpleProgressBar()
+#			file_set = [f['name'].encode('utf-8').split('\\') for f in files] if 'files' in task else None
+#			verified = lixian_hash_bt.verify_bt(output_path, lixian_hash_bt.bdecode(torrent_file)['info'], file_set=file_set, progress_callback=bar.update)
+#			bar.done()
+#			if not verified:
+#				# note that we don't delete bt download folder if hash failed
+#				raise Exception('bt hash check failed')
 	else:
 		ensure_dir_exists(output_dir)
 
