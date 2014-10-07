@@ -10,6 +10,7 @@ import os.path
 import json
 from ast import literal_eval
 
+USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:11.0) Gecko/20100101 Firefox/11.0'
 
 def retry(f_or_arg, *args):
 	#retry_sleeps = [1, 1, 1]
@@ -251,7 +252,7 @@ class XunleiClient(object):
 		headers = args['headers']
 		headers.setdefault('Accept-Encoding', 'gzip, deflate')
 #		headers.setdefault('Referer', 'http://lixian.vip.xunlei.com/task.html')
-		headers.setdefault('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:11.0) Gecko/20100101 Firefox/11.0')
+		headers.setdefault('User-Agent', USER_AGENT)
 #		headers.setdefault('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8')
 #		headers.setdefault('Accept-Language', 'zh-cn,zh;q=0.7,en-us;q=0.3')
 		response = self.urlopen(url, **args)
@@ -387,11 +388,11 @@ class XunleiClient(object):
 		assert verification_code
 		password = encypt_password(password)
 		password = md5(password+verification_code)
-		login_page = self.urlopen('http://login.xunlei.com/sec2login/', headers={ 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0' }, data={'u': username, 'p': password, 'verifycode': verification_code})
+		login_page = self.urlopen('http://login.xunlei.com/sec2login/', headers={ 'User-Agent': USER_AGENT}, data={'u': username, 'p': password, 'verifycode': verification_code})
 		#login_page = self.urlopen('http://login.xunlei.com/sec2login/', data={'u': username, 'p': password, 'verifycode': verification_code})
 		self.id = self.get_userid()
 		with self.attr(page_size=1):
-			login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp(), headers={ 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0' }).read()
+			login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp(), headers={ 'User-Agent': USER_AGENT}).read()
 			#login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp()).read()
 		if not self.is_login_ok(login_page):
 			logger.trace(login_page)
