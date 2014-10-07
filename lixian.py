@@ -747,17 +747,12 @@ class XunleiClient(object):
 			return bt_hash
 		raise NotImplementedError(response)
 
-	def add_torrent_task_by_info_hash(self, sha1):
-		return self.add_torrent_task_by_content(self.get_torrent_file_by_info_hash(sha1), sha1.upper()+'.torrent')
-
 	def add_torrent_task(self, path):
 		with open(path, 'rb') as x:
 			return self.add_torrent_task_by_content(x.read(), os.path.basename(path))
 
-	def add_torrent_task_by_info_hash2(self, sha1, old_task_id=None):
-		'''similar to add_torrent_task_by_info_hash, but faster. I may delete current add_torrent_task_by_info_hash completely in future'''
-		link = 'http://dynamic.cloud.vip.xunlei.com/interface/get_torrent?userid=%s&infoid=%s' % (self.id, sha1.upper())
-		return self.add_torrent_task_by_link(link, old_task_id=old_task_id)
+	def add_torrent_task_by_info_hash(self, sha1, old_task_id=None):
+		return self.add_magnet_task('magnet:?xt=urn:btih:' + sha1.upper())
 
 	def add_magnet_task(self, link):
 		return self.add_torrent_task_by_link(link)

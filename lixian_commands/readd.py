@@ -37,4 +37,4 @@ def readd_task(args):
 		urls, ids = zip(*non_bt)
 		client.add_batch_tasks(urls, ids)
 	for hash, id in bt:
-		client.add_torrent_task_by_info_hash2(hash, id)
+		client.add_torrent_task_by_info_hash(hash, id)
