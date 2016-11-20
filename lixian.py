@@ -324,7 +324,17 @@ class XunleiClient(object):
 		def domain_header(domain):
 			root = self.cookiejar._cookies[domain]['/']
 			return '; '.join(k+'='+root[k].value for k in root)
-		return  domain_header('.xunlei.com') + '; ' + domain_header('.vip.xunlei.com')
+		return domain_header('.xunlei.com') + '; ' + domain_header('.vip.xunlei.com')
+
+	def check_device_id(self):
+		if not self.has_cookie('.xunlei.com', 'deviceid'):
+			device_url = 'http://login.xunlei.com/risk?cmd=report'
+			xl_fp_raw = "P#etCxXneIMfMG3q###Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36###zh-CN###24###1200x1920###-480###true###true###true###undefined###function######Win32######Widevine Content Decryption Module::Enables Widevine licenses for playback of HTML audio/video content. (version: 1.4.8.893)::application/x-ppapi-widevine-cdm~;Chrome PDF Viewer::::application/pdf~pdf;Shockwave Flash::Shockwave Flash 23.0 r0::application/x-shockwave-flash~swf,application/futuresplash~spl;Native Client::::application/x-nacl~,application/x-pnacl~;Chrome PDF Viewer::Portable Document Format::application/x-google-chrome-pdf~pdf###22b4692f98f0d7a48ee37728981cd1c5###7u$v$2ZFjPZYMt3e"
+			xl_fp = md5(xl_fp_raw)
+			device_data = {'xl_fp_raw': xl_fp_raw, 'xl_fp': xl_fp}
+			self.urlopen(device_url, data=device_data).read()
+		if not self.has_cookie('.xunlei.com', '_x_t_'):
+			self.set_cookie('.xunlei.com', '_x_t_', '0')
 
 	def is_login_ok(self, html):
 		return len(html) > 512
@@ -358,7 +368,7 @@ class XunleiClient(object):
 		if not self.verification_code_reader:
 			raise NotImplementedError('Verification code required')
 		else:
-			verification_code_url = 'http://verify2.xunlei.com/image?t=MVA&cachetime=%s' % current_timestamp()
+			verification_code_url = 'http://verify1.xunlei.com/image?t=MVA&cachetime=%s' % current_timestamp()
 			image = self.urlopen(verification_code_url).read()
 			return self.verification_code_reader(image)
 
@@ -377,8 +387,9 @@ class XunleiClient(object):
 			raise NotImplementedError('user is not logged in')
 
 		logger.debug('login')
+		self.check_device_id()
 		cachetime = current_timestamp()
-		check_url = 'http://login.xunlei.com/check?u=%s&cachetime=%d' % (username, cachetime)
+		check_url = 'http://login.xunlei.com/check/?u=%s&business_type=108&v=101&cachetime=%d&' % (username, cachetime)
 		login_page = self.urlopen(check_url).read()
 		verification_code = self.get_cookie('.xunlei.com', 'check_result')[2:].upper()
 		if not verification_code:
@@ -386,10 +397,7 @@ class XunleiClient(object):
 			if verification_code:
 				verification_code = verification_code.upper()
 		assert verification_code
-		password = encypt_password(password)
-		password = md5(password+verification_code)
-		login_page = self.urlopen('http://login.xunlei.com/sec2login/', headers={ 'User-Agent': USER_AGENT}, data={'u': username, 'p': password, 'verifycode': verification_code})
-		#login_page = self.urlopen('http://login.xunlei.com/sec2login/', data={'u': username, 'p': password, 'verifycode': verification_code})
+		login_page = self.urlopen('https://login3.xunlei.com/sec2login/', headers={'User-Agent': USER_AGENT}, data={'u': username, 'p': password, 'verifycode': verification_code, 'login_enable': '0', 'business_type': '108', 'v': '101'})
 		self.id = self.get_userid()
 		with self.attr(page_size=1):
 			login_page = self.urlopen('http://dynamic.lixian.vip.xunlei.com/login?cachetime=%d&from=0'%current_timestamp(), headers={ 'User-Agent': USER_AGENT}).read()
@@ -1052,11 +1060,6 @@ def to_utf_8(s):
 def md5(s):
 	import hashlib
 	return hashlib.md5(s).hexdigest().lower()
-
-def encypt_password(password):
-	if not re.match(r'^[0-9a-f]{32}$', password):
-		password = md5(md5(password))
-	return password
 
 def ungzip(s):
 	from StringIO import StringIO

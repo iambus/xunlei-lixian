@@ -1,6 +1,5 @@
 
 
-from lixian import encypt_password
 from lixian_commands.util import *
 from lixian_cli_parser import *
 from lixian_config import *
@@ -29,8 +28,8 @@ def lx_config(args):
 				password = getpass('Password: ')
 			else:
 				password = args[1]
-			print 'Saving password (encrypted) to', global_config.path
-			put_config('password', encypt_password(password))
+			print 'Saving password to', global_config.path
+			put_config('password', password)
 		else:
 			print 'Saving configuration to', global_config.path
 			put_config(*args)
